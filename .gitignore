@@ -1,0 +1,54 @@
+# Build output
+bin/
+obj/
+Debug/
+Release/
+out/
+publish/
+
+# ASP.NET Core / .NET
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+appsettings.Development.json
+
+# Node / React
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+vite.svg
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDEs and editors
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
