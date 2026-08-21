@@ -29,6 +29,25 @@ A library/book rental management system for admin-driven checkout and check-in w
 - `lending-service` - Admin checkout/check-in, rental history, renewals, cancellations, overdue flagging, and late fee display; not started yet.
 - `notification-service` - Checkout, due-soon, and overdue alerts, plus admin/user notification logs; not started yet.
 
+## Branching Strategy
+
+- `main` contains stable, reviewed, releasable code.
+- `develop` integrates completed user stories.
+- Feature branches start from `develop` and merge back through pull requests.
+- Only `develop` should normally merge into `main`.
+- Both permanent branches require pull requests, at least one approval, resolved conversations, blocked force pushes, and blocked deletion.
+- CI checks become required only after the workflow has completed successfully at least once.
+
+Branch names should use the exact Jira issue key:
+
+```text
+feature/YRP-6-user-login
+fix/YRP-12-fix-user-search
+refactor/YRP-6-improve-authentication
+docs/YRP-9-update-registration-documentation
+test/YRP-19-add-book-tests
+```
+
 ## Repository Structure
 
 ```text
