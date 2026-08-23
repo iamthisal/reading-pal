@@ -2,10 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Placeholders for Pages
-const LoginPage = () => <div className="p-8 text-center text-white">Login Page Placeholder</div>;
-const HomePage = () => <div className="p-8 text-center text-white">Home Page (Regular User)</div>;
-const AdminDashboard = () => <div className="p-8 text-center text-white">Admin Dashboard</div>;
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import AdminDashboard from './pages/AdminDashboard';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
