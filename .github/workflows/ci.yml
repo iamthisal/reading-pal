@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-infrastructure:
+    name: Validate Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          required_files=(
+            "README.md"
+            ".env.example"
+            ".gitignore"
+            ".dockerignore"
+            "docker-compose.yml"
+            "services/user-service/Dockerfile"
+          )
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Required file missing: $file"
+              exit 1
+            fi
+            echo "Found: $file"
+          done
+
+      - name: Prepare environment file
+        run: cp .env.example .env
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+
+  build-and-test:
+    name: Build and Test (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: services/user-service/UserService.csproj
+
+      - name: Restore dependencies
+        run: dotnet restore services/user-service/UserService.csproj
+
+      - name: Build user-service
+        run: dotnet build services/user-service/UserService.csproj --configuration Release --no-restore
+
+      - name: Run tests
+        run: |
+          test_projects=$(find tests/ services/user-service/ -type f \( -name "*Test*.csproj" -o -name "*Tests*.csproj" \) 2>/dev/null || true)
+          if [ -n "$test_projects" ]; then
+            echo "Running tests for: $test_projects"
+            for proj in $test_projects; do
+              dotnet test "$proj" --configuration Release --no-build --verbosity normal
+            done
+          else
+            echo "No test projects found. Skipping test execution gracefully."
+          fi
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    if: hashFiles('frontend/package.json') != ''
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint frontend
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build user-service Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/user-service/Dockerfile
+          push: false
+          tags: readingpal-user-service:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+

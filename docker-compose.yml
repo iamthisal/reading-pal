@@ -1,4 +1,23 @@
 services:
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: readingpal-user-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=mysql;Port=3306;Database=${USER_DB_NAME};Uid=${MYSQL_USER};Pwd=${MYSQL_PASSWORD};
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__Key: ${JWT_SECRET}
+    ports:
+      - "${USER_SERVICE_PORT}:8080"
+
   mysql:
     image: mysql:8.4
     container_name: readingpal-mysql
