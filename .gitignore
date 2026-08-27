@@ -18,7 +18,6 @@ TestResults/
 coverage/
 *.coverage
 *.coveragexml
-appsettings.Development.json
 
 # Node / React
 node_modules/
