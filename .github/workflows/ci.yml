@@ -58,13 +58,29 @@ jobs:
         with:
           dotnet-version: '10.0.x'
           cache: true
-          cache-dependency-path: services/user-service/UserService.csproj
+          cache-dependency-path: '**/*.csproj'
 
       - name: Restore dependencies
-        run: dotnet restore services/user-service/UserService.csproj
+        run: |
+          dotnet restore services/user-service/UserService.csproj
+          test_projects=$(find tests/ -type f \( -name "*Test*.csproj" -o -name "*Tests*.csproj" \) 2>/dev/null || true)
+          if [ -n "$test_projects" ]; then
+            for proj in $test_projects; do
+              dotnet restore "$proj"
+            done
+          fi
 
       - name: Build user-service
         run: dotnet build services/user-service/UserService.csproj --configuration Release --no-restore
+
+      - name: Build test projects
+        run: |
+          test_projects=$(find tests/ services/user-service/ -type f \( -name "*Test*.csproj" -o -name "*Tests*.csproj" \) 2>/dev/null || true)
+          if [ -n "$test_projects" ]; then
+            for proj in $test_projects; do
+              dotnet build "$proj" --configuration Release --no-restore
+            done
+          fi
 
       - name: Run tests
         run: |
