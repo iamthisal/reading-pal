@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { BookOpen, LogIn } from 'lucide-react';
@@ -85,10 +85,6 @@ const LoginPage = () => {
                             {isLoading ? 'Signing in...' : 'Sign In'}
                         </div>
                     </button>
-
-                    <div style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        Don't have an account? <Link to="/register" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>Register here</Link>
-                    </div>
                 </form>
             </div>
         </div>
