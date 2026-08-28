@@ -48,6 +48,30 @@ namespace UserService.Controllers
             return Ok(new AuthResponse { Token = userToken, Role = user.Role, IsValidated = user.IsValidated });
         }
 
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterRequest request)
+        {
+            if (_context.Users.Any(u => u.Email == request.Email))
+            {
+                return BadRequest(new { message = "Email already in use" });
+            }
+
+            var user = new User
+            {
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Role = "User",
+                IsValidated = false
+            };
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            return Ok(new { message = "Registration successful" });
+        }
+
         private string GenerateJwtToken(string id, string email, string role, bool isValidated)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
