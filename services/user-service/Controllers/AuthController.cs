@@ -7,6 +7,7 @@ using System.Text;
 using UserService.Data;
 using UserService.DTOs;
 using System.Linq;
+using UserService.Models;
 
 namespace UserService.Controllers
 {
