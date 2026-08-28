@@ -48,36 +48,6 @@ namespace UserService.Controllers
             return Ok(new AuthResponse { Token = userToken, Role = user.Role, IsValidated = user.IsValidated });
         }
 
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterRequest request)
-        {
-            // 1. Check if email already exists
-            if (_context.Users.Any(u => u.Email == request.Email))
-            {
-                return BadRequest(new { message = "Email already in use" });
-            }
-
-            // 2. Hash Password
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            // 3. Create User
-            var user = new UserService.Models.User
-            {
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Role = "User",
-                IsValidated = false // ensure newly registered users default to false
-            };
-
-            // 4. Save to DB
-            _context.Users.Add(user);
-            _context.SaveChanges();
-
-            return Ok(new { message = "Registration successful. Please wait for an admin to validate your account." });
-        }
-
         private string GenerateJwtToken(string id, string email, string role, bool isValidated)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
