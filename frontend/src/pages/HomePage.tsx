@@ -1,5 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, BookMarked } from 'lucide-react';
+import { LogOut, BookMarked, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HomePage = () => {
     const { logout, user } = useAuth();
@@ -11,10 +12,16 @@ const HomePage = () => {
                     <BookMarked size={32} color="var(--accent-color)" />
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Reading Pal</h1>
                 </div>
-                <button onClick={logout} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <LogOut size={16} />
-                    Sign Out
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <Link to="/profile" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                        <User size={16} />
+                        My Profile
+                    </Link>
+                    <button onClick={logout} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <LogOut size={16} />
+                        Sign Out
+                    </button>
+                </div>
             </header>
             
             <main>
