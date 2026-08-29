@@ -1,0 +1,23 @@
+# Requires AZURE_WEBAPP_PUBLISH_PROFILE secret to be set in repo settings before this workflow will succeed.
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-userservice:
+    name: Deploy User Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: reading-pal-userservice
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: 'ghcr.io/iamthisal/reading-pal-userservice:latest'
