@@ -12,7 +12,7 @@ using UserService.Data;
 namespace UserService.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20260823133946_InitialCreate")]
+    [Migration("20260829074157_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
