@@ -14,6 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   validate-infrastructure:
     name: Validate Infrastructure
@@ -130,13 +134,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build user-service Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: services/user-service/Dockerfile
-          push: false
-          tags: readingpal-user-service:ci
+          push: true
+          tags: ghcr.io/iamthisal/reading-pal-userservice:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
