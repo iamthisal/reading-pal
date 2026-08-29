@@ -12,7 +12,7 @@ builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 0))));
 
 // Add CORS
-var allowedOrigin = builder.Configuration["Frontend:Url"] ?? "http://localhost:5173";
+var allowedOrigin = builder.Configuration["Frontend:Url"] ?? "http://localhost:5173";   
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>

@@ -7,6 +7,7 @@ using System.Text;
 using UserService.Data;
 using UserService.DTOs;
 using System.Linq;
+using UserService.Models;
 
 namespace UserService.Controllers
 {
@@ -46,6 +47,30 @@ namespace UserService.Controllers
 
             var userToken = GenerateJwtToken(user.Id.ToString(), user.Email, user.Role, user.IsValidated);
             return Ok(new AuthResponse { Token = userToken, Role = user.Role, IsValidated = user.IsValidated });
+        }
+
+        [HttpPost("register")]
+        public IActionResult Register([FromBody] RegisterRequest request)
+        {
+            if (_context.Users.Any(u => u.Email == request.Email))
+            {
+                return BadRequest(new { message = "Email already in use" });
+            }
+
+            var user = new User
+            {
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Role = "User",
+                IsValidated = false
+            };
+
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            return Ok(new { message = "Registration successful" });
         }
 
         private string GenerateJwtToken(string id, string email, string role, bool isValidated)
