@@ -23,7 +23,7 @@ namespace UserService.Controllers
         [HttpGet("profile")]
         public IActionResult GetProfile()
         {
-            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out var userId))
             {
                 return Unauthorized(new { message = "Invalid user token" });
@@ -48,7 +48,7 @@ namespace UserService.Controllers
         [HttpPut("profile")]
         public IActionResult UpdateProfile([FromBody] UpdateProfileRequest request)
         {
-            var userIdStr = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out var userId))
             {
                 return Unauthorized(new { message = "Invalid user token" });
