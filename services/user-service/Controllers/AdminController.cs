@@ -61,5 +61,35 @@ namespace UserService.Controllers
 
             return Ok(activeUsers);
         }
+
+        [HttpPost("users/{id}/accept")]
+        public IActionResult AcceptUser(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id && !u.IsValidated);
+            if (user == null)
+            {
+                return NotFound(new { message = "Pending user not found." });
+            }
+
+            user.IsValidated = true;
+            _context.SaveChanges();
+
+            return Ok(new { message = "User accepted successfully." });
+        }
+
+        [HttpPost("users/{id}/reject")]
+        public IActionResult RejectUser(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id && !u.IsValidated);
+            if (user == null)
+            {
+                return NotFound(new { message = "Pending user not found." });
+            }
+
+            _context.Users.Remove(user);
+            _context.SaveChanges();
+
+            return Ok(new { message = "User rejected and deleted successfully." });
+        }
     }
 }

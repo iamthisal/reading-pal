@@ -28,6 +28,9 @@ const AdminUsersPage = () => {
     const [users, setUsers] = useState<UserSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [selectedUser, setSelectedUser] = useState<UserSummary | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -50,6 +53,52 @@ const AdminUsersPage = () => {
             fetchUsers();
         }
     }, [endpoint, token]);
+
+    const openModal = (user: UserSummary) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setSelectedUser(null);
+        setIsModalOpen(false);
+    };
+
+    const handleAccept = async () => {
+        if (!selectedUser) return;
+        setActionLoading(true);
+        try {
+            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/accept`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Remove user from list
+            setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
+            closeModal();
+        } catch (err) {
+            console.error('Failed to accept user:', err);
+            alert('Failed to accept user. Please try again.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!selectedUser) return;
+        setActionLoading(true);
+        try {
+            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/reject`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Remove user from list
+            setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
+            closeModal();
+        } catch (err) {
+            console.error('Failed to reject user:', err);
+            alert('Failed to reject user. Please try again.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     return (
         <div className="page-container">
@@ -90,9 +139,14 @@ const AdminUsersPage = () => {
                                 </thead>
                                 <tbody>
                                     {users.map(user => (
-                                        <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
                                             <td style={{ padding: '1rem' }}>{user.id}</td>
-                                            <td style={{ padding: '1rem', fontWeight: 500 }}>{user.firstName} {user.lastName}</td>
+                                            <td 
+                                                style={{ padding: '1rem', fontWeight: 500, cursor: isPending ? 'pointer' : 'default', color: isPending ? 'var(--accent-color)' : 'inherit', textDecoration: isPending ? 'underline' : 'none' }}
+                                                onClick={() => isPending ? openModal(user) : null}
+                                            >
+                                                {user.firstName} {user.lastName}
+                                            </td>
                                             <td style={{ padding: '1rem' }}>{user.email}</td>
                                             <td style={{ padding: '1rem' }}>
                                                 {user.isValidated ? (
@@ -112,6 +166,51 @@ const AdminUsersPage = () => {
                     )}
                 </div>
             </main>
+
+            {/* Modal Overlay */}
+            {isModalOpen && selectedUser && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>User Details</h2>
+                            <p style={{ color: 'var(--text-secondary)' }}>Review the pending registration details.</p>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
+                            <div>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Name</span>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 500 }}>{selectedUser.firstName} {selectedUser.lastName}</div>
+                            </div>
+                            <div>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Email Address</span>
+                                <div style={{ fontSize: '1.1rem' }}>{selectedUser.email}</div>
+                            </div>
+                            <div>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Registration Date</span>
+                                <div style={{ fontSize: '1.1rem' }}>{new Date(selectedUser.createdAt).toLocaleDateString()} at {new Date(selectedUser.createdAt).toLocaleTimeString()}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                            <button className="btn-outline" onClick={closeModal} disabled={actionLoading}>Cancel</button>
+                            <button 
+                                onClick={handleReject} 
+                                disabled={actionLoading}
+                                style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
+                            >
+                                Reject
+                            </button>
+                            <button 
+                                onClick={handleAccept} 
+                                disabled={actionLoading}
+                                className="btn-primary" 
+                            >
+                                {actionLoading ? 'Processing...' : 'Accept User'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
