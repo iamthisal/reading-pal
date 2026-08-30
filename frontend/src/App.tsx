@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
+import ProfilePage from './pages/ProfilePage';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -24,6 +25,7 @@ function App() {
           
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/home" element={<HomePage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
