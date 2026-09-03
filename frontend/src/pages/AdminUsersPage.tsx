@@ -245,22 +245,71 @@ const AdminUsersPage = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-                            <button className="btn-outline" onClick={closeModal} disabled={actionLoading}>Cancel</button>
-                            <button 
-                                onClick={handleReject} 
-                                disabled={actionLoading}
-                                style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
-                            >
-                                Reject
-                            </button>
-                            <button 
-                                onClick={handleAccept} 
-                                disabled={actionLoading}
-                                className="btn-primary" 
-                            >
-                                {actionLoading ? 'Processing...' : 'Accept User'}
-                            </button>
+                            <button className="btn-outline" onClick={closeModal} disabled={actionLoading}>Close</button>
+                            {isPending && (
+                                <>
+                                    <button 
+                                        onClick={handleReject} 
+                                        disabled={actionLoading}
+                                        style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
+                                    >
+                                        Reject
+                                    </button>
+                                    <button 
+                                        onClick={handleAccept} 
+                                        disabled={actionLoading}
+                                        className="btn-primary" 
+                                    >
+                                        {actionLoading ? 'Processing...' : 'Accept User'}
+                                    </button>
+                                </>
+                            )}
                         </div>
+
+                        {!isPending && (
+                            <div style={{ marginTop: '1rem' }}>
+                                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Borrowing History</h3>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    
+                                    {/* Current Borrowings */}
+                                    <div style={{ backgroundColor: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                        <h4 style={{ color: 'var(--accent-color)', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Current Borrowings</h4>
+                                        {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).length === 0 ? (
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No current borrowings.</p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).map((record, idx) => (
+                                                    <div key={idx} style={{ fontSize: '0.875rem' }}>
+                                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{record.bookTitle}</div>
+                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>ID: {record.bookId}</div>
+                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Borrowed: {new Date(record.borrowedDate).toLocaleDateString()}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Past Borrowings */}
+                                    <div style={{ backgroundColor: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                                        <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Past Borrowings</h4>
+                                        {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).length === 0 ? (
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No past borrowings.</p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).map((record, idx) => (
+                                                    <div key={idx} style={{ fontSize: '0.875rem' }}>
+                                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{record.bookTitle}</div>
+                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>ID: {record.bookId}</div>
+                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Returned: {new Date(record.returnedDate!).toLocaleDateString()}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
