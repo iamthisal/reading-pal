@@ -91,5 +91,20 @@ namespace UserService.Controllers
 
             return Ok(new { message = "User rejected and deleted successfully." });
         }
+
+        [HttpPost("users/{id}/revoke")]
+        public IActionResult RevokeUser(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id && u.IsValidated && u.Role != "Admin");
+            if (user == null)
+            {
+                return NotFound(new { message = "Active user not found." });
+            }
+
+            user.IsValidated = false;
+            _context.SaveChanges();
+
+            return Ok(new { message = "User access revoked successfully." });
+        }
     }
 }
