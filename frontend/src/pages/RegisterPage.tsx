@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { BookOpen, UserPlus, CheckCircle } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const RegisterPage = () => {
     const [firstName, setFirstName] = useState('');
@@ -22,7 +23,7 @@ const RegisterPage = () => {
         setIsLoading(true);
 
         try {
-            await axios.post('http://localhost:5000/api/auth/register', {
+            await axios.post(`${API_BASE_URL}/api/auth/register`, {
                 firstName,
                 lastName,
                 email,

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { User, Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 
 const ProfilePage = () => {
     const { token } = useAuth();
@@ -21,7 +22,7 @@ const ProfilePage = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/user/profile', {
+                const response = await axios.get(`${API_BASE_URL}/api/user/profile`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setFirstName(response.data.firstName);
@@ -45,7 +46,7 @@ const ProfilePage = () => {
         setIsSaving(true);
 
         try {
-            await axios.put('http://localhost:5000/api/user/profile', {
+            await axios.put(`${API_BASE_URL}/api/user/profile`, {
                 firstName,
                 lastName,
                 email,

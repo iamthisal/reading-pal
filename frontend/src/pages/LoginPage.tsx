@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { BookOpen, LogIn } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -20,8 +21,7 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            // Note: Update URL if backend port differs
-            const response = await axios.post('http://localhost:5000/api/auth/login', {
+            const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
                 email,
                 password
             });
