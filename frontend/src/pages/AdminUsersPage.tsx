@@ -142,8 +142,8 @@ const AdminUsersPage = () => {
                                         <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background-color 0.2s' }}>
                                             <td style={{ padding: '1rem' }}>{user.id}</td>
                                             <td 
-                                                style={{ padding: '1rem', fontWeight: 500, cursor: isPending ? 'pointer' : 'default', color: isPending ? 'var(--accent-color)' : 'inherit', textDecoration: isPending ? 'underline' : 'none' }}
-                                                onClick={() => isPending ? openModal(user) : null}
+                                                style={{ padding: '1rem', fontWeight: 500, cursor: 'pointer', color: 'var(--accent-color)', textDecoration: 'underline' }}
+                                                onClick={() => openModal(user)}
                                             >
                                                 {user.firstName} {user.lastName}
                                             </td>
