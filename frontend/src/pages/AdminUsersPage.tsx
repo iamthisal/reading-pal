@@ -153,6 +153,26 @@ const AdminUsersPage = () => {
         }
     };
 
+    const handleRevoke = async () => {
+        if (!selectedUser) return;
+        const confirmRevoke = window.confirm(`Are you sure you want to revoke access for ${selectedUser.firstName} ${selectedUser.lastName}? They will be moved back to the pending requests list.`);
+        if (!confirmRevoke) return;
+        
+        setActionLoading(true);
+        try {
+            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/revoke`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
+            closeModal();
+        } catch (err) {
+            console.error('Failed to revoke user:', err);
+            alert('Failed to revoke user access. Please try again.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     return (
         <div className="page-container">
             <header className="dashboard-header">
@@ -223,10 +243,10 @@ const AdminUsersPage = () => {
             {/* Modal Overlay */}
             {isModalOpen && selectedUser && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div className="glass-panel" style={{ width: '90%', maxWidth: '500px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                    <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                         <div>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>User Details</h2>
-                            <p style={{ color: 'var(--text-secondary)' }}>Review the pending registration details.</p>
+                            <p style={{ color: 'var(--text-secondary)' }}>Review the {isPending ? 'pending registration' : 'active user'} details.</p>
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
@@ -246,7 +266,7 @@ const AdminUsersPage = () => {
 
                         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
                             <button className="btn-outline" onClick={closeModal} disabled={actionLoading}>Close</button>
-                            {isPending && (
+                            {isPending ? (
                                 <>
                                     <button 
                                         onClick={handleReject} 
@@ -263,6 +283,14 @@ const AdminUsersPage = () => {
                                         {actionLoading ? 'Processing...' : 'Accept User'}
                                     </button>
                                 </>
+                            ) : (
+                                <button 
+                                    onClick={handleRevoke} 
+                                    disabled={actionLoading}
+                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
+                                >
+                                    {actionLoading ? 'Processing...' : 'Revoke Access'}
+                                </button>
                             )}
                         </div>
 
