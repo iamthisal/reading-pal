@@ -13,6 +13,59 @@ interface UserSummary {
     createdAt: string;
 }
 
+export interface BorrowingRecord {
+    bookId: string;
+    bookTitle: string;
+    borrowedDate: string;
+    returnedDate: string | null;
+}
+
+const generateMockBorrowings = (userId: number): BorrowingRecord[] => {
+    // Generate deterministic mock data based on the user's ID
+    const mockBooks = [
+        "The Great Gatsby", "1984", "To Kill a Mockingbird", "Pride and Prejudice", 
+        "The Catcher in the Rye", "Moby Dick", "The Lord of the Rings", "Jane Eyre"
+    ];
+    
+    const borrowings: BorrowingRecord[] = [];
+    
+    // Add 2 current borrowings
+    borrowings.push({
+        bookId: `B-${(userId * 7) % 999}`,
+        bookTitle: mockBooks[userId % mockBooks.length],
+        borrowedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+        returnedDate: null
+    });
+    borrowings.push({
+        bookId: `B-${(userId * 13) % 999}`,
+        bookTitle: mockBooks[(userId + 1) % mockBooks.length],
+        borrowedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        returnedDate: null
+    });
+    
+    // Add 3 past borrowings
+    borrowings.push({
+        bookId: `B-${(userId * 3) % 999}`,
+        bookTitle: mockBooks[(userId + 2) % mockBooks.length],
+        borrowedDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days ago
+        returnedDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString() // 45 days ago
+    });
+    borrowings.push({
+        bookId: `B-${(userId * 11) % 999}`,
+        bookTitle: mockBooks[(userId + 3) % mockBooks.length],
+        borrowedDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+        returnedDate: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString()
+    });
+    borrowings.push({
+        bookId: `B-${(userId * 5) % 999}`,
+        bookTitle: mockBooks[(userId + 4) % mockBooks.length],
+        borrowedDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+        returnedDate: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString()
+    });
+    
+    return borrowings;
+}
+
 const AdminUsersPage = () => {
     const { token } = useAuth();
     const location = useLocation();
