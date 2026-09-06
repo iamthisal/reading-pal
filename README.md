@@ -88,4 +88,4 @@ ReadingPal/
 
 ## Status
 
-Early repository scaffold only. No application code has been written yet.
+The user-service foundation is live and deployed to Azure, with GitHub Actions CI/CD configured and working for automated validation and deployment. The project includes a React frontend and an ASP.NET Core user service with JWT authentication, user registration, login, profile management, and admin user management flows. The inventory, lending, and notification services are still in progress, so the system is not yet complete end-to-end, but the core backend and deployment pipeline are operational.
