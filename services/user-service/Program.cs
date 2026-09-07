@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddApplicationInsightsTelemetry();
 
 var app = builder.Build();
 
