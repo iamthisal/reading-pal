@@ -37,7 +37,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddApplicationInsightsTelemetry();
+var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
+    ?? builder.Configuration["ApplicationInsights:ConnectionString"];
+if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 
 var app = builder.Build();
 
