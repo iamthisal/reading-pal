@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Users, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 interface UserSummary {
     id: number;
@@ -89,7 +90,7 @@ const AdminUsersPage = () => {
         const fetchUsers = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`http://localhost:5000${endpoint}`, {
+                const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUsers(response.data);
@@ -121,7 +122,7 @@ const AdminUsersPage = () => {
         if (!selectedUser) return;
         setActionLoading(true);
         try {
-            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/accept`, {}, {
+            await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/accept`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Remove user from list
@@ -139,7 +140,7 @@ const AdminUsersPage = () => {
         if (!selectedUser) return;
         setActionLoading(true);
         try {
-            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/reject`, {}, {
+            await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/reject`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Remove user from list

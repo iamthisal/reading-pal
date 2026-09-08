@@ -3,6 +3,7 @@ import { LogOut, Users, ShieldAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 
 const AdminDashboard = () => {
     const { logout, token } = useAuth();
@@ -11,7 +12,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchAdminMessage = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/admin/message', {
+                const response = await axios.get(`${API_BASE_URL}/api/admin/message`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

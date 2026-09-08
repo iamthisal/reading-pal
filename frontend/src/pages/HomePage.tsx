@@ -35,7 +35,7 @@ const HomePage = () => {
                     )}
                     
                     <p style={{ color: 'var(--text-secondary)' }}>
-                        Browse our physical catalog and manage your reservations here.
+                        Browse our physical catalog, manage reservations, and track your Reading Pal account here.
                     </p>
                 </div>
             </main>

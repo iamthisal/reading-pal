@@ -2,22 +2,59 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
     branches:
       - main
+    types:
+      - completed
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  USER_SERVICE_IMAGE: ghcr.io/iamthisal/reading-pal-userservice
+
 jobs:
-  deploy-userservice:
-    name: Deploy User Service
+  build-and-deploy-userservice:
+    name: Build and Deploy User Service
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push user-service image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/user-service/Dockerfile
+          push: true
+          tags: ${{ env.USER_SERVICE_IMAGE }}:${{ github.event.workflow_run.head_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: reading-pal-userservice
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          images: 'ghcr.io/iamthisal/reading-pal-userservice:latest'
+          images: ${{ env.USER_SERVICE_IMAGE }}:${{ github.event.workflow_run.head_sha }}
