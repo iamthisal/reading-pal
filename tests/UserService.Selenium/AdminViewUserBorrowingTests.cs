@@ -20,8 +20,6 @@ public class AdminViewUserBorrowingTests : IDisposable
 
     public AdminViewUserBorrowingTests()
     {
-        var options = new ChromeOptions();
-        options.AddArgument("--start-maximized");
         var options = UserService.SeleniumTests.WebDriverHelper.CreateOptions();
 
         driver = new ChromeDriver(options);

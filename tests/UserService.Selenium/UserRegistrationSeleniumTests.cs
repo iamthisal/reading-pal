@@ -9,8 +9,6 @@ namespace UserService.SeleniumTests
     {
         private IWebDriver CreateDriver()
         {
-            var options = new ChromeOptions();
-
             var options = WebDriverHelper.CreateOptions();
             return new ChromeDriver(options);
         }

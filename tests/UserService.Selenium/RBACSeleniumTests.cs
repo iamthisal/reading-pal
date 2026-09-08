@@ -20,8 +20,6 @@ public class RBACSeleniumTests : IDisposable
 
     public RBACSeleniumTests()
     {
-        var options = new ChromeOptions();
-        options.AddArgument("--start-maximized");
         var options = UserService.SeleniumTests.WebDriverHelper.CreateOptions();
 
         driver = new ChromeDriver(options);

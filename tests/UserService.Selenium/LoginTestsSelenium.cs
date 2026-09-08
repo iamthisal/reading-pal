@@ -8,10 +8,6 @@ namespace UserService.SeleniumTests
     {
         private IWebDriver CreateDriver()
         {
-            var options = new ChromeOptions();
-
-            options.AddArgument("--start-maximized");
-
             var options = WebDriverHelper.CreateOptions();
             return new ChromeDriver(options);
         }

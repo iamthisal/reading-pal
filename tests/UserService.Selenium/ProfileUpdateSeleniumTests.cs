@@ -31,13 +31,6 @@ namespace UserService.Tests
     
         public ProfileUpdateSeleniumTests()
         {
-            var options = new ChromeOptions();
-
-            // Uncomment this if you want Selenium to run without opening Chrome
-            // options.AddArgument("--headless");
-
-            options.AddArgument("--start-maximized");
-
             var options = WebDriverHelper.CreateOptions();
             driver = new ChromeDriver(options);
 
