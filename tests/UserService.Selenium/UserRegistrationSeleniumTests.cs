@@ -11,6 +11,7 @@ namespace UserService.SeleniumTests
         {
             var options = new ChromeOptions();
 
+            var options = WebDriverHelper.CreateOptions();
             return new ChromeDriver(options);
         }
 

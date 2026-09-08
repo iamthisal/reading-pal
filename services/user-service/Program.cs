@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using UserService.Data;
+using UserService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,5 +59,47 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
+try
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+    db.Database.Migrate();
+
+    if (!db.Users.Any(u => u.Email == "dahamyakulandi21@gmail.com"))
+    {
+        db.Users.Add(new User
+        {
+            Email = "dahamyakulandi21@gmail.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Pwd123*"),
+            Role = "User",
+            FirstName = "Dahamya",
+            LastName = "Kulandi",
+            IsValidated = true,
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+
+    if (!db.Users.Any(u => u.Email == "dahamku@gmail.com"))
+    {
+        db.Users.Add(new User
+        {
+            Email = "dahamku@gmail.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Pwd123*"),
+            Role = "User",
+            FirstName = "Dahamya",
+            LastName = "Kulandi",
+            IsValidated = true,
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+
+    db.SaveChanges();
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Could not run database migration/seed on startup.");
+}
 
 app.Run();

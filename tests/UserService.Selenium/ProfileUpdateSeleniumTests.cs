@@ -2,6 +2,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
+using UserService.SeleniumTests;
 
 namespace UserService.Tests
 {
@@ -37,6 +38,7 @@ namespace UserService.Tests
 
             options.AddArgument("--start-maximized");
 
+            var options = WebDriverHelper.CreateOptions();
             driver = new ChromeDriver(options);
 
             wait = new WebDriverWait(
