@@ -1,0 +1,68 @@
+# Requires AZURE_INVENTORY_WEBAPP_PUBLISH_PROFILE secret to be set in GitHub repository secrets
+name: CD - Inventory Service
+
+on:
+  workflow_run:
+    workflows:
+      - "CI - Inventory Service"
+    branches:
+      - main
+    types:
+      - completed
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_BASE: ghcr.io/${{ github.repository_owner }}/reading-pal-inventoryservice
+  AZURE_WEBAPP_NAME: reading-pal-inventoryservice
+
+jobs:
+  build-and-deploy-inventoryservice:
+    name: Build and Deploy Inventory Service
+    runs-on: ubuntu-latest
+    if: ${{ (github.event_name == 'workflow_dispatch') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve Image Tag
+        run: |
+          RESOLVED_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          LOWER_IMAGE="${IMAGE_BASE,,}"
+          echo "IMAGE_TAG=${LOWER_IMAGE}:${RESOLVED_SHA}" >> $GITHUB_ENV
+
+      - name: Build and push inventory-service image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/inventory-service/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_INVENTORY_WEBAPP_PUBLISH_PROFILE }}
+          images: ${{ env.IMAGE_TAG }}
