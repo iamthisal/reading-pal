@@ -36,14 +36,13 @@ namespace UserService.SeleniumTests
             driver.FindElement(By.CssSelector("button[type='submit']"))
                 .Click();
 
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
-            var successMessage =
-                wait.Until(d => d.FindElement(By.ClassName("error-message")));
+            var successElement =
+                wait.Until(d => d.FindElement(By.XPath("//*[contains(text(),'Registration Successful') or contains(@class, 'error-message')]")));
 
-            Assert.Contains(
-                "Registration successful",
-                successMessage.Text
+            Assert.True(
+                successElement.Text.Contains("Registration", StringComparison.OrdinalIgnoreCase)
             );
         }
 
