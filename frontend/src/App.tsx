@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminBooksPage from './pages/AdminBooksPage';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -33,6 +34,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users/pending" element={<AdminUsersPage />} />
             <Route path="/admin/users/active" element={<AdminUsersPage />} />
+            <Route path="/admin/books" element={<AdminBooksPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />
