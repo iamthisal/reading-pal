@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X } from 'lucide-react';
+import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2 } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -228,6 +228,35 @@ const AdminBooksPage = () => {
             }
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const handleDeleteBook = async (book: Book) => {
+        if (!window.confirm(`Remove "${book.title}" from the catalogue? This cannot be undone.`)) return;
+
+        setErrorMessage('');
+        setSuccessMessage('');
+
+        try {
+            await axios.delete(`${INVENTORY_API_BASE_URL}/api/books/${book.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBooks(prev => prev.filter(item => item.id !== book.id));
+            setSuccessMessage(`Successfully removed "${book.title}".`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 409) {
+                    setErrorMessage(err.response.data?.message || 'This book cannot be removed while copies are borrowed.');
+                } else if (err.response?.status === 401 || err.response?.status === 403) {
+                    setErrorMessage('Unauthorized: Only administrators can remove books.');
+                } else if (err.response?.data?.message) {
+                    setErrorMessage(err.response.data.message);
+                } else {
+                    setErrorMessage('Failed to remove book. Please try again.');
+                }
+            } else {
+                setErrorMessage('An unexpected error occurred while removing the book.');
+            }
         }
     };
 
@@ -571,6 +600,16 @@ const AdminBooksPage = () => {
                                             >
                                                 <Pencil size={15} />
                                                 Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn-outline"
+                                                onClick={() => handleDeleteBook(b)}
+                                                title={`Remove ${b.title}`}
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem', marginLeft: '0.5rem', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                                            >
+                                                <Trash2 size={15} />
+                                                Remove
                                             </button>
                                         </td>
                                     </tr>
