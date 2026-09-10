@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw } from 'lucide-react';
+import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -35,6 +35,14 @@ const AdminBooksPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(true);
+    const [editingBook, setEditingBook] = useState<Book | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editAuthor, setEditAuthor] = useState('');
+    const [editIsbn, setEditIsbn] = useState('');
+    const [editGenre, setEditGenre] = useState('');
+    const [editTotalCopies, setEditTotalCopies] = useState('1');
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [editErrorMessage, setEditErrorMessage] = useState('');
 
     const fetchBooks = useCallback(async () => {
         setIsLoading(true);
@@ -81,13 +89,13 @@ const AdminBooksPage = () => {
         };
     }, [token]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
         setErrorMessage('');
         setSuccessMessage('');
 
-        const copies = parseInt(totalCopies, 10);
-        if (isNaN(copies) || copies < 1) {
+        const copies = Number.parseInt(totalCopies, 10);
+        if (Number.isNaN(copies) || copies < 1) {
             setErrorMessage('Total copies must be a positive number (at least 1).');
             return;
         }
@@ -152,6 +160,77 @@ const AdminBooksPage = () => {
         }
     };
 
+    const openEditModal = (book: Book) => {
+        setEditingBook(book);
+        setEditTitle(book.title);
+        setEditAuthor(book.author);
+        setEditIsbn(book.isbn);
+        setEditGenre(book.genre);
+        setEditTotalCopies(String(book.totalCopies));
+        setEditErrorMessage('');
+    };
+
+    const closeEditModal = () => {
+        if (!isUpdating) {
+            setEditingBook(null);
+            setEditErrorMessage('');
+        }
+    };
+
+    const handleUpdateBook = async (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        if (!editingBook) return;
+
+        const copies = Number.parseInt(editTotalCopies, 10);
+        if (Number.isNaN(copies) || copies < 1) {
+            setEditErrorMessage('Total copies must be a positive number (at least 1).');
+            return;
+        }
+
+        if (!editTitle.trim() || !editAuthor.trim() || !editIsbn.trim() || !editGenre.trim()) {
+            setEditErrorMessage('Please fill in all required fields.');
+            return;
+        }
+
+        setIsUpdating(true);
+        setEditErrorMessage('');
+        setErrorMessage('');
+
+        try {
+            const response = await axios.put<Book>(
+                `${INVENTORY_API_BASE_URL}/api/books/${editingBook.id}`,
+                {
+                    title: editTitle.trim(),
+                    author: editAuthor.trim(),
+                    isbn: editIsbn.trim(),
+                    genre: editGenre.trim(),
+                    totalCopies: copies
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBooks(prev => prev.map(book => book.id === response.data.id ? response.data : book));
+            setEditingBook(null);
+            setSuccessMessage(`Successfully updated "${response.data.title}".`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 409) {
+                    setEditErrorMessage(err.response.data?.message || 'A book with this ISBN already exists.');
+                } else if (err.response?.status === 400) {
+                    setEditErrorMessage(err.response.data?.message || 'Please verify the book details and copy count.');
+                } else if (err.response?.status === 401 || err.response?.status === 403) {
+                    setEditErrorMessage('Unauthorized: Only administrators can update books.');
+                } else {
+                    setEditErrorMessage('Failed to update book. Please try again.');
+                }
+            } else {
+                setEditErrorMessage('An unexpected error occurred while updating the book.');
+            }
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     const filteredBooks = books.filter(b => {
         const q = searchQuery.toLowerCase();
         return (
@@ -161,6 +240,7 @@ const AdminBooksPage = () => {
             b.genre.toLowerCase().includes(q)
         );
     });
+    const emptyInventoryMessage = books.length === 0 ? 'No books added to the catalogue yet.' : 'No books match your search query.';
 
     return (
         <div className="page-container">
@@ -208,6 +288,68 @@ const AdminBooksPage = () => {
                     <AlertCircle size={20} color="var(--danger-color)" />
                     <span>{errorMessage}</span>
                 </div>
+            )}
+
+            {editingBook && (
+                <dialog
+                    open
+                    aria-labelledby="edit-book-title"
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1rem',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                    }}
+                >
+                    <div
+                        className="glass-panel"
+                        style={{ width: '100%', maxWidth: '640px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 id="edit-book-title" style={{ fontSize: '1.25rem' }}>Edit Book</h2>
+                            <button type="button" className="btn-outline" onClick={closeEditModal} disabled={isUpdating} title="Close edit dialog" style={{ padding: '0.5rem' }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {editErrorMessage && <div className="error-message" style={{ marginBottom: '1rem' }}>{editErrorMessage}</div>}
+
+                        <form onSubmit={handleUpdateBook}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-title-input">Title</label>
+                                    <input id="edit-book-title-input" type="text" className="form-input" value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={200} required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-author">Author</label>
+                                    <input id="edit-book-author" type="text" className="form-input" value={editAuthor} onChange={e => setEditAuthor(e.target.value)} maxLength={150} required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-isbn">ISBN</label>
+                                    <input id="edit-book-isbn" type="text" className="form-input" value={editIsbn} onChange={e => setEditIsbn(e.target.value)} maxLength={30} required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-genre">Genre</label>
+                                    <input id="edit-book-genre" type="text" className="form-input" value={editGenre} onChange={e => setEditGenre(e.target.value)} maxLength={100} required />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
+                                    <input id="edit-book-copies" type="number" min="1" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button type="button" className="btn-outline" onClick={closeEditModal} disabled={isUpdating}>Cancel</button>
+                                <button type="submit" className="btn-primary" disabled={isUpdating}>
+                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </dialog>
             )}
 
             {/* Add Book Form Panel */}
@@ -359,15 +501,17 @@ const AdminBooksPage = () => {
                     </div>
                 </div>
 
-                {isLoading ? (
+                {isLoading && (
                     <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
                         Loading inventory...
                     </p>
-                ) : filteredBooks.length === 0 ? (
+                )}
+                {!isLoading && filteredBooks.length === 0 && (
                     <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-                        {books.length === 0 ? 'No books added to the catalogue yet.' : 'No books match your search query.'}
+                        {emptyInventoryMessage}
                     </p>
-                ) : (
+                )}
+                {!isLoading && filteredBooks.length > 0 && (
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
@@ -380,6 +524,7 @@ const AdminBooksPage = () => {
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'center' }}>Total</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, textAlign: 'center' }}>Available</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Added On</th>
+                                    <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -415,6 +560,18 @@ const AdminBooksPage = () => {
                                         </td>
                                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                             {new Date(b.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td style={{ padding: '0.75rem' }}>
+                                            <button
+                                                type="button"
+                                                className="btn-outline"
+                                                onClick={() => openEditModal(b)}
+                                                title={`Edit ${b.title}`}
+                                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem' }}
+                                            >
+                                                <Pencil size={15} />
+                                                Edit
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
