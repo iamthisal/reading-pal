@@ -629,6 +629,81 @@ namespace InventoryService.Tests
             Assert.True(response.UpdatedAt > originalUpdatedAt);
         }
 
+        // TC-BOOK-DELETE-001: Admin can remove an available book successfully
+        [Fact]
+        public async Task Admin_Can_Delete_Book_Successfully()
+        {
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Book to Remove",
+                Author = "Author",
+                ISBN = "978-6666666666",
+                Genre = "Fiction",
+                TotalCopies = 2,
+                AvailableCopies = 2
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+            var result = await controller.Delete(book.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            Assert.Null(await context.Books.FindAsync(book.Id));
+        }
+
+        // TC-BOOK-DELETE-002: Delete endpoint requires Admin role authorization
+        [Fact]
+        public void Delete_Book_Requires_Admin_Role()
+        {
+            var methodInfo = typeof(BooksController).GetMethod(nameof(BooksController.Delete));
+            Assert.NotNull(methodInfo);
+
+            var authorizeAttribute = methodInfo!.GetCustomAttribute<AuthorizeAttribute>();
+
+            Assert.NotNull(authorizeAttribute);
+            Assert.Equal("Admin", authorizeAttribute!.Roles);
+        }
+
+        // TC-BOOK-DELETE-003: Removing a missing book returns NotFound
+        [Fact]
+        public async Task Delete_Book_Returns_NotFound_When_Not_Exists()
+        {
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+
+            var result = await controller.Delete(999);
+
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal(404, notFoundResult.StatusCode);
+        }
+
+        // TC-BOOK-DELETE-004: Books with borrowed copies cannot be removed
+        [Fact]
+        public async Task Delete_Book_With_Borrowed_Copies_Returns_Conflict()
+        {
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Borrowed Book",
+                Author = "Author",
+                ISBN = "978-7777777777",
+                Genre = "Fiction",
+                TotalCopies = 3,
+                AvailableCopies = 2
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+            var result = await controller.Delete(book.Id);
+
+            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+            Assert.Equal(409, conflictResult.StatusCode);
+            Assert.NotNull(await context.Books.FindAsync(book.Id));
+        }
+
     }
 }
 
