@@ -63,6 +63,28 @@ namespace InventoryService.Controllers
             });
         }
 
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound(new { message = $"Book with ID {id} not found." });
+            }
+
+            var borrowedCopies = book.TotalCopies - book.AvailableCopies;
+            if (borrowedCopies > 0)
+            {
+                return Conflict(new { message = "A book cannot be removed while copies are currently borrowed." });
+            }
+
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BookResponse>> Create([FromBody] CreateBookRequest request)
@@ -110,5 +132,58 @@ namespace InventoryService.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = book.Id }, response);
         }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BookResponse>> Update(int id, [FromBody] UpdateBookRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound(new { message = $"Book with ID {id} not found." });
+            }
+
+            var trimmedIsbn = request.ISBN?.Trim() ?? string.Empty;
+            var duplicateIsbn = await _context.Books.AnyAsync(b => b.Id != id && b.ISBN.ToLower() == trimmedIsbn.ToLower());
+            if (duplicateIsbn)
+            {
+                return Conflict(new { message = $"A book with ISBN '{request.ISBN}' already exists." });
+            }
+
+            var borrowedCopies = book.TotalCopies - book.AvailableCopies;
+            if (request.TotalCopies < borrowedCopies)
+            {
+                return BadRequest(new { message = $"Total copies cannot be less than currently borrowed copies ({borrowedCopies})." });
+            }
+
+            book.Title = request.Title.Trim();
+            book.Author = request.Author.Trim();
+            book.ISBN = trimmedIsbn;
+            book.Genre = request.Genre.Trim();
+            book.AvailableCopies = request.TotalCopies - borrowedCopies;
+            book.TotalCopies = request.TotalCopies;
+            book.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new BookResponse
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                ISBN = book.ISBN,
+                Genre = book.Genre,
+                TotalCopies = book.TotalCopies,
+                AvailableCopies = book.AvailableCopies,
+                CreatedAt = book.CreatedAt,
+                UpdatedAt = book.UpdatedAt
+            });
+        }
+
     }
 }
