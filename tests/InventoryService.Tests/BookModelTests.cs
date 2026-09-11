@@ -53,6 +53,33 @@ namespace InventoryService.Tests
             Assert.Equal(now, book.CreatedAt);
             Assert.Equal(now, book.UpdatedAt);
         }
+
+        [Fact]
+        public void Book_Validation_Fails_For_InvalidProperties()
+        {
+            // Arrange
+            var book = new Book
+            {
+                Title = "", // required
+                Author = "", // required
+                ISBN = new string('X', 100), // too long
+                Genre = "",
+                TotalCopies = 0 // out of range
+            };
+
+            var context = new System.ComponentModel.DataAnnotations.ValidationContext(book);
+            var results = new System.Collections.Generic.List<System.ComponentModel.DataAnnotations.ValidationResult>();
+
+            // Act
+            var isValid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(book, context, results, true);
+
+            // Assert
+            Assert.False(isValid);
+            Assert.Contains(results, r => r.MemberNames != null && r.MemberNames.Contains("Title"));
+            Assert.Contains(results, r => r.MemberNames != null && r.MemberNames.Contains("Author"));
+            Assert.Contains(results, r => r.MemberNames != null && r.MemberNames.Contains("ISBN"));
+            Assert.Contains(results, r => r.MemberNames != null && r.MemberNames.Contains("TotalCopies"));
+        }
     }
 }
 
