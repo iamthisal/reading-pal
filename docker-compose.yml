@@ -34,8 +34,17 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__Key: ${JWT_SECRET}
+
+      Kafka__BootstrapServers: kafka:19092
+      Kafka__Topics__BookCreated: book-created
+      Kafka__Topics__BookUpdated: book-updated
+      Kafka__Topics__BookDeleted: book-deleted
     ports:
       - "${INVENTORY_SERVICE_PORT}:8080"
+
+    networks:
+      - default
+      - events
 
   mysql:
     image: mysql:8.4
@@ -95,3 +104,8 @@ volumes:
   zookeeper-data:
   zookeeper-log:
   kafka-data:
+
+networks:
+  events:
+    external: true
+    name: readingpal-events
