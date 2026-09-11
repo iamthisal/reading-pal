@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, ShieldAlert } from 'lucide-react';
+import { LogOut, Users, ShieldAlert, BookPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -49,7 +49,7 @@ const AdminDashboard = () => {
                         This is the protected administration area. From here, you will be able to view registered users and manage the library.
                     </p>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                         <Link to="/admin/users/pending" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                             <h3 style={{ marginBottom: '0.5rem', color: 'var(--accent-color)' }}>Pending Requests</h3>
                             <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View and manage newly registered users awaiting approval</p>
@@ -58,6 +58,14 @@ const AdminDashboard = () => {
                         <Link to="/admin/users/active" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
                             <h3 style={{ marginBottom: '0.5rem', color: 'var(--success-color, #10b981)' }}>Active Users</h3>
                             <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View all registered and approved users</p>
+                        </Link>
+
+                        <Link to="/admin/books" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <BookPlus size={20} color="#60a5fa" />
+                                <h3 style={{ color: '#60a5fa' }}>Book Inventory</h3>
+                            </div>
+                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Add new books to the catalogue and track copy availability</p>
                         </Link>
                     </div>
                     
