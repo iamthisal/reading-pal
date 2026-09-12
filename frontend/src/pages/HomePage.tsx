@@ -1,7 +1,20 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { LogOut, BookMarked, User, Search, RefreshCw, Library, LayoutDashboard } from 'lucide-react';
+import {
+    Bell,
+    BookMarked,
+    BookOpen,
+    ChevronDown,
+    Grid3X3,
+    Heart,
+    LayoutDashboard,
+    Library,
+    LogOut,
+    RefreshCw,
+    Search,
+    User,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
@@ -18,12 +31,77 @@ interface Book {
     availabilityStatus?: string;
 }
 
+const mockBooks: Book[] = [
+    {
+        id: -1,
+        title: 'The Psychology of Money',
+        author: 'Morgan Housel',
+        isbn: '9780857197689',
+        genre: 'Money',
+        coverImageUrl: 'https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg',
+        totalCopies: 4,
+        availableCopies: 3,
+        isAvailable: true,
+        availabilityStatus: 'Available',
+    },
+    {
+        id: -2,
+        title: 'Company of One',
+        author: 'Paul Jarvis',
+        isbn: '9781328972354',
+        genre: 'Business',
+        coverImageUrl: 'https://covers.openlibrary.org/b/isbn/9781328972354-L.jpg',
+        totalCopies: 2,
+        availableCopies: 1,
+        isAvailable: true,
+        availabilityStatus: 'Available',
+    },
+    {
+        id: -3,
+        title: 'How Innovation Works',
+        author: 'Matt Ridley',
+        isbn: '9780062916594',
+        genre: 'Business',
+        coverImageUrl: 'https://covers.openlibrary.org/b/isbn/9780062916594-L.jpg',
+        totalCopies: 5,
+        availableCopies: 2,
+        isAvailable: true,
+        availabilityStatus: 'Available',
+    },
+    {
+        id: -4,
+        title: 'The Picture of Dorian Gray',
+        author: 'Oscar Wilde',
+        isbn: '9780141439570',
+        genre: 'Fiction',
+        coverImageUrl: 'https://covers.openlibrary.org/b/isbn/9780141439570-L.jpg',
+        totalCopies: 3,
+        availableCopies: 1,
+        isAvailable: true,
+        availabilityStatus: 'Available',
+    },
+    {
+        id: -5,
+        title: 'The Two Towers',
+        author: 'J. R. R. Tolkien',
+        isbn: '9780261103580',
+        genre: 'Fantasy',
+        coverImageUrl: 'https://covers.openlibrary.org/b/isbn/9780261103580-L.jpg',
+        totalCopies: 2,
+        availableCopies: 1,
+        isAvailable: true,
+        availabilityStatus: 'Available',
+    },
+];
+
 const HomePage = () => {
     const { logout, user } = useAuth();
     const [books, setBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedGenre, setSelectedGenre] = useState('All Categories');
+    const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
 
     const fetchBooks = async () => {
         setIsLoading(true);
@@ -43,154 +121,234 @@ const HomePage = () => {
         fetchBooks();
     }, []);
 
+    const displayBooks = useMemo(() => {
+        const titles = new Set(books.map(book => book.title.trim().toLowerCase()));
+        const fillers = mockBooks.filter(book => !titles.has(book.title.toLowerCase()));
+        return books.length >= 5 ? books : [...books, ...fillers].slice(0, 8);
+    }, [books]);
+
+    const genres = useMemo(() => {
+        const uniqueGenres = Array.from(new Set(displayBooks.map(book => book.genre))).filter(Boolean);
+        return ['All Categories', ...uniqueGenres];
+    }, [displayBooks]);
+
     const filteredBooks = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
-        if (!query) return books;
 
-        return books.filter(book =>
-            book.title.toLowerCase().includes(query) ||
-            book.author.toLowerCase().includes(query) ||
-            book.isbn.toLowerCase().includes(query) ||
-            book.genre.toLowerCase().includes(query)
-        );
-    }, [books, searchQuery]);
+        return displayBooks.filter(book => {
+            const matchesGenre = selectedGenre === 'All Categories' || book.genre === selectedGenre;
+            const matchesQuery = !query ||
+                book.title.toLowerCase().includes(query) ||
+                book.author.toLowerCase().includes(query) ||
+                book.isbn.toLowerCase().includes(query) ||
+                book.genre.toLowerCase().includes(query);
 
+            return matchesGenre && matchesQuery;
+        });
+    }, [displayBooks, searchQuery, selectedGenre]);
+
+    const availableBooks = filteredBooks.filter(book => book.isAvailable ?? book.availableCopies > 0);
+    const unavailableBooks = filteredBooks.filter(book => !(book.isAvailable ?? book.availableCopies > 0));
+    const recommendationBooks = availableBooks.slice(0, 5);
+    const categoryBooks = [...availableBooks.slice(5), ...unavailableBooks].slice(0, 8);
     const availableCount = books.filter(book => (book.isAvailable ?? book.availableCopies > 0)).length;
-    const emptyMessage = books.length === 0 ? 'No books have been added to the catalogue yet.' : 'No books match your search.';
+    const emptyMessage = books.length === 0 ? 'No books have been added yet.' : 'No books match your search.';
+
+    const markCoverFailed = (bookId: number) => {
+        setFailedCoverIds(prev => new Set(prev).add(bookId));
+    };
+
+    const showSearchResults = () => {
+        document.getElementById('recommendations')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const renderCover = (book: Book, size: 'large' | 'small') => {
+        const hasCover = book.coverImageUrl && !failedCoverIds.has(book.id);
+
+        if (hasCover) {
+            return (
+                <img
+                    src={book.coverImageUrl ?? ''}
+                    alt={`${book.title} cover`}
+                    loading="lazy"
+                    onError={() => markCoverFailed(book.id)}
+                    className={`discover-cover discover-cover-${size}`}
+                />
+            );
+        }
+
+        return (
+            <div className={`discover-cover discover-cover-${size} discover-cover-fallback`}>
+                <span>{book.title}</span>
+            </div>
+        );
+    };
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <BookMarked size={32} color="var(--accent-color)" />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Reading Pal</h1>
+        <div className="discover-shell">
+            <aside className="discover-sidebar">
+                <div className="discover-brand">
+                    <BookMarked size={24} />
+                    <span>Reading Pal</span>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+
+                <nav className="discover-nav" aria-label="Library navigation">
+                    <span className="discover-nav-label">Menu</span>
+                    <a className="discover-nav-item discover-nav-item-active" href="#discover">
+                        <BookOpen size={16} />
+                        Discover
+                    </a>
+                    <a className="discover-nav-item" href="#categories">
+                        <Grid3X3 size={16} />
+                        Category
+                    </a>
+                    <a className="discover-nav-item" href="#recommendations">
+                        <Library size={16} />
+                        My Library
+                    </a>
+                    <a className="discover-nav-item" href="#categories">
+                        <Heart size={16} />
+                        Favorite
+                    </a>
+                </nav>
+
+                <div className="discover-sidebar-bottom">
                     {user?.role === 'Admin' ? (
-                        <Link to="/admin/dashboard" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                        <Link to="/admin/dashboard" className="discover-nav-item">
                             <LayoutDashboard size={16} />
                             Dashboard
                         </Link>
                     ) : (
-                        <Link to="/profile" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                        <Link to="/profile" className="discover-nav-item">
                             <User size={16} />
                             My Profile
                         </Link>
                     )}
-                    <button onClick={logout} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <button type="button" onClick={logout} className="discover-nav-item discover-nav-button">
                         <LogOut size={16} />
-                        Sign Out
+                        Log out
                     </button>
                 </div>
-            </header>
-            
-            <main>
-                <section style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                        <div>
-                            <h2 style={{ marginBottom: '0.5rem' }}>Library Catalogue</h2>
-                            <p style={{ color: 'var(--text-secondary)', maxWidth: '680px' }}>
-                                Browse available books and check how many copies are ready to borrow.
-                            </p>
+            </aside>
+
+            <main id="discover" className="discover-main">
+                <section className="discover-hero">
+                    <div className="discover-user-strip">
+                        <div className="discover-user-chip">
+                            <span className="discover-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'R'}</span>
+                            <span>{user?.email || 'Reader'}</span>
+                            <ChevronDown size={14} />
                         </div>
-                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                            <span style={{ padding: '0.55rem 0.75rem', borderRadius: '6px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', fontWeight: 600 }}>
-                                {books.length} Books
-                            </span>
-                            <span style={{ padding: '0.55rem 0.75rem', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#6ee7b7', fontWeight: 600 }}>
-                                {availableCount} Available
-                            </span>
+                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={fetchBooks} disabled={isLoading}>
+                            <RefreshCw size={17} />
+                        </button>
+                        <button type="button" className="discover-icon-button" title="Notifications">
+                            <Bell size={17} />
+                        </button>
+                    </div>
+
+                    <div className="discover-copy">
+                        <p className="discover-eyebrow">Available Books</p>
+                        <h1>Discover</h1>
+                    </div>
+
+                    <div className="discover-search-panel">
+                        <select
+                            value={selectedGenre}
+                            onChange={e => setSelectedGenre(e.target.value)}
+                            className="discover-category-select"
+                            aria-label="Book category"
+                        >
+                            {genres.map(genre => (
+                                <option key={genre} value={genre}>{genre}</option>
+                            ))}
+                        </select>
+                        <div className="discover-search-input">
+                            <Search size={16} />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') showSearchResults();
+                                }}
+                                placeholder="Find the book you like..."
+                            />
                         </div>
+                        <button type="button" className="discover-search-button" onClick={showSearchResults}>Search</button>
                     </div>
 
                     {!user?.isValidated && (
-                        <div className="error-message" style={{ background: 'rgba(234, 179, 8, 0.1)', borderColor: '#eab308', color: '#fde047', marginTop: '1.5rem', marginBottom: 0 }}>
-                            <strong>Account Pending Approval:</strong> Your registration has been received but must be validated by an administrator before you can reserve physical books.
+                        <div className="discover-warning">
+                            <strong>Account Pending Approval:</strong> Your registration must be validated before reserving physical books.
+                        </div>
+                    )}
+
+                    <div className="discover-stats">
+                        <span>{books.length} real books</span>
+                        <span>{availableCount} available now</span>
+                    </div>
+                </section>
+
+                <section id="recommendations" className="discover-section">
+                    <div className="discover-section-header">
+                        <h2>Book Recommendation</h2>
+                        <button type="button" className="discover-view-button" onClick={showSearchResults}>
+                            View all
+                        </button>
+                    </div>
+
+                    {errorMessage && <div className="discover-error">{errorMessage}</div>}
+
+                    {isLoading && (
+                        <div className="discover-empty">Loading books...</div>
+                    )}
+
+                    {!isLoading && recommendationBooks.length === 0 && (
+                        <div className="discover-empty">{emptyMessage}</div>
+                    )}
+
+                    {!isLoading && recommendationBooks.length > 0 && (
+                        <div className="discover-book-row">
+                            {recommendationBooks.map(book => (
+                                <article key={book.id} className="discover-featured-book">
+                                    {renderCover(book, 'large')}
+                                    <div className="discover-book-meta">
+                                        <h3>{book.title}</h3>
+                                        <p>{book.author}</p>
+                                        <span>{book.availableCopies} of {book.totalCopies} copies</span>
+                                    </div>
+                                </article>
+                            ))}
                         </div>
                     )}
                 </section>
 
-                <section className="glass-panel" style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                            <Library size={20} color="var(--accent-color)" />
-                            <h3 style={{ fontSize: '1.15rem' }}>Books</h3>
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <div style={{ position: 'relative', width: 'min(320px, 80vw)' }}>
-                                <Search size={16} color="var(--text-secondary)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    style={{ paddingLeft: '2.25rem', fontSize: '0.9rem' }}
-                                    placeholder="Search title, author, genre..."
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <button type="button" onClick={fetchBooks} className="btn-outline" title="Refresh catalogue" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem' }}>
-                                <RefreshCw size={16} />
-                            </button>
-                        </div>
+                <section id="categories" className="discover-section">
+                    <div className="discover-section-header">
+                        <h2>Book Category</h2>
+                        <button type="button" className="discover-icon-button" title="Refresh categories" onClick={fetchBooks} disabled={isLoading}>
+                            <Grid3X3 size={17} />
+                        </button>
                     </div>
 
-                    {errorMessage && <div className="error-message">{errorMessage}</div>}
+                    <div className="discover-category-grid">
+                        {(categoryBooks.length > 0 ? categoryBooks : recommendationBooks).map(book => {
+                            const isAvailable = book.isAvailable ?? book.availableCopies > 0;
+                            const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
 
-                    {isLoading && (
-                        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>Loading books...</p>
-                    )}
-
-                    {!isLoading && filteredBooks.length === 0 && (
-                        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>{emptyMessage}</p>
-                    )}
-
-                    {!isLoading && filteredBooks.length > 0 && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-                            {filteredBooks.map(book => {
-                                const isAvailable = book.isAvailable ?? book.availableCopies > 0;
-                                const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
-
-                                return (
-                                    <article key={book.id} style={{ minHeight: '260px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.52)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                                        <div>
-                                            {book.coverImageUrl ? (
-                                                <img
-                                                    src={book.coverImageUrl}
-                                                    alt={`${book.title} cover`}
-                                                    loading="lazy"
-                                                    onError={e => {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                    style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: '6px', marginBottom: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
-                                                />
-                                            ) : (
-                                                <div style={{ width: '100%', aspectRatio: '3 / 4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', borderRadius: '6px', marginBottom: '1rem', background: 'linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(16, 185, 129, 0.14))', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center', color: 'var(--text-primary)', fontWeight: 700, lineHeight: 1.3 }}>
-                                                    {book.title}
-                                                </div>
-                                            )}
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                                                <h4 style={{ fontSize: '1.05rem', lineHeight: 1.35 }}>{book.title}</h4>
-                                                <span style={{ flexShrink: 0, padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', fontSize: '0.78rem', fontWeight: 600 }}>
-                                                    {book.genre}
-                                                </span>
-                                            </div>
-                                            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>by {book.author}</p>
-                                            <p style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>ISBN {book.isbn}</p>
-                                        </div>
-
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
-                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                                                <strong style={{ color: 'var(--text-primary)' }}>{book.availableCopies}</strong> of {book.totalCopies} copies
-                                            </span>
-                                            <span style={{ padding: '0.45rem 0.7rem', borderRadius: '6px', backgroundColor: isAvailable ? 'rgba(16, 185, 129, 0.16)' : 'rgba(239, 68, 68, 0.18)', border: isAvailable ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(239, 68, 68, 0.42)', color: isAvailable ? '#6ee7b7' : '#fca5a5', fontWeight: 700, fontSize: '0.85rem' }}>
-                                                {statusText}
-                                            </span>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
-                    )}
+                            return (
+                                <article key={book.id} className="discover-category-book">
+                                    {renderCover(book, 'small')}
+                                    <h3>{book.genre}</h3>
+                                    <p>{book.title}</p>
+                                    <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
+                                        {statusText}
+                                    </span>
+                                </article>
+                            );
+                        })}
+                    </div>
                 </section>
             </main>
         </div>
