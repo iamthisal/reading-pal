@@ -23,21 +23,9 @@ namespace InventoryService.Controllers
         {
             var books = await _context.Books
                 .OrderByDescending(b => b.CreatedAt)
-                .Select(b => new BookResponse
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Author = b.Author,
-                    ISBN = b.ISBN,
-                    Genre = b.Genre,
-                    TotalCopies = b.TotalCopies,
-                    AvailableCopies = b.AvailableCopies,
-                    CreatedAt = b.CreatedAt,
-                    UpdatedAt = b.UpdatedAt
-                })
                 .ToListAsync();
 
-            return Ok(books);
+            return Ok(books.Select(ToBookResponse));
         }
 
         [HttpGet("{id}")]
@@ -49,18 +37,7 @@ namespace InventoryService.Controllers
                 return NotFound(new { message = $"Book with ID {id} not found." });
             }
 
-            return Ok(new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ISBN = book.ISBN,
-                Genre = book.Genre,
-                TotalCopies = book.TotalCopies,
-                AvailableCopies = book.AvailableCopies,
-                CreatedAt = book.CreatedAt,
-                UpdatedAt = book.UpdatedAt
-            });
+            return Ok(ToBookResponse(book));
         }
 
         [HttpDelete("{id}")]
@@ -108,6 +85,7 @@ namespace InventoryService.Controllers
                 Author = request.Author.Trim(),
                 ISBN = trimmedIsbn,
                 Genre = request.Genre.Trim(),
+                CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl),
                 TotalCopies = request.TotalCopies,
                 AvailableCopies = request.TotalCopies,
                 CreatedAt = now,
@@ -117,18 +95,7 @@ namespace InventoryService.Controllers
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
-            var response = new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ISBN = book.ISBN,
-                Genre = book.Genre,
-                TotalCopies = book.TotalCopies,
-                AvailableCopies = book.AvailableCopies,
-                CreatedAt = book.CreatedAt,
-                UpdatedAt = book.UpdatedAt
-            };
+            var response = ToBookResponse(book);
 
             return CreatedAtAction(nameof(GetById), new { id = book.Id }, response);
         }
@@ -165,25 +132,79 @@ namespace InventoryService.Controllers
             book.Author = request.Author.Trim();
             book.ISBN = trimmedIsbn;
             book.Genre = request.Genre.Trim();
+            book.CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl);
             book.AvailableCopies = request.TotalCopies - borrowedCopies;
             book.TotalCopies = request.TotalCopies;
             book.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            return Ok(new BookResponse
+            return Ok(ToBookResponse(book));
+        }
+
+        [HttpPatch("{id}/mark-unavailable")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BookResponse>> MarkUnavailable(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound(new { message = $"Book with ID {id} not found." });
+            }
+
+            var borrowedCopies = book.TotalCopies - book.AvailableCopies;
+            book.TotalCopies = borrowedCopies;
+            book.AvailableCopies = 0;
+            book.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(ToBookResponse(book));
+        }
+
+        [HttpPatch("{id}/mark-available")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<BookResponse>> MarkAvailable(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null)
+            {
+                return NotFound(new { message = $"Book with ID {id} not found." });
+            }
+
+            var borrowedCopies = book.TotalCopies - book.AvailableCopies;
+            book.TotalCopies = borrowedCopies + 1;
+            book.AvailableCopies = 1;
+            book.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(ToBookResponse(book));
+        }
+
+        private static BookResponse ToBookResponse(Book book)
+        {
+            return new BookResponse
             {
                 Id = book.Id,
                 Title = book.Title,
                 Author = book.Author,
                 ISBN = book.ISBN,
                 Genre = book.Genre,
+                CoverImageUrl = book.CoverImageUrl,
                 TotalCopies = book.TotalCopies,
                 AvailableCopies = book.AvailableCopies,
+                IsAvailable = book.AvailableCopies > 0,
+                AvailabilityStatus = book.AvailableCopies > 0 ? "Available" : "Not available now",
                 CreatedAt = book.CreatedAt,
                 UpdatedAt = book.UpdatedAt
-            });
+            };
         }
 
+        private static string? NormalizeOptionalUrl(string? url)
+        {
+            var trimmedUrl = url?.Trim();
+            return string.IsNullOrWhiteSpace(trimmedUrl) ? null : trimmedUrl;
+        }
     }
 }

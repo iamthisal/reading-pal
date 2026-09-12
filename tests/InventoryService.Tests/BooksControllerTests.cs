@@ -38,6 +38,7 @@ namespace InventoryService.Tests
                 Author = "David Thomas, Andrew Hunt",
                 ISBN = "978-0135957059",
                 Genre = "Technology",
+                CoverImageUrl = " https://example.com/pragmatic-programmer.jpg ",
                 TotalCopies = 5
             };
 
@@ -54,7 +55,11 @@ namespace InventoryService.Tests
             Assert.Equal("David Thomas, Andrew Hunt", response.Author);
             Assert.Equal("978-0135957059", response.ISBN);
             Assert.Equal("Technology", response.Genre);
+            Assert.Equal("https://example.com/pragmatic-programmer.jpg", response.CoverImageUrl);
             Assert.Equal(5, response.TotalCopies);
+            Assert.Equal(5, response.AvailableCopies);
+            Assert.True(response.IsAvailable);
+            Assert.Equal("Available", response.AvailabilityStatus);
         }
 
         // TC-BOOK-002: Available copies must equal Total copies at creation
@@ -88,6 +93,65 @@ namespace InventoryService.Tests
             Assert.NotNull(dbBook);
             Assert.Equal(8, dbBook!.TotalCopies);
             Assert.Equal(8, dbBook.AvailableCopies);
+        }
+
+        // TC-BOOK-002B: Admin can add a book with zero copies so it starts unavailable
+        [Fact]
+        public async Task Admin_Can_Add_Book_With_Zero_Copies_As_Unavailable()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+            var request = new CreateBookRequest
+            {
+                Title = "Coming Soon Book",
+                Author = "Future Author",
+                ISBN = "ISBN-ZERO-CREATE",
+                Genre = "Fiction",
+                TotalCopies = 0
+            };
+
+            // Act
+            var result = await controller.Create(request);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(createdResult.Value);
+
+            Assert.Equal(0, response.TotalCopies);
+            Assert.Equal(0, response.AvailableCopies);
+            Assert.False(response.IsAvailable);
+            Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-002C: Blank cover image URL is stored as null
+        [Fact]
+        public async Task Add_Book_With_Blank_Cover_Image_Url_Stores_Null()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+            var request = new CreateBookRequest
+            {
+                Title = "Book Without Cover",
+                Author = "Author",
+                ISBN = "ISBN-BLANK-COVER",
+                Genre = "Fiction",
+                CoverImageUrl = "   ",
+                TotalCopies = 2
+            };
+
+            // Act
+            var result = await controller.Create(request);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(createdResult.Value);
+
+            Assert.Null(response.CoverImageUrl);
+            var dbBook = await context.Books.FindAsync(response.Id);
+            Assert.NotNull(dbBook);
+            Assert.Null(dbBook!.CoverImageUrl);
         }
 
         // TC-BOOK-003: System sets CreatedAt and UpdatedAt timestamps automatically
@@ -210,6 +274,7 @@ namespace InventoryService.Tests
                 Author = "Eric Evans",
                 ISBN = "978-0321125217",
                 Genre = "Software Architecture",
+                CoverImageUrl = "https://example.com/ddd.jpg",
                 TotalCopies = 4,
                 AvailableCopies = 4,
                 CreatedAt = DateTime.UtcNow,
@@ -229,6 +294,7 @@ namespace InventoryService.Tests
             Assert.Equal(book.Id, response.Id);
             Assert.Equal("Domain-Driven Design", response.Title);
             Assert.Equal("Eric Evans", response.Author);
+            Assert.Equal("https://example.com/ddd.jpg", response.CoverImageUrl);
         }
 
         // TC-BOOK-008: Get book by ID returns NotFound when not exists
@@ -286,6 +352,88 @@ namespace InventoryService.Tests
             Assert.Equal(2, books.Count());
         }
 
+        // TC-BOOK-010: GetAll returns availability status and available copy counts
+        [Fact]
+        public async Task GetAll_Returns_Availability_Status_And_Copy_Counts()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            context.Books.AddRange(
+                new Book
+                {
+                    Title = "Available Book",
+                    Author = "Author A",
+                    ISBN = "ISBN-AVAILABLE",
+                    Genre = "Genre A",
+                    TotalCopies = 3,
+                    AvailableCopies = 2
+                },
+                new Book
+                {
+                    Title = "Unavailable Book",
+                    Author = "Author B",
+                    ISBN = "ISBN-UNAVAILABLE",
+                    Genre = "Genre B",
+                    TotalCopies = 4,
+                    AvailableCopies = 0
+                }
+            );
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.GetAll();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var books = Assert.IsAssignableFrom<IEnumerable<BookResponse>>(okResult.Value).ToList();
+
+            var availableBook = Assert.Single(books, b => b.ISBN == "ISBN-AVAILABLE");
+            Assert.Equal(2, availableBook.AvailableCopies);
+            Assert.True(availableBook.IsAvailable);
+            Assert.Equal("Available", availableBook.AvailabilityStatus);
+
+            var unavailableBook = Assert.Single(books, b => b.ISBN == "ISBN-UNAVAILABLE");
+            Assert.Equal(0, unavailableBook.AvailableCopies);
+            Assert.False(unavailableBook.IsAvailable);
+            Assert.Equal("Not available now", unavailableBook.AvailabilityStatus);
+        }
+
+        // TC-BOOK-011: Get book by ID returns not available status when no copies remain
+        [Fact]
+        public async Task GetById_Returns_NotAvailable_Status_When_No_Copies_Remain()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Checked Out Book",
+                Author = "Author",
+                ISBN = "ISBN-CHECKED-OUT",
+                Genre = "Fiction",
+                TotalCopies = 2,
+                AvailableCopies = 0,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.GetById(book.Id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(0, response.AvailableCopies);
+            Assert.False(response.IsAvailable);
+            Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
         // TC-BOOK-UPDATE-001: Admin can update book details successfully and receives 200 OK
         [Fact]
         public async Task Admin_Can_Update_Book_Successfully()
@@ -313,6 +461,7 @@ namespace InventoryService.Tests
                 Author = "Updated Author",
                 ISBN = "978-0135957059",
                 Genre = "Computer Science",
+                CoverImageUrl = "https://example.com/updated-cover.jpg",
                 TotalCopies = 8
             };
 
@@ -328,6 +477,7 @@ namespace InventoryService.Tests
             Assert.Equal("Updated Author", response.Author);
             Assert.Equal("978-0135957059", response.ISBN);
             Assert.Equal("Computer Science", response.Genre);
+            Assert.Equal("https://example.com/updated-cover.jpg", response.CoverImageUrl);
             Assert.Equal(8, response.TotalCopies);
             Assert.Equal(8, response.AvailableCopies);
 
@@ -335,6 +485,7 @@ namespace InventoryService.Tests
             Assert.NotNull(dbBook);
             Assert.Equal("Updated Title", dbBook!.Title);
             Assert.Equal("Updated Author", dbBook.Author);
+            Assert.Equal("https://example.com/updated-cover.jpg", dbBook.CoverImageUrl);
             Assert.Equal(8, dbBook.TotalCopies);
             Assert.Equal(8, dbBook.AvailableCopies);
         }
@@ -581,6 +732,231 @@ namespace InventoryService.Tests
             Assert.Equal(400, badRequestResult.StatusCode);
         }
 
+        // TC-BOOK-UPDATE-008B: Admin can update total copies to zero when no copies are borrowed
+        [Fact]
+        public async Task Update_Book_TotalCopies_To_Zero_Marks_Book_Unavailable()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Temporary Book",
+                Author = "Sample Author",
+                ISBN = "ISBN-ZERO-UPDATE",
+                Genre = "Tech",
+                TotalCopies = 5,
+                AvailableCopies = 5
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+            var request = new UpdateBookRequest
+            {
+                Title = "Temporary Book",
+                Author = "Sample Author",
+                ISBN = "ISBN-ZERO-UPDATE",
+                Genre = "Tech",
+                TotalCopies = 0
+            };
+
+            // Act
+            var result = await controller.Update(book.Id, request);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(0, response.TotalCopies);
+            Assert.Equal(0, response.AvailableCopies);
+            Assert.False(response.IsAvailable);
+            Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-UNAVAILABLE-001: Mark unavailable endpoint requires Admin role authorization
+        [Fact]
+        public void MarkUnavailable_Book_Requires_Admin_Role()
+        {
+            var methodInfo = typeof(BooksController).GetMethod(nameof(BooksController.MarkUnavailable));
+            Assert.NotNull(methodInfo);
+
+            var authorizeAttribute = methodInfo!.GetCustomAttribute<AuthorizeAttribute>();
+
+            Assert.NotNull(authorizeAttribute);
+            Assert.Equal("Admin", authorizeAttribute!.Roles);
+        }
+
+        // TC-BOOK-UNAVAILABLE-002: Admin can mark a book unavailable when no copies are borrowed
+        [Fact]
+        public async Task MarkUnavailable_With_No_Borrowed_Copies_Sets_Total_And_Available_To_Zero()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Available Book",
+                Author = "Author",
+                ISBN = "ISBN-MARK-ZERO",
+                Genre = "Fiction",
+                TotalCopies = 6,
+                AvailableCopies = 6
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.MarkUnavailable(book.Id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(0, response.TotalCopies);
+            Assert.Equal(0, response.AvailableCopies);
+            Assert.False(response.IsAvailable);
+            Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-UNAVAILABLE-003: Mark unavailable preserves borrowed copy count
+        [Fact]
+        public async Task MarkUnavailable_With_Borrowed_Copies_Preserves_Borrowed_Count()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Partly Borrowed Book",
+                Author = "Author",
+                ISBN = "ISBN-MARK-BORROWED",
+                Genre = "Fiction",
+                TotalCopies = 5,
+                AvailableCopies = 2
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.MarkUnavailable(book.Id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(3, response.TotalCopies);
+            Assert.Equal(0, response.AvailableCopies);
+            Assert.False(response.IsAvailable);
+            Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-UNAVAILABLE-004: Marking a missing book unavailable returns NotFound
+        [Fact]
+        public async Task MarkUnavailable_Returns_NotFound_When_Book_Does_Not_Exist()
+        {
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+
+            var result = await controller.MarkUnavailable(999);
+
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Equal(404, notFoundResult.StatusCode);
+        }
+
+        // TC-BOOK-AVAILABLE-001: Mark available endpoint requires Admin role authorization
+        [Fact]
+        public void MarkAvailable_Book_Requires_Admin_Role()
+        {
+            var methodInfo = typeof(BooksController).GetMethod(nameof(BooksController.MarkAvailable));
+            Assert.NotNull(methodInfo);
+
+            var authorizeAttribute = methodInfo!.GetCustomAttribute<AuthorizeAttribute>();
+
+            Assert.NotNull(authorizeAttribute);
+            Assert.Equal("Admin", authorizeAttribute!.Roles);
+        }
+
+        // TC-BOOK-AVAILABLE-002: Admin can mark an unavailable book available again
+        [Fact]
+        public async Task MarkAvailable_With_No_Borrowed_Copies_Sets_One_Available_Copy()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Unavailable Book",
+                Author = "Author",
+                ISBN = "ISBN-MARK-AVAILABLE",
+                Genre = "Fiction",
+                TotalCopies = 0,
+                AvailableCopies = 0
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.MarkAvailable(book.Id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(1, response.TotalCopies);
+            Assert.Equal(1, response.AvailableCopies);
+            Assert.True(response.IsAvailable);
+            Assert.Equal("Available", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-AVAILABLE-003: Mark available preserves borrowed copy count
+        [Fact]
+        public async Task MarkAvailable_With_Borrowed_Copies_Preserves_Borrowed_Count()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var book = new Book
+            {
+                Title = "Borrowed Unavailable Book",
+                Author = "Author",
+                ISBN = "ISBN-MARK-AVAILABLE-BORROWED",
+                Genre = "Fiction",
+                TotalCopies = 3,
+                AvailableCopies = 0
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+
+            var controller = new BooksController(context);
+
+            // Act
+            var result = await controller.MarkAvailable(book.Id);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(okResult.Value);
+
+            Assert.Equal(4, response.TotalCopies);
+            Assert.Equal(1, response.AvailableCopies);
+            Assert.True(response.IsAvailable);
+            Assert.Equal("Available", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-AVAILABLE-004: Marking a missing book available returns NotFound
+        [Fact]
+        public async Task MarkAvailable_Returns_NotFound_When_Book_Does_Not_Exist()
+        {
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+
+            var result = await controller.MarkAvailable(999);
+
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Equal(404, notFoundResult.StatusCode);
+        }
+
         // TC-BOOK-UPDATE-009: Update modifies UpdatedAt timestamp while preserving CreatedAt
         [Fact]
         public async Task Update_Book_Updates_UpdatedAt_And_Preserves_CreatedAt()
@@ -706,4 +1082,3 @@ namespace InventoryService.Tests
 
     }
 }
-

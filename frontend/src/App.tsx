@@ -25,8 +25,11 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
-          <Route element={<ProtectedRoute allowedRoles={['User']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['User', 'Admin']} />}>
             <Route path="/home" element={<HomePage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
           

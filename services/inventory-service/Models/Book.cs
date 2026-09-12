@@ -23,8 +23,11 @@ namespace InventoryService.Models
         [MaxLength(100)]
         public string Genre { get; set; } = string.Empty;
 
+        [MaxLength(500)]
+        public string? CoverImageUrl { get; set; }
+
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Total copies must be at least 1")]
+        [Range(0, int.MaxValue, ErrorMessage = "Total copies cannot be negative")]
         public int TotalCopies { get; set; }
 
         public int AvailableCopies { get; set; }
