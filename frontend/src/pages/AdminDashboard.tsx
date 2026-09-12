@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, ShieldAlert, BookPlus } from 'lucide-react';
+import { LogOut, Users, ShieldAlert, BookPlus, BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -66,6 +66,14 @@ const AdminDashboard = () => {
                                 <h3 style={{ color: '#60a5fa' }}>Book Inventory</h3>
                             </div>
                             <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Add new books to the catalogue and track copy availability</p>
+                        </Link>
+
+                        <Link to="/home" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <BookOpen size={20} color="#6ee7b7" />
+                                <h3 style={{ color: '#6ee7b7' }}>Public Catalogue</h3>
+                            </div>
+                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View books exactly as members see them, including live availability</p>
                         </Link>
                     </div>
                     

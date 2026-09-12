@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2 } from 'lucide-react';
+import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -13,6 +13,8 @@ export interface Book {
     genre: string;
     totalCopies: number;
     availableCopies: number;
+    isAvailable?: boolean;
+    availabilityStatus?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -43,6 +45,8 @@ const AdminBooksPage = () => {
     const [editTotalCopies, setEditTotalCopies] = useState('1');
     const [isUpdating, setIsUpdating] = useState(false);
     const [editErrorMessage, setEditErrorMessage] = useState('');
+    const [markingUnavailableId, setMarkingUnavailableId] = useState<number | null>(null);
+    const [markingAvailableId, setMarkingAvailableId] = useState<number | null>(null);
 
     const fetchBooks = useCallback(async () => {
         setIsLoading(true);
@@ -95,8 +99,8 @@ const AdminBooksPage = () => {
         setSuccessMessage('');
 
         const copies = Number.parseInt(totalCopies, 10);
-        if (Number.isNaN(copies) || copies < 1) {
-            setErrorMessage('Total copies must be a positive number (at least 1).');
+        if (Number.isNaN(copies) || copies < 0) {
+            setErrorMessage('Total copies cannot be negative.');
             return;
         }
 
@@ -182,8 +186,8 @@ const AdminBooksPage = () => {
         if (!editingBook) return;
 
         const copies = Number.parseInt(editTotalCopies, 10);
-        if (Number.isNaN(copies) || copies < 1) {
-            setEditErrorMessage('Total copies must be a positive number (at least 1).');
+        if (Number.isNaN(copies) || copies < 0) {
+            setEditErrorMessage('Total copies cannot be negative.');
             return;
         }
 
@@ -228,6 +232,74 @@ const AdminBooksPage = () => {
             }
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const handleMarkUnavailable = async (book: Book) => {
+        if (book.availableCopies === 0) return;
+        if (!window.confirm(`Mark "${book.title}" as unavailable now? Available copies will be set to 0.`)) return;
+
+        setErrorMessage('');
+        setSuccessMessage('');
+        setMarkingUnavailableId(book.id);
+
+        try {
+            const response = await axios.patch<Book>(
+                `${INVENTORY_API_BASE_URL}/api/books/${book.id}/mark-unavailable`,
+                null,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBooks(prev => prev.map(item => item.id === response.data.id ? response.data : item));
+            setSuccessMessage(`"${response.data.title}" is now marked as unavailable.`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    setErrorMessage('Unauthorized: Only administrators can mark books unavailable.');
+                } else if (err.response?.data?.message) {
+                    setErrorMessage(err.response.data.message);
+                } else {
+                    setErrorMessage('Failed to mark book unavailable. Please try again.');
+                }
+            } else {
+                setErrorMessage('An unexpected error occurred while marking the book unavailable.');
+            }
+        } finally {
+            setMarkingUnavailableId(null);
+        }
+    };
+
+    const handleMarkAvailable = async (book: Book) => {
+        if (book.availableCopies > 0) return;
+        if (!window.confirm(`Make "${book.title}" available again? This will add 1 available copy.`)) return;
+
+        setErrorMessage('');
+        setSuccessMessage('');
+        setMarkingAvailableId(book.id);
+
+        try {
+            const response = await axios.patch<Book>(
+                `${INVENTORY_API_BASE_URL}/api/books/${book.id}/mark-available`,
+                null,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBooks(prev => prev.map(item => item.id === response.data.id ? response.data : item));
+            setSuccessMessage(`"${response.data.title}" is available again with ${response.data.availableCopies} copy.`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    setErrorMessage('Unauthorized: Only administrators can make books available.');
+                } else if (err.response?.data?.message) {
+                    setErrorMessage(err.response.data.message);
+                } else {
+                    setErrorMessage('Failed to make book available. Please try again.');
+                }
+            } else {
+                setErrorMessage('An unexpected error occurred while making the book available.');
+            }
+        } finally {
+            setMarkingAvailableId(null);
         }
     };
 
@@ -367,7 +439,7 @@ const AdminBooksPage = () => {
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
-                                    <input id="edit-book-copies" type="number" min="1" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
+                                    <input id="edit-book-copies" type="number" min="0" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
@@ -461,7 +533,7 @@ const AdminBooksPage = () => {
                                 <input
                                     id="book-copies"
                                     type="number"
-                                    min="1"
+                                    min="0"
                                     className="form-input"
                                     placeholder="e.g. 5"
                                     value={totalCopies}
@@ -601,6 +673,31 @@ const AdminBooksPage = () => {
                                                 <Pencil size={15} />
                                                 Edit
                                             </button>
+                                            {b.availableCopies > 0 ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn-outline"
+                                                    onClick={() => handleMarkUnavailable(b)}
+                                                    disabled={markingUnavailableId === b.id}
+                                                    title={`Mark ${b.title} unavailable`}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem', marginLeft: '0.5rem', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.35)' }}
+                                                >
+                                                    <CircleOff size={15} />
+                                                    {markingUnavailableId === b.id ? 'Saving...' : 'Unavailable'}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="btn-outline"
+                                                    onClick={() => handleMarkAvailable(b)}
+                                                    disabled={markingAvailableId === b.id}
+                                                    title={`Make ${b.title} available`}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem', marginLeft: '0.5rem', color: '#6ee7b7', borderColor: 'rgba(16, 185, 129, 0.35)' }}
+                                                >
+                                                    <CheckCircle size={15} />
+                                                    {markingAvailableId === b.id ? 'Saving...' : 'Available'}
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 className="btn-outline"
