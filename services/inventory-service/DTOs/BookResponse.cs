@@ -9,6 +9,7 @@ namespace InventoryService.DTOs
         public string Author { get; set; } = string.Empty;
         public string ISBN { get; set; } = string.Empty;
         public string Genre { get; set; } = string.Empty;
+        public string? CoverImageUrl { get; set; }
         public int TotalCopies { get; set; }
         public int AvailableCopies { get; set; }
         public bool IsAvailable { get; set; }

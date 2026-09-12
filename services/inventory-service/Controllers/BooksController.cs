@@ -85,6 +85,7 @@ namespace InventoryService.Controllers
                 Author = request.Author.Trim(),
                 ISBN = trimmedIsbn,
                 Genre = request.Genre.Trim(),
+                CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl),
                 TotalCopies = request.TotalCopies,
                 AvailableCopies = request.TotalCopies,
                 CreatedAt = now,
@@ -131,6 +132,7 @@ namespace InventoryService.Controllers
             book.Author = request.Author.Trim();
             book.ISBN = trimmedIsbn;
             book.Genre = request.Genre.Trim();
+            book.CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl);
             book.AvailableCopies = request.TotalCopies - borrowedCopies;
             book.TotalCopies = request.TotalCopies;
             book.UpdatedAt = DateTime.UtcNow;
@@ -189,6 +191,7 @@ namespace InventoryService.Controllers
                 Author = book.Author,
                 ISBN = book.ISBN,
                 Genre = book.Genre,
+                CoverImageUrl = book.CoverImageUrl,
                 TotalCopies = book.TotalCopies,
                 AvailableCopies = book.AvailableCopies,
                 IsAvailable = book.AvailableCopies > 0,
@@ -196,6 +199,12 @@ namespace InventoryService.Controllers
                 CreatedAt = book.CreatedAt,
                 UpdatedAt = book.UpdatedAt
             };
+        }
+
+        private static string? NormalizeOptionalUrl(string? url)
+        {
+            var trimmedUrl = url?.Trim();
+            return string.IsNullOrWhiteSpace(trimmedUrl) ? null : trimmedUrl;
         }
     }
 }

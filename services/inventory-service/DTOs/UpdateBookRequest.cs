@@ -20,6 +20,10 @@ namespace InventoryService.DTOs
         [StringLength(100, MinimumLength = 1, ErrorMessage = "Genre must be between 1 and 100 characters")]
         public string Genre { get; set; } = string.Empty;
 
+        [StringLength(500, ErrorMessage = "Cover image URL cannot exceed 500 characters")]
+        [Url(ErrorMessage = "Cover image URL must be a valid URL")]
+        public string? CoverImageUrl { get; set; }
+
         [Required(ErrorMessage = "Total copies is required")]
         [Range(0, 100000, ErrorMessage = "Total copies cannot be negative")]
         public int TotalCopies { get; set; }

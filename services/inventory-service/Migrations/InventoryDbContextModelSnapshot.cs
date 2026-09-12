@@ -41,6 +41,10 @@ namespace InventoryService.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<string>("Genre")
                         .IsRequired()
                         .HasMaxLength(100)
