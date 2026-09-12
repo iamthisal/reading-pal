@@ -18,6 +18,7 @@ namespace InventoryService.Tests
             Assert.Equal(string.Empty, book.Author);
             Assert.Equal(string.Empty, book.ISBN);
             Assert.Equal(string.Empty, book.Genre);
+            Assert.Null(book.CoverImageUrl);
             Assert.Equal(0, book.TotalCopies);
             Assert.Equal(0, book.AvailableCopies);
             Assert.True(book.CreatedAt <= DateTime.UtcNow);
@@ -36,6 +37,7 @@ namespace InventoryService.Tests
                 Author = "Robert C. Martin",
                 ISBN = "978-0132350884",
                 Genre = "Software Engineering",
+                CoverImageUrl = "https://example.com/clean-code.jpg",
                 TotalCopies = 5,
                 AvailableCopies = 5,
                 CreatedAt = now,
@@ -48,6 +50,7 @@ namespace InventoryService.Tests
             Assert.Equal("Robert C. Martin", book.Author);
             Assert.Equal("978-0132350884", book.ISBN);
             Assert.Equal("Software Engineering", book.Genre);
+            Assert.Equal("https://example.com/clean-code.jpg", book.CoverImageUrl);
             Assert.Equal(5, book.TotalCopies);
             Assert.Equal(5, book.AvailableCopies);
             Assert.Equal(now, book.CreatedAt);

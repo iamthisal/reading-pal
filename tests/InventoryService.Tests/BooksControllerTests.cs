@@ -38,6 +38,7 @@ namespace InventoryService.Tests
                 Author = "David Thomas, Andrew Hunt",
                 ISBN = "978-0135957059",
                 Genre = "Technology",
+                CoverImageUrl = " https://example.com/pragmatic-programmer.jpg ",
                 TotalCopies = 5
             };
 
@@ -54,6 +55,7 @@ namespace InventoryService.Tests
             Assert.Equal("David Thomas, Andrew Hunt", response.Author);
             Assert.Equal("978-0135957059", response.ISBN);
             Assert.Equal("Technology", response.Genre);
+            Assert.Equal("https://example.com/pragmatic-programmer.jpg", response.CoverImageUrl);
             Assert.Equal(5, response.TotalCopies);
             Assert.Equal(5, response.AvailableCopies);
             Assert.True(response.IsAvailable);
@@ -120,6 +122,36 @@ namespace InventoryService.Tests
             Assert.Equal(0, response.AvailableCopies);
             Assert.False(response.IsAvailable);
             Assert.Equal("Not available now", response.AvailabilityStatus);
+        }
+
+        // TC-BOOK-002C: Blank cover image URL is stored as null
+        [Fact]
+        public async Task Add_Book_With_Blank_Cover_Image_Url_Stores_Null()
+        {
+            // Arrange
+            using var context = GetDbContext();
+            var controller = new BooksController(context);
+            var request = new CreateBookRequest
+            {
+                Title = "Book Without Cover",
+                Author = "Author",
+                ISBN = "ISBN-BLANK-COVER",
+                Genre = "Fiction",
+                CoverImageUrl = "   ",
+                TotalCopies = 2
+            };
+
+            // Act
+            var result = await controller.Create(request);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+            var response = Assert.IsType<BookResponse>(createdResult.Value);
+
+            Assert.Null(response.CoverImageUrl);
+            var dbBook = await context.Books.FindAsync(response.Id);
+            Assert.NotNull(dbBook);
+            Assert.Null(dbBook!.CoverImageUrl);
         }
 
         // TC-BOOK-003: System sets CreatedAt and UpdatedAt timestamps automatically
@@ -242,6 +274,7 @@ namespace InventoryService.Tests
                 Author = "Eric Evans",
                 ISBN = "978-0321125217",
                 Genre = "Software Architecture",
+                CoverImageUrl = "https://example.com/ddd.jpg",
                 TotalCopies = 4,
                 AvailableCopies = 4,
                 CreatedAt = DateTime.UtcNow,
@@ -261,6 +294,7 @@ namespace InventoryService.Tests
             Assert.Equal(book.Id, response.Id);
             Assert.Equal("Domain-Driven Design", response.Title);
             Assert.Equal("Eric Evans", response.Author);
+            Assert.Equal("https://example.com/ddd.jpg", response.CoverImageUrl);
         }
 
         // TC-BOOK-008: Get book by ID returns NotFound when not exists
@@ -427,6 +461,7 @@ namespace InventoryService.Tests
                 Author = "Updated Author",
                 ISBN = "978-0135957059",
                 Genre = "Computer Science",
+                CoverImageUrl = "https://example.com/updated-cover.jpg",
                 TotalCopies = 8
             };
 
@@ -442,6 +477,7 @@ namespace InventoryService.Tests
             Assert.Equal("Updated Author", response.Author);
             Assert.Equal("978-0135957059", response.ISBN);
             Assert.Equal("Computer Science", response.Genre);
+            Assert.Equal("https://example.com/updated-cover.jpg", response.CoverImageUrl);
             Assert.Equal(8, response.TotalCopies);
             Assert.Equal(8, response.AvailableCopies);
 
@@ -449,6 +485,7 @@ namespace InventoryService.Tests
             Assert.NotNull(dbBook);
             Assert.Equal("Updated Title", dbBook!.Title);
             Assert.Equal("Updated Author", dbBook.Author);
+            Assert.Equal("https://example.com/updated-cover.jpg", dbBook.CoverImageUrl);
             Assert.Equal(8, dbBook.TotalCopies);
             Assert.Equal(8, dbBook.AvailableCopies);
         }
