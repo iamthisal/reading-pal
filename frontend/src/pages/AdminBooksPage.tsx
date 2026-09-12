@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2 } from 'lucide-react';
+import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -11,8 +11,11 @@ export interface Book {
     author: string;
     isbn: string;
     genre: string;
+    coverImageUrl?: string | null;
     totalCopies: number;
     availableCopies: number;
+    isAvailable?: boolean;
+    availabilityStatus?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -25,6 +28,7 @@ const AdminBooksPage = () => {
     const [author, setAuthor] = useState('');
     const [isbn, setIsbn] = useState('');
     const [genre, setGenre] = useState('');
+    const [coverImageUrl, setCoverImageUrl] = useState('');
     const [totalCopies, setTotalCopies] = useState('1');
 
     // UI state
@@ -40,9 +44,12 @@ const AdminBooksPage = () => {
     const [editAuthor, setEditAuthor] = useState('');
     const [editIsbn, setEditIsbn] = useState('');
     const [editGenre, setEditGenre] = useState('');
+    const [editCoverImageUrl, setEditCoverImageUrl] = useState('');
     const [editTotalCopies, setEditTotalCopies] = useState('1');
     const [isUpdating, setIsUpdating] = useState(false);
     const [editErrorMessage, setEditErrorMessage] = useState('');
+    const [markingUnavailableId, setMarkingUnavailableId] = useState<number | null>(null);
+    const [markingAvailableId, setMarkingAvailableId] = useState<number | null>(null);
 
     const fetchBooks = useCallback(async () => {
         setIsLoading(true);
@@ -95,8 +102,8 @@ const AdminBooksPage = () => {
         setSuccessMessage('');
 
         const copies = Number.parseInt(totalCopies, 10);
-        if (Number.isNaN(copies) || copies < 1) {
-            setErrorMessage('Total copies must be a positive number (at least 1).');
+        if (Number.isNaN(copies) || copies < 0) {
+            setErrorMessage('Total copies cannot be negative.');
             return;
         }
 
@@ -113,6 +120,7 @@ const AdminBooksPage = () => {
                 author: author.trim(),
                 isbn: isbn.trim(),
                 genre: genre.trim(),
+                coverImageUrl: coverImageUrl.trim() || null,
                 totalCopies: copies
             };
 
@@ -140,6 +148,7 @@ const AdminBooksPage = () => {
             setAuthor('');
             setIsbn('');
             setGenre('');
+            setCoverImageUrl('');
             setTotalCopies('1');
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -166,6 +175,7 @@ const AdminBooksPage = () => {
         setEditAuthor(book.author);
         setEditIsbn(book.isbn);
         setEditGenre(book.genre);
+        setEditCoverImageUrl(book.coverImageUrl || '');
         setEditTotalCopies(String(book.totalCopies));
         setEditErrorMessage('');
     };
@@ -182,8 +192,8 @@ const AdminBooksPage = () => {
         if (!editingBook) return;
 
         const copies = Number.parseInt(editTotalCopies, 10);
-        if (Number.isNaN(copies) || copies < 1) {
-            setEditErrorMessage('Total copies must be a positive number (at least 1).');
+        if (Number.isNaN(copies) || copies < 0) {
+            setEditErrorMessage('Total copies cannot be negative.');
             return;
         }
 
@@ -204,6 +214,7 @@ const AdminBooksPage = () => {
                     author: editAuthor.trim(),
                     isbn: editIsbn.trim(),
                     genre: editGenre.trim(),
+                    coverImageUrl: editCoverImageUrl.trim() || null,
                     totalCopies: copies
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -228,6 +239,74 @@ const AdminBooksPage = () => {
             }
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const handleMarkUnavailable = async (book: Book) => {
+        if (book.availableCopies === 0) return;
+        if (!window.confirm(`Mark "${book.title}" as unavailable now? Available copies will be set to 0.`)) return;
+
+        setErrorMessage('');
+        setSuccessMessage('');
+        setMarkingUnavailableId(book.id);
+
+        try {
+            const response = await axios.patch<Book>(
+                `${INVENTORY_API_BASE_URL}/api/books/${book.id}/mark-unavailable`,
+                null,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBooks(prev => prev.map(item => item.id === response.data.id ? response.data : item));
+            setSuccessMessage(`"${response.data.title}" is now marked as unavailable.`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    setErrorMessage('Unauthorized: Only administrators can mark books unavailable.');
+                } else if (err.response?.data?.message) {
+                    setErrorMessage(err.response.data.message);
+                } else {
+                    setErrorMessage('Failed to mark book unavailable. Please try again.');
+                }
+            } else {
+                setErrorMessage('An unexpected error occurred while marking the book unavailable.');
+            }
+        } finally {
+            setMarkingUnavailableId(null);
+        }
+    };
+
+    const handleMarkAvailable = async (book: Book) => {
+        if (book.availableCopies > 0) return;
+        if (!window.confirm(`Make "${book.title}" available again? This will add 1 available copy.`)) return;
+
+        setErrorMessage('');
+        setSuccessMessage('');
+        setMarkingAvailableId(book.id);
+
+        try {
+            const response = await axios.patch<Book>(
+                `${INVENTORY_API_BASE_URL}/api/books/${book.id}/mark-available`,
+                null,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setBooks(prev => prev.map(item => item.id === response.data.id ? response.data : item));
+            setSuccessMessage(`"${response.data.title}" is available again with ${response.data.availableCopies} copy.`);
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    setErrorMessage('Unauthorized: Only administrators can make books available.');
+                } else if (err.response?.data?.message) {
+                    setErrorMessage(err.response.data.message);
+                } else {
+                    setErrorMessage('Failed to make book available. Please try again.');
+                }
+            } else {
+                setErrorMessage('An unexpected error occurred while making the book available.');
+            }
+        } finally {
+            setMarkingAvailableId(null);
         }
     };
 
@@ -366,8 +445,12 @@ const AdminBooksPage = () => {
                                     <input id="edit-book-genre" type="text" className="form-input" value={editGenre} onChange={e => setEditGenre(e.target.value)} maxLength={100} required />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-cover">Cover Image URL</label>
+                                    <input id="edit-book-cover" type="url" className="form-input" value={editCoverImageUrl} onChange={e => setEditCoverImageUrl(e.target.value)} maxLength={500} placeholder="https://example.com/book-cover.jpg" />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
-                                    <input id="edit-book-copies" type="number" min="1" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
+                                    <input id="edit-book-copies" type="number" min="0" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
@@ -455,13 +538,26 @@ const AdminBooksPage = () => {
                             </div>
 
                             <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label" htmlFor="book-cover">Cover Image URL</label>
+                                <input
+                                    id="book-cover"
+                                    type="url"
+                                    className="form-input"
+                                    placeholder="https://example.com/book-cover.jpg"
+                                    value={coverImageUrl}
+                                    onChange={e => setCoverImageUrl(e.target.value)}
+                                    maxLength={500}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" htmlFor="book-copies">
                                     Total Copies <span style={{ color: 'var(--danger-color)' }}>*</span>
                                 </label>
                                 <input
                                     id="book-copies"
                                     type="number"
-                                    min="1"
+                                    min="0"
                                     className="form-input"
                                     placeholder="e.g. 5"
                                     value={totalCopies}
@@ -480,6 +576,7 @@ const AdminBooksPage = () => {
                                     setAuthor('');
                                     setIsbn('');
                                     setGenre('');
+                                    setCoverImageUrl('');
                                     setTotalCopies('1');
                                     setErrorMessage('');
                                 }}
@@ -546,6 +643,7 @@ const AdminBooksPage = () => {
                             <thead>
                                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ID</th>
+                                    <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Cover</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Title</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Author</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ISBN</th>
@@ -560,6 +658,23 @@ const AdminBooksPage = () => {
                                 {filteredBooks.map(b => (
                                     <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>#{b.id}</td>
+                                        <td style={{ padding: '0.75rem' }}>
+                                            {b.coverImageUrl ? (
+                                                <img
+                                                    src={b.coverImageUrl}
+                                                    alt={`${b.title} cover`}
+                                                    loading="lazy"
+                                                    onError={e => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                    style={{ width: '42px', height: '56px', objectFit: 'cover', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+                                                />
+                                            ) : (
+                                                <div style={{ width: '42px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                    {b.title.slice(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{b.title}</td>
                                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>{b.author}</td>
                                         <td style={{ padding: '0.75rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>{b.isbn}</td>
@@ -601,6 +716,31 @@ const AdminBooksPage = () => {
                                                 <Pencil size={15} />
                                                 Edit
                                             </button>
+                                            {b.availableCopies > 0 ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn-outline"
+                                                    onClick={() => handleMarkUnavailable(b)}
+                                                    disabled={markingUnavailableId === b.id}
+                                                    title={`Mark ${b.title} unavailable`}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem', marginLeft: '0.5rem', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.35)' }}
+                                                >
+                                                    <CircleOff size={15} />
+                                                    {markingUnavailableId === b.id ? 'Saving...' : 'Unavailable'}
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="btn-outline"
+                                                    onClick={() => handleMarkAvailable(b)}
+                                                    disabled={markingAvailableId === b.id}
+                                                    title={`Make ${b.title} available`}
+                                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.75rem', marginLeft: '0.5rem', color: '#6ee7b7', borderColor: 'rgba(16, 185, 129, 0.35)' }}
+                                                >
+                                                    <CheckCircle size={15} />
+                                                    {markingAvailableId === b.id ? 'Saving...' : 'Available'}
+                                                </button>
+                                            )}
                                             <button
                                                 type="button"
                                                 className="btn-outline"

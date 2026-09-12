@@ -609,7 +609,7 @@ namespace UserService.Tests
 
             // Act
             email.Clear();
-            email.SendKeys("lithu12@gmail.com");
+            email.SendKeys("dahamku@gmail.com");
 
             ClickUpdate();
 
