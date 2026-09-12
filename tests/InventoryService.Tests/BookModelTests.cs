@@ -64,7 +64,7 @@ namespace InventoryService.Tests
                 Author = "", // required
                 ISBN = new string('X', 100), // too long
                 Genre = "",
-                TotalCopies = 0 // out of range
+                TotalCopies = -1 // out of range
             };
 
             var context = new System.ComponentModel.DataAnnotations.ValidationContext(book);
@@ -82,4 +82,3 @@ namespace InventoryService.Tests
         }
     }
 }
-
