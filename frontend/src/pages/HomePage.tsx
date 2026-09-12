@@ -11,6 +11,7 @@ interface Book {
     author: string;
     isbn: string;
     genre: string;
+    coverImageUrl?: string | null;
     totalCopies: number;
     availableCopies: number;
     isAvailable?: boolean;
@@ -150,8 +151,23 @@ const HomePage = () => {
                                 const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
 
                                 return (
-                                    <article key={book.id} style={{ minHeight: '210px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.52)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                                    <article key={book.id} style={{ minHeight: '260px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.52)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                         <div>
+                                            {book.coverImageUrl ? (
+                                                <img
+                                                    src={book.coverImageUrl}
+                                                    alt={`${book.title} cover`}
+                                                    loading="lazy"
+                                                    onError={e => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                    style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: '6px', marginBottom: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+                                                />
+                                            ) : (
+                                                <div style={{ width: '100%', aspectRatio: '3 / 4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', borderRadius: '6px', marginBottom: '1rem', background: 'linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(16, 185, 129, 0.14))', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center', color: 'var(--text-primary)', fontWeight: 700, lineHeight: 1.3 }}>
+                                                    {book.title}
+                                                </div>
+                                            )}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
                                                 <h4 style={{ fontSize: '1.05rem', lineHeight: 1.35 }}>{book.title}</h4>
                                                 <span style={{ flexShrink: 0, padding: '0.25rem 0.5rem', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', fontSize: '0.78rem', fontWeight: 600 }}>

@@ -11,6 +11,7 @@ export interface Book {
     author: string;
     isbn: string;
     genre: string;
+    coverImageUrl?: string | null;
     totalCopies: number;
     availableCopies: number;
     isAvailable?: boolean;
@@ -27,6 +28,7 @@ const AdminBooksPage = () => {
     const [author, setAuthor] = useState('');
     const [isbn, setIsbn] = useState('');
     const [genre, setGenre] = useState('');
+    const [coverImageUrl, setCoverImageUrl] = useState('');
     const [totalCopies, setTotalCopies] = useState('1');
 
     // UI state
@@ -42,6 +44,7 @@ const AdminBooksPage = () => {
     const [editAuthor, setEditAuthor] = useState('');
     const [editIsbn, setEditIsbn] = useState('');
     const [editGenre, setEditGenre] = useState('');
+    const [editCoverImageUrl, setEditCoverImageUrl] = useState('');
     const [editTotalCopies, setEditTotalCopies] = useState('1');
     const [isUpdating, setIsUpdating] = useState(false);
     const [editErrorMessage, setEditErrorMessage] = useState('');
@@ -117,6 +120,7 @@ const AdminBooksPage = () => {
                 author: author.trim(),
                 isbn: isbn.trim(),
                 genre: genre.trim(),
+                coverImageUrl: coverImageUrl.trim() || null,
                 totalCopies: copies
             };
 
@@ -144,6 +148,7 @@ const AdminBooksPage = () => {
             setAuthor('');
             setIsbn('');
             setGenre('');
+            setCoverImageUrl('');
             setTotalCopies('1');
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -170,6 +175,7 @@ const AdminBooksPage = () => {
         setEditAuthor(book.author);
         setEditIsbn(book.isbn);
         setEditGenre(book.genre);
+        setEditCoverImageUrl(book.coverImageUrl || '');
         setEditTotalCopies(String(book.totalCopies));
         setEditErrorMessage('');
     };
@@ -208,6 +214,7 @@ const AdminBooksPage = () => {
                     author: editAuthor.trim(),
                     isbn: editIsbn.trim(),
                     genre: editGenre.trim(),
+                    coverImageUrl: editCoverImageUrl.trim() || null,
                     totalCopies: copies
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -438,6 +445,10 @@ const AdminBooksPage = () => {
                                     <input id="edit-book-genre" type="text" className="form-input" value={editGenre} onChange={e => setEditGenre(e.target.value)} maxLength={100} required />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label" htmlFor="edit-book-cover">Cover Image URL</label>
+                                    <input id="edit-book-cover" type="url" className="form-input" value={editCoverImageUrl} onChange={e => setEditCoverImageUrl(e.target.value)} maxLength={500} placeholder="https://example.com/book-cover.jpg" />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
                                     <input id="edit-book-copies" type="number" min="0" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
                                 </div>
@@ -527,6 +538,19 @@ const AdminBooksPage = () => {
                             </div>
 
                             <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label" htmlFor="book-cover">Cover Image URL</label>
+                                <input
+                                    id="book-cover"
+                                    type="url"
+                                    className="form-input"
+                                    placeholder="https://example.com/book-cover.jpg"
+                                    value={coverImageUrl}
+                                    onChange={e => setCoverImageUrl(e.target.value)}
+                                    maxLength={500}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" htmlFor="book-copies">
                                     Total Copies <span style={{ color: 'var(--danger-color)' }}>*</span>
                                 </label>
@@ -552,6 +576,7 @@ const AdminBooksPage = () => {
                                     setAuthor('');
                                     setIsbn('');
                                     setGenre('');
+                                    setCoverImageUrl('');
                                     setTotalCopies('1');
                                     setErrorMessage('');
                                 }}
@@ -618,6 +643,7 @@ const AdminBooksPage = () => {
                             <thead>
                                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ID</th>
+                                    <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Cover</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Title</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Author</th>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ISBN</th>
@@ -632,6 +658,23 @@ const AdminBooksPage = () => {
                                 {filteredBooks.map(b => (
                                     <tr key={b.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>#{b.id}</td>
+                                        <td style={{ padding: '0.75rem' }}>
+                                            {b.coverImageUrl ? (
+                                                <img
+                                                    src={b.coverImageUrl}
+                                                    alt={`${b.title} cover`}
+                                                    loading="lazy"
+                                                    onError={e => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                    style={{ width: '42px', height: '56px', objectFit: 'cover', borderRadius: '4px', backgroundColor: 'rgba(255, 255, 255, 0.06)' }}
+                                                />
+                                            ) : (
+                                                <div style={{ width: '42px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                    {b.title.slice(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>{b.title}</td>
                                         <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>{b.author}</td>
                                         <td style={{ padding: '0.75rem', fontFamily: 'monospace', fontSize: '0.85rem' }}>{b.isbn}</td>
