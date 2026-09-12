@@ -21,7 +21,7 @@ namespace InventoryService.DTOs
         public string Genre { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Total copies is required")]
-        [Range(1, 100000, ErrorMessage = "Total copies must be at least 1")]
+        [Range(0, 100000, ErrorMessage = "Total copies cannot be negative")]
         public int TotalCopies { get; set; }
     }
 }
