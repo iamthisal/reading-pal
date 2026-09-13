@@ -6,7 +6,6 @@ import {
     BookMarked,
     BookOpen,
     ChevronDown,
-    Grid3X3,
     Heart,
     LayoutDashboard,
     Library,
@@ -158,10 +157,7 @@ const HomePage = () => {
         });
     }, [displayBooks, searchQuery, selectedGenre, selectedAuthor, selectedStatus]);
 
-    const availableBooks = filteredBooks.filter(book => book.isAvailable ?? book.availableCopies > 0);
-    const unavailableBooks = filteredBooks.filter(book => !(book.isAvailable ?? book.availableCopies > 0));
-    const recommendationBooks = availableBooks.slice(0, 5);
-    const categoryBooks = [...availableBooks.slice(5), ...unavailableBooks].slice(0, 8);
+    const recommendationBooks = filteredBooks;
     const availableCount = books.filter(book => (book.isAvailable ?? book.availableCopies > 0)).length;
     const emptyMessage = books.length === 0 ? 'No books have been added yet.' : 'No books match your search.';
 
@@ -216,15 +212,11 @@ const HomePage = () => {
                         <BookOpen size={16} />
                         Discover
                     </a>
-                    <a className="discover-nav-item" href="#categories">
-                        <Grid3X3 size={16} />
-                        Category
-                    </a>
                     <a className="discover-nav-item" href="#recommendations">
                         <Library size={16} />
                         My Library
                     </a>
-                    <a className="discover-nav-item" href="#categories">
+                    <a className="discover-nav-item" href="#recommendations">
                         <Heart size={16} />
                         Favorite
                     </a>
@@ -355,46 +347,28 @@ const HomePage = () => {
 
                     {!isLoading && recommendationBooks.length > 0 && (
                         <div className="discover-book-row">
-                            {recommendationBooks.map(book => (
-                                <article key={book.id} className="discover-featured-book">
-                                    {renderCover(book, 'large')}
-                                    <div className="discover-book-meta">
-                                        <h3>{book.title}</h3>
-                                        <p>{book.author}</p>
-                                        <span>{book.availableCopies} of {book.totalCopies} copies</span>
-                                    </div>
-                                </article>
-                            ))}
+                            {recommendationBooks.map(book => {
+                                const isAvailable = book.isAvailable ?? book.availableCopies > 0;
+                                const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
+
+                                return (
+                                    <article key={book.id} className="discover-featured-book">
+                                        {renderCover(book, 'large')}
+                                        <div className="discover-book-meta">
+                                            <h3>{book.title}</h3>
+                                            <p>{book.author}</p>
+                                            <span>{book.availableCopies} of {book.totalCopies} copies</span>
+                                            <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
+                                                {statusText}
+                                            </span>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     )}
                 </section>
 
-                <section id="categories" className="discover-section">
-                    <div className="discover-section-header">
-                        <h2>Book Category</h2>
-                        <button type="button" className="discover-icon-button" title="Refresh categories" onClick={fetchBooks} disabled={isLoading}>
-                            <Grid3X3 size={17} />
-                        </button>
-                    </div>
-
-                    <div className="discover-category-grid">
-                        {(categoryBooks.length > 0 ? categoryBooks : recommendationBooks).map(book => {
-                            const isAvailable = book.isAvailable ?? book.availableCopies > 0;
-                            const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
-
-                            return (
-                                <article key={book.id} className="discover-category-book">
-                                    {renderCover(book, 'small')}
-                                    <h3>{book.genre}</h3>
-                                    <p>{book.title}</p>
-                                    <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
-                                        {statusText}
-                                    </span>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </section>
             </main>
         </div>
     );
