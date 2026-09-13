@@ -5,18 +5,10 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - "services/inventory-service/**"
-      - "tests/InventoryService.Tests/**"
-      - ".github/workflows/ci_inventry.yml"
   pull_request:
     branches:
       - main
       - develop
-    paths:
-      - "services/inventory-service/**"
-      - "tests/InventoryService.Tests/**"
-      - ".github/workflows/ci_inventry.yml"
   workflow_dispatch:
 
 concurrency:
