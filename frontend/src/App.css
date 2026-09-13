@@ -28,8 +28,8 @@
   }
 
   .base {
-    width: 170px;
-    position: relative;
+    width: 171px;
+    position: relative; /*170 to 171*/
     z-index: 0;
   }
 
