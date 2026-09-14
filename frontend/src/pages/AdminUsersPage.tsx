@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { Users, ArrowLeft } from 'lucide-react';
+import { BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 interface UserSummary {
@@ -68,7 +68,7 @@ const generateMockBorrowings = (userId: number): BorrowingRecord[] => {
 }
 
 const AdminUsersPage = () => {
-    const { token } = useAuth();
+    const { logout, token } = useAuth();
     const location = useLocation();
     
     // Determine mode based on URL
@@ -175,23 +175,64 @@ const AdminUsersPage = () => {
     };
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Users size={32} color="var(--accent-color)" />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>{pageTitle}</h1>
-                </div>
-                <Link to="/admin/dashboard" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-                    <ArrowLeft size={16} />
-                    Back to Dashboard
+        <div className="admin-shell">
+            <aside className="admin-sidebar">
+                <Link to="/admin/dashboard" className="admin-brand">
+                    <BookMarked size={23} />
+                    <span>Reading Pal</span>
                 </Link>
-            </header>
-            
-            <main style={{ marginTop: '2rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem' }}>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{pageDescription}</p>
+
+                <nav className="admin-nav" aria-label="Administration navigation">
+                    <span className="admin-nav-label">Workspace</span>
+                    <Link to="/admin/dashboard" className="admin-nav-item">
+                        <LayoutDashboard size={16} />
+                        Overview
+                    </Link>
+                    <Link to="/admin/users/pending" className="admin-nav-item admin-nav-item-active">
+                        <Users size={16} />
+                        User approvals
+                    </Link>
+                    <Link to="/admin/books" className="admin-nav-item">
+                        <BookPlus size={16} />
+                        Book inventory
+                    </Link>
+                    <Link to="/home" className="admin-nav-item">
+                        <BookOpen size={16} />
+                        Public catalogue
+                    </Link>
+                </nav>
+
+                <div className="admin-sidebar-bottom">
+                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
+                        <LogOut size={16} />
+                        Log out
+                    </button>
+                </div>
+            </aside>
+
+            <main className="admin-main admin-users-main">
+                <header className="admin-topbar admin-users-topbar">
+                    <div>
+                        <p className="admin-eyebrow">Member operations</p>
+                        <h1>{pageTitle}</h1>
+                        <p className="admin-users-subtitle">{pageDescription}</p>
+                    </div>
+                    <div className={`admin-users-mode ${isPending ? 'admin-users-mode-pending' : 'admin-users-mode-active'}`}>
+                        <Users size={17} />
+                        {isPending ? 'Approval queue' : 'Member directory'}
+                    </div>
+                </header>
+
+                <div className="admin-users-panel glass-panel">
+                    <div className="admin-users-panel-heading">
+                        <div>
+                            <p className="admin-eyebrow">Workspace list</p>
+                            <h2>{isPending ? 'Members awaiting review' : 'Validated members'}</h2>
+                        </div>
+                        <span className="admin-users-count">{users.length} {users.length === 1 ? 'member' : 'members'}</span>
+                    </div>
                     
-                    {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
+                    {error && <div className="error-message admin-users-error" style={{ marginBottom: '1rem' }}>{error}</div>}
                     
                     {isLoading ? (
                         <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Loading users...</p>
@@ -200,8 +241,8 @@ const AdminUsersPage = () => {
                             <p style={{ color: 'var(--text-secondary)' }}>No users found.</p>
                         </div>
                     ) : (
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <div className="admin-users-table-wrap" style={{ overflowX: 'auto' }}>
+                            <table className="admin-users-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                                         <th style={{ padding: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ID</th>
@@ -243,14 +284,14 @@ const AdminUsersPage = () => {
 
             {/* Modal Overlay */}
             {isModalOpen && selectedUser && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div className="glass-panel" style={{ width: '90%', maxWidth: '600px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                <div className="admin-user-modal-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div className="admin-user-modal glass-panel" style={{ width: '90%', maxWidth: '600px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
                         <div>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>User Details</h2>
                             <p style={{ color: 'var(--text-secondary)' }}>Review the {isPending ? 'pending registration' : 'active user'} details.</p>
                         </div>
                         
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
+                        <div className="admin-user-details" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
                             <div>
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Name</span>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 500 }}>{selectedUser.firstName} {selectedUser.lastName}</div>
