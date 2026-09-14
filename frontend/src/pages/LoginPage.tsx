@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, LogIn, Sparkles } from 'lucide-react';
+import { BookOpen, KeyRound, LogIn, Sparkles } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const LoginPage = () => {
@@ -74,6 +74,7 @@ const LoginPage = () => {
 
             <main className="auth-form-area">
                 <div className="auth-form-card">
+                    <span className="auth-wax-seal" aria-hidden="true"><KeyRound size={17} /></span>
                     <div className="auth-form-heading">
                         <p className="auth-eyebrow">Welcome back</p>
                         <h2>Sign in to your library</h2>
