@@ -10,6 +10,7 @@ namespace InventoryService.Data
         }
 
         public DbSet<Book> Books => Set<Book>();
+        public DbSet<Genre> Genres => Set<Genre>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +20,12 @@ namespace InventoryService.Data
             {
                 entity.HasKey(b => b.Id);
                 entity.HasIndex(b => b.ISBN).IsUnique();
+            });
+
+            modelBuilder.Entity<Genre>(entity =>
+            {
+                entity.HasKey(g => g.Id);
+                entity.HasIndex(g => g.Name).IsUnique();
             });
         }
     }

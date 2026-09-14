@@ -1,12 +1,12 @@
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, ShieldAlert, BookPlus, BookOpen } from 'lucide-react';
+import { ArrowUpRight, BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, ShieldAlert, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 
 const AdminDashboard = () => {
-    const { logout, token } = useAuth();
+    const { logout, token, user } = useAuth();
     const [adminMessage, setAdminMessage] = useState<string>('');
 
     useEffect(() => {
@@ -30,63 +30,107 @@ const AdminDashboard = () => {
     }, [token]);
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Users size={32} color="var(--accent-color)" />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Admin Dashboard</h1>
+        <div className="admin-shell">
+            <aside className="admin-sidebar">
+                <Link to="/admin/dashboard" className="admin-brand">
+                    <BookMarked size={23} />
+                    <span>Reading Pal</span>
+                </Link>
+
+                <nav className="admin-nav" aria-label="Administration navigation">
+                    <span className="admin-nav-label">Workspace</span>
+                    <Link to="/admin/dashboard" className="admin-nav-item admin-nav-item-active">
+                        <LayoutDashboard size={16} />
+                        Overview
+                    </Link>
+                    <Link to="/admin/users/pending" className="admin-nav-item">
+                        <Users size={16} />
+                        User approvals
+                    </Link>
+                    <Link to="/admin/users/active" className="admin-nav-item">
+                        <Users size={16} />
+                        Active users
+                    </Link>
+                    <Link to="/admin/books" className="admin-nav-item">
+                        <BookPlus size={16} />
+                        Book inventory
+                    </Link>
+                    <Link to="/home" className="admin-nav-item">
+                        <BookOpen size={16} />
+                        Public catalogue
+                    </Link>
+                </nav>
+
+                <div className="admin-sidebar-bottom">
+                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
+                        <LogOut size={16} />
+                        Log out
+                    </button>
                 </div>
-                <button onClick={logout} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <LogOut size={16} />
-                    Sign Out
-                </button>
-            </header>
-            
-            <main>
-                <div className="glass-panel" style={{ padding: '2rem' }}>
-                    <h2 style={{ marginBottom: '1rem' }}>Welcome, Admin</h2>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                        This is the protected administration area. From here, you will be able to view registered users and manage the library.
-                    </p>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                        <Link to="/admin/users/pending" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                            <h3 style={{ marginBottom: '0.5rem', color: 'var(--accent-color)' }}>Pending Requests</h3>
-                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View and manage newly registered users awaiting approval</p>
-                        </Link>
-                        
-                        <Link to="/admin/users/active" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                            <h3 style={{ marginBottom: '0.5rem', color: 'var(--success-color, #10b981)' }}>Active Users</h3>
-                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View all registered and approved users</p>
-                        </Link>
+            </aside>
 
-                        <Link to="/admin/books" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                <BookPlus size={20} color="#60a5fa" />
-                                <h3 style={{ color: '#60a5fa' }}>Book Inventory</h3>
-                            </div>
-                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Add new books to the catalogue and track copy availability</p>
-                        </Link>
-
-                        <Link to="/home" className="glass-panel" style={{ padding: '1.5rem', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', transition: 'transform 0.2s', border: '1px solid var(--border-color)', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                <BookOpen size={20} color="#6ee7b7" />
-                                <h3 style={{ color: '#6ee7b7' }}>Public Catalogue</h3>
-                            </div>
-                            <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>View books exactly as members see them, including live availability</p>
-                        </Link>
+            <main className="admin-main">
+                <header className="admin-topbar">
+                    <div>
+                        <p className="admin-eyebrow">Library operations</p>
+                        <h1>Admin dashboard</h1>
                     </div>
-                    
-                    <div style={{ padding: '1.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                        <ShieldAlert size={24} color="#ef4444" style={{ flexShrink: 0 }} />
+                    <div className="admin-user-chip">
+                        <span className="admin-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'A'}</span>
+                        <span>{user?.email || 'Administrator'}</span>
+                    </div>
+                </header>
+
+                <section className="admin-welcome">
+                    <div>
+                        <p className="admin-kicker">Good to see you</p>
+                        <h2>Keep the library moving.</h2>
+                        <p>Review member activity, maintain the catalogue, and keep every shelf ready for its next reader.</p>
+                    </div>
+                    <div className="admin-welcome-mark"><BookMarked size={42} /></div>
+                </section>
+
+                <section className="admin-section" aria-labelledby="admin-actions-heading">
+                    <div className="admin-section-heading">
                         <div>
-                            <h3 style={{ color: '#ef4444', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Classified Admin Message</h3>
-                            <p style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
-                                {adminMessage ? adminMessage : "Loading secret message..."}
-                            </p>
+                            <p className="admin-eyebrow">Quick access</p>
+                            <h2 id="admin-actions-heading">What needs your attention?</h2>
                         </div>
+                        <span className="admin-section-note">4 tools available</span>
                     </div>
-                </div>
+
+                    <div className="admin-action-grid">
+                        <Link to="/admin/users/pending" className="admin-action-card admin-action-card-coral">
+                            <span className="admin-action-icon"><Users size={21} /></span>
+                            <span className="admin-action-copy"><strong>Pending requests</strong><small>Manage new members awaiting approval</small></span>
+                            <ArrowUpRight className="admin-action-arrow" size={18} />
+                        </Link>
+                        <Link to="/admin/users/active" className="admin-action-card admin-action-card-yellow">
+                            <span className="admin-action-icon"><Users size={21} /></span>
+                            <span className="admin-action-copy"><strong>Active users</strong><small>Browse approved library members</small></span>
+                            <ArrowUpRight className="admin-action-arrow" size={18} />
+                        </Link>
+                        <Link to="/admin/books" className="admin-action-card admin-action-card-green">
+                            <span className="admin-action-icon"><BookPlus size={21} /></span>
+                            <span className="admin-action-copy"><strong>Book inventory</strong><small>Add titles and track availability</small></span>
+                            <ArrowUpRight className="admin-action-arrow" size={18} />
+                        </Link>
+                        <Link to="/home" className="admin-action-card admin-action-card-ivory">
+                            <span className="admin-action-icon"><BookOpen size={21} /></span>
+                            <span className="admin-action-copy"><strong>Public catalogue</strong><small>See the experience members use</small></span>
+                            <ArrowUpRight className="admin-action-arrow" size={18} />
+                        </Link>
+                    </div>
+                </section>
+
+                <section className="admin-message" aria-labelledby="admin-message-heading">
+                    <ShieldAlert size={24} />
+                    <div>
+                        <p className="admin-eyebrow">Private channel</p>
+                        <h2 id="admin-message-heading">Classified admin message</h2>
+                        <p>{adminMessage || 'Loading secret message...'}</p>
+                    </div>
+                </section>
             </main>
         </div>
     );

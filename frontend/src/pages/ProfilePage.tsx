@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { User, Save, ArrowLeft } from 'lucide-react';
+import { BookMarked, BookOpen, Heart, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 
 const ProfilePage = () => {
-    const { token } = useAuth();
+    const { logout, token, user } = useAuth();
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -66,28 +66,80 @@ const ProfilePage = () => {
 
     if (isLoading) {
         return (
-            <div className="page-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+            <div className="profile-shell profile-loading">
                 <p>Loading profile...</p>
             </div>
         );
     }
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <User size={32} color="var(--accent-color)" />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>My Profile</h1>
-                </div>
-                <Link to="/home" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-                    <ArrowLeft size={16} />
-                    Back to Home
+        <div className="profile-shell discover-shell">
+            <aside className="discover-sidebar">
+                <Link to="/home" className="discover-brand">
+                    <BookMarked size={24} />
+                    <span>Reading Pal</span>
                 </Link>
-            </header>
-            
-            <main style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
-                <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', padding: '2rem' }}>
-                    <h2 style={{ marginBottom: '1.5rem' }}>Edit Details</h2>
+
+                <nav className="discover-nav" aria-label="Library navigation">
+                    <span className="discover-nav-label">Menu</span>
+                    <Link to="/home" className="discover-nav-item">
+                        <BookOpen size={16} />
+                        Discover
+                    </Link>
+                    <a href="/home#recommendations" className="discover-nav-item">
+                        <Library size={16} />
+                        My Library
+                    </a>
+                    <a href="/home#recommendations" className="discover-nav-item">
+                        <Heart size={16} />
+                        Favorite
+                    </a>
+                </nav>
+
+                <div className="discover-sidebar-bottom">
+                    {user?.role === 'Admin' ? (
+                        <Link to="/admin/dashboard" className="discover-nav-item">
+                            <LayoutDashboard size={16} />
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <Link to="/profile" className="discover-nav-item discover-nav-item-active">
+                            <User size={16} />
+                            My Profile
+                        </Link>
+                    )}
+                    <button type="button" onClick={logout} className="discover-nav-item discover-nav-button">
+                        <LogOut size={16} />
+                        Log out
+                    </button>
+                </div>
+            </aside>
+
+            <main className="profile-main discover-main">
+                <header className="profile-topbar">
+                    <div className="profile-user-chip">
+                        <span className="discover-avatar">{email?.slice(0, 1).toUpperCase() || 'R'}</span>
+                        <span>{email || 'Reader'}</span>
+                    </div>
+                </header>
+
+                <section className="profile-hero">
+                    <div>
+                        <p className="discover-eyebrow">Your reading identity</p>
+                        <h1>My profile</h1>
+                        <p>Keep your details current so your Reading Pal experience stays personal.</p>
+                    </div>
+                    <div className="profile-hero-mark"><User size={38} /></div>
+                </section>
+
+                <section className="profile-form-panel">
+                    <div className="profile-panel-heading">
+                        <div>
+                            <p className="discover-eyebrow">Account settings</p>
+                            <h2>Edit details</h2>
+                        </div>
+                        <span className="profile-account-label">Member account</span>
+                    </div>
 
                     {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
                     {successMsg && <div style={{ padding: '1rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>{successMsg}</div>}
@@ -143,8 +195,8 @@ const ProfilePage = () => {
                             />
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-                            <button type="submit" className="btn-primary" disabled={isSaving}>
+                        <div className="profile-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+                            <button type="submit" className="profile-save-button btn-primary" disabled={isSaving}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                                     <Save size={20} />
                                     {isSaving ? 'Saving...' : 'Save Changes'}
@@ -152,7 +204,7 @@ const ProfilePage = () => {
                             </button>
                         </div>
                     </form>
-                </div>
+                </section>
             </main>
         </div>
     );

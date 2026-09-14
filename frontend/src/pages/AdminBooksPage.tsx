@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff } from 'lucide-react';
+import { BookMarked, BookOpen, BookPlus, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff, Tags, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -20,8 +20,15 @@ export interface Book {
     updatedAt: string;
 }
 
+interface Genre {
+    id: number;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 const AdminBooksPage = () => {
-    const { token } = useAuth();
+    const { logout, token } = useAuth();
 
     // Form state
     const [title, setTitle] = useState('');
@@ -33,6 +40,7 @@ const AdminBooksPage = () => {
 
     // UI state
     const [books, setBooks] = useState<Book[]>([]);
+    const [genres, setGenres] = useState<Genre[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -50,6 +58,12 @@ const AdminBooksPage = () => {
     const [editErrorMessage, setEditErrorMessage] = useState('');
     const [markingUnavailableId, setMarkingUnavailableId] = useState<number | null>(null);
     const [markingAvailableId, setMarkingAvailableId] = useState<number | null>(null);
+    const [isGenreManagerOpen, setIsGenreManagerOpen] = useState(false);
+    const [newGenreName, setNewGenreName] = useState('');
+    const [editingGenreId, setEditingGenreId] = useState<number | null>(null);
+    const [editingGenreName, setEditingGenreName] = useState('');
+    const [genreErrorMessage, setGenreErrorMessage] = useState('');
+    const [isGenreSubmitting, setIsGenreSubmitting] = useState(false);
 
     const fetchBooks = useCallback(async () => {
         setIsLoading(true);
@@ -71,11 +85,13 @@ const AdminBooksPage = () => {
         let isMounted = true;
         const load = async () => {
             try {
-                const response = await axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {}
-                });
+                const [booksResponse, genresResponse] = await Promise.all([
+                    axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`, { headers: token ? { Authorization: `Bearer ${token}` } : {} }),
+                    axios.get<Genre[]>(`${INVENTORY_API_BASE_URL}/api/genres`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+                ]);
                 if (isMounted) {
-                    setBooks(response.data);
+                    setBooks(booksResponse.data);
+                    setGenres(genresResponse.data);
                     setErrorMessage('');
                 }
             } catch (err) {
@@ -95,6 +111,63 @@ const AdminBooksPage = () => {
             isMounted = false;
         };
     }, [token]);
+
+    const handleCreateGenre = async (e: { preventDefault: () => void }) => {
+        e.preventDefault();
+        const name = newGenreName.trim();
+        if (!name) return;
+
+        setIsGenreSubmitting(true);
+        setGenreErrorMessage('');
+        try {
+            const response = await axios.post<Genre>(`${INVENTORY_API_BASE_URL}/api/genres`, { name }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setGenres(prev => [...prev, response.data].sort((a, b) => a.name.localeCompare(b.name)));
+            setNewGenreName('');
+            setGenreErrorMessage('');
+        } catch (err: unknown) {
+            setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to add genre.' : 'Failed to add genre.');
+        } finally {
+            setIsGenreSubmitting(false);
+        }
+    };
+
+    const handleUpdateGenre = async (genre: Genre) => {
+        const name = editingGenreName.trim();
+        if (!name) return;
+
+        setIsGenreSubmitting(true);
+        setGenreErrorMessage('');
+        try {
+            const response = await axios.put<Genre>(`${INVENTORY_API_BASE_URL}/api/genres/${genre.id}`, { name }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setGenres(prev => prev.map(item => item.id === genre.id ? response.data : item).sort((a, b) => a.name.localeCompare(b.name)));
+            setBooks(prev => prev.map(book => book.genre.toLowerCase() === genre.name.toLowerCase() ? { ...book, genre: response.data.name } : book));
+            setEditingGenreId(null);
+            setEditingGenreName('');
+        } catch (err: unknown) {
+            setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to update genre.' : 'Failed to update genre.');
+        } finally {
+            setIsGenreSubmitting(false);
+        }
+    };
+
+    const handleDeleteGenre = async (genre: Genre) => {
+        if (!window.confirm(`Delete the genre "${genre.name}"?`)) return;
+
+        setIsGenreSubmitting(true);
+        setGenreErrorMessage('');
+        try {
+            await axios.delete(`${INVENTORY_API_BASE_URL}/api/genres/${genre.id}`, { headers: { Authorization: `Bearer ${token}` } });
+            setGenres(prev => prev.filter(item => item.id !== genre.id));
+        } catch (err: unknown) {
+            setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to delete genre.' : 'Failed to delete genre.');
+        } finally {
+            setIsGenreSubmitting(false);
+        }
+    };
 
     const handleSubmit = async (e: { preventDefault: () => void }) => {
         e.preventDefault();
@@ -351,31 +424,64 @@ const AdminBooksPage = () => {
     const emptyInventoryMessage = books.length === 0 ? 'No books added to the catalogue yet.' : 'No books match your search query.';
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Link to="/admin/dashboard" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-                        <ArrowLeft size={16} />
-                        Dashboard
+        <div className="admin-shell">
+            <aside className="admin-sidebar">
+                <Link to="/admin/dashboard" className="admin-brand">
+                    <BookMarked size={23} />
+                    <span>Reading Pal</span>
+                </Link>
+
+                <nav className="admin-nav" aria-label="Administration navigation">
+                    <span className="admin-nav-label">Workspace</span>
+                    <Link to="/admin/dashboard" className="admin-nav-item">
+                        <LayoutDashboard size={16} />
+                        Overview
                     </Link>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <BookPlus size={28} color="var(--accent-color)" />
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Book Inventory Management</h1>
-                    </div>
+                    <Link to="/admin/users/pending" className="admin-nav-item">
+                        <Users size={16} />
+                        User approvals
+                    </Link>
+                    <Link to="/admin/users/active" className="admin-nav-item">
+                        <Users size={16} />
+                        Active users
+                    </Link>
+                    <Link to="/admin/books" className="admin-nav-item admin-nav-item-active">
+                        <BookPlus size={16} />
+                        Book inventory
+                    </Link>
+                    <Link to="/home" className="admin-nav-item">
+                        <BookOpen size={16} />
+                        Public catalogue
+                    </Link>
+                </nav>
+
+                <div className="admin-sidebar-bottom">
+                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
+                        <LogOut size={16} />
+                        Log out
+                    </button>
                 </div>
-                <button
-                    onClick={() => setIsFormOpen(prev => !prev)}
-                    className="btn-outline"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                    <BookPlus size={16} />
-                    {isFormOpen ? 'Hide Add Form' : 'Add New Book'}
-                </button>
-            </header>
+            </aside>
+
+            <main className="admin-main admin-inventory-main">
+                <header className="admin-topbar admin-inventory-topbar">
+                    <div>
+                        <p className="admin-eyebrow">Library operations</p>
+                        <h1>Book inventory</h1>
+                        <p className="admin-inventory-subtitle">Keep the catalogue current, useful, and ready for its next reader.</p>
+                    </div>
+                    <button
+                        onClick={() => setIsFormOpen(prev => !prev)}
+                        className="admin-primary-action"
+                    >
+                        <BookPlus size={17} />
+                        {isFormOpen ? 'Hide add form' : 'Add new book'}
+                    </button>
+                </header>
 
             {/* Notification Alerts */}
             {successMessage && (
-                <div style={{
+                <div className="admin-inventory-alert admin-inventory-alert-success" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
@@ -392,10 +498,51 @@ const AdminBooksPage = () => {
             )}
 
             {errorMessage && (
-                <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="admin-inventory-alert admin-inventory-alert-error error-message" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <AlertCircle size={20} color="var(--danger-color)" />
                     <span>{errorMessage}</span>
                 </div>
+            )}
+
+            {isGenreManagerOpen && (
+                <dialog open aria-labelledby="genre-manager-title" style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
+                    <div className="glass-panel" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h2 id="genre-manager-title" style={{ fontSize: '1.25rem' }}>Manage Genres</h2>
+                            <button type="button" className="btn-outline" onClick={() => setIsGenreManagerOpen(false)} title="Close genre manager" style={{ padding: '0.5rem' }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        {genreErrorMessage && <div className="error-message" style={{ marginBottom: '1rem' }}>{genreErrorMessage}</div>}
+                        <form onSubmit={handleCreateGenre} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                            <input id="new-genre-name" type="text" className="form-input" placeholder="e.g. Science Fiction" value={newGenreName} onChange={e => setNewGenreName(e.target.value)} maxLength={100} required />
+                            <button type="submit" className="btn-primary" disabled={isGenreSubmitting}>Add</button>
+                        </form>
+                        <div style={{ display: 'grid', gap: '0.75rem' }}>
+                            {genres.map(item => (
+                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                                    {editingGenreId === item.id ? (
+                                        <input className="form-input" value={editingGenreName} onChange={e => setEditingGenreName(e.target.value)} maxLength={100} autoFocus />
+                                    ) : (
+                                        <span style={{ flex: 1 }}>{item.name}</span>
+                                    )}
+                                    {editingGenreId === item.id ? (
+                                        <>
+                                            <button type="button" className="btn-primary" onClick={() => handleUpdateGenre(item)} disabled={isGenreSubmitting}>Save</button>
+                                            <button type="button" className="btn-outline" onClick={() => setEditingGenreId(null)} disabled={isGenreSubmitting}>Cancel</button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button type="button" className="btn-outline" onClick={() => { setEditingGenreId(item.id); setEditingGenreName(item.name); }} title={`Edit ${item.name}`} style={{ padding: '0.5rem' }}><Pencil size={15} /></button>
+                                            <button type="button" className="btn-outline" onClick={() => handleDeleteGenre(item)} disabled={isGenreSubmitting} title={`Delete ${item.name}`} style={{ padding: '0.5rem' }}><Trash2 size={15} /></button>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                            {genres.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>No genres have been added yet.</p>}
+                        </div>
+                    </div>
+                </dialog>
             )}
 
             {editingBook && (
@@ -442,7 +589,11 @@ const AdminBooksPage = () => {
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-genre">Genre</label>
-                                    <input id="edit-book-genre" type="text" className="form-input" value={editGenre} onChange={e => setEditGenre(e.target.value)} maxLength={100} required />
+                                    <select id="edit-book-genre" className="form-input" value={editGenre} onChange={e => setEditGenre(e.target.value)} required>
+                                        {!genres.some(item => item.name === editGenre) && editGenre && <option value={editGenre}>{editGenre}</option>}
+                                        <option value="">Select a genre</option>
+                                        {genres.map(item => <option key={item.id} value={item.name}>{item.name}</option>)}
+                                    </select>
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-cover">Cover Image URL</label>
@@ -466,7 +617,7 @@ const AdminBooksPage = () => {
 
             {/* Add Book Form Panel */}
             {isFormOpen && (
-                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
+                <div className="admin-inventory-form glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
                     <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <BookPlus size={20} color="var(--accent-color)" />
                         Add New Book to Catalogue
@@ -522,19 +673,14 @@ const AdminBooksPage = () => {
                                 />
                             </div>
 
-                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" htmlFor="book-genre">
                                     Genre <span style={{ color: 'var(--danger-color)' }}>*</span>
                                 </label>
-                                <input
-                                    id="book-genre"
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="e.g. Computer Science / Technology"
-                                    value={genre}
-                                    onChange={e => setGenre(e.target.value)}
-                                    required
-                                />
+                                    <select id="book-genre" className="form-input" value={genre} onChange={e => setGenre(e.target.value)} required>
+                                        <option value="">Select a genre</option>
+                                        {genres.map(item => <option key={item.id} value={item.name}>{item.name}</option>)}
+                                    </select>
                             </div>
 
                             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -567,7 +713,12 @@ const AdminBooksPage = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem', gap: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
+                            <button type="button" className="btn-outline" onClick={() => { setIsGenreManagerOpen(true); setGenreErrorMessage(''); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Tags size={16} />
+                                Manage Genres
+                            </button>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
                             <button
                                 type="button"
                                 className="btn-outline"
@@ -591,21 +742,22 @@ const AdminBooksPage = () => {
                             >
                                 {isSubmitting ? 'Adding Book...' : 'Add Book'}
                             </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             )}
 
             {/* Current Books Inventory List */}
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="admin-inventory-panel glass-panel" style={{ padding: '2rem' }}>
+                <div className="admin-inventory-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="admin-inventory-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Layers size={20} color="var(--accent-color)" />
                         <h2 style={{ fontSize: '1.25rem' }}>Current Inventory ({books.length})</h2>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', width: '280px' }}>
+                    <div className="admin-inventory-tools" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div className="admin-inventory-search" style={{ position: 'relative', width: '280px' }}>
                             <Search size={16} color="var(--text-secondary)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
                             <input
                                 type="text"
@@ -618,7 +770,7 @@ const AdminBooksPage = () => {
                         </div>
                         <button
                             onClick={fetchBooks}
-                            className="btn-outline"
+                            className="btn-outline admin-refresh-button"
                             title="Refresh List"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem' }}
                         >
@@ -639,7 +791,7 @@ const AdminBooksPage = () => {
                 )}
                 {!isLoading && filteredBooks.length > 0 && (
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <table className="admin-inventory-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
                                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ID</th>
@@ -759,6 +911,7 @@ const AdminBooksPage = () => {
                     </div>
                 )}
             </div>
+            </main>
         </div>
     );
 };
