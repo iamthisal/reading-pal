@@ -22,6 +22,7 @@ namespace InventoryService.Controllers
         {
         }
 
+        [ActivatorUtilitiesConstructor]
         public BooksController(
             InventoryDbContext context,
             IBookEventPublisher bookEventPublisher,
