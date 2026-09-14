@@ -51,13 +51,13 @@ const AdminDashboard = () => {
                         <BookPlus size={16} />
                         Book inventory
                     </Link>
-                </nav>
-
-                <div className="admin-sidebar-bottom">
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue
                     </Link>
+                </nav>
+
+                <div className="admin-sidebar-bottom">
                     <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
                         <LogOut size={16} />
                         Log out
