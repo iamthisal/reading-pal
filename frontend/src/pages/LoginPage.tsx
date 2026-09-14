@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, LogIn } from 'lucide-react';
+import { BookOpen, LogIn, Sparkles } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 
 const LoginPage = () => {
@@ -42,55 +42,76 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="app-container">
-            <div className="glass-panel login-card">
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                    <BookOpen size={48} color="var(--accent-color)" />
+        <div className="auth-page">
+            <section className="auth-showcase">
+                <div className="auth-showcase-topline">
+                    <BookOpen size={22} />
+                    <span>Reading Pal</span>
                 </div>
-                <h1>Reading Pal</h1>
-                <p>Sign in to your library account</p>
+                <div className="auth-showcase-copy">
+                    <p className="auth-eyebrow">A quieter place to read</p>
+                    <h1>Make room for a good story.</h1>
+                    <p>Keep your library close, discover your next favorite book, and return to the pages that stay with you.</p>
+                </div>
+                <div className="auth-book-stack" aria-hidden="true">
+                    <span className="auth-book auth-book-one">READ</span>
+                    <span className="auth-book auth-book-two">WANDER</span>
+                    <span className="auth-book auth-book-three">NOTES</span>
+                </div>
+                <div className="auth-showcase-footer">
+                    <Sparkles size={16} />
+                    <span>Your reading life, in one place.</span>
+                </div>
+            </section>
 
-                {error && <div className="error-message">{error}</div>}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="email">Email Address</label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="form-input"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder="name@example.com"
-                        />
-                    </div>
-                    
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            className="form-input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            placeholder="••••••••"
-                        />
+            <main className="auth-form-area">
+                <div className="auth-form-card">
+                    <div className="auth-form-heading">
+                        <p className="auth-eyebrow">Welcome back</p>
+                        <h2>Sign in to your library</h2>
+                        <p>Pick up where you left off.</p>
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={isLoading}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <LogIn size={20} />
-                            {isLoading ? 'Signing in...' : 'Sign In'}
+                    {error && <div className="error-message">{error}</div>}
+
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="email">Email Address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                className="form-input"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="name@example.com"
+                            />
                         </div>
-                    </button>
+                        
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="password">Password</label>
+                            <input
+                                id="password"
+                                type="password"
+                                className="form-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="Enter your password"
+                            />
+                        </div>
 
-                    <div style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                        Don't have an account? <Link to="/register" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 500 }}>Register here</Link>
-                    </div>
-                </form>
-            </div>
+                        <button type="submit" className="auth-submit-button" disabled={isLoading}>
+                            <LogIn size={18} />
+                            {isLoading ? 'Signing in...' : 'Sign in'}
+                        </button>
+
+                        <div className="auth-register-prompt">
+                            Don't have an account? <Link to="/register">Register here</Link>
+                        </div>
+                    </form>
+                </div>
+            </main>
         </div>
     );
 };
