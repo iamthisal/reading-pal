@@ -908,6 +908,23 @@ body {
   box-shadow: 0 0 0 34px rgba(245, 217, 107, 0.06), 0 0 0 68px rgba(245, 217, 107, 0.035);
 }
 
+.auth-showcase::after {
+  content: '';
+  position: absolute;
+  right: -4%;
+  bottom: 0;
+  z-index: 0;
+  width: 82%;
+  height: 19%;
+  border-top: 8px solid rgba(56, 30, 17, 0.68);
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 208, 137, 0.08) 0 3px, transparent 3px 15px),
+    linear-gradient(160deg, #71452b, #3c2419 70%);
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.26);
+  transform: perspective(500px) rotateX(9deg);
+  transform-origin: bottom right;
+}
+
 .auth-showcase-topline {
   position: relative;
   z-index: 1;
@@ -978,7 +995,79 @@ body {
   perspective: 900px;
   transform: rotate(-7deg) rotateX(8deg);
   animation: auth-open-book-float 6s ease-in-out 0.3s infinite;
-  display: none;
+  display: block;
+}
+
+.auth-ink-bottle,
+.auth-pen {
+  position: absolute;
+  z-index: 3;
+  display: block;
+}
+
+.auth-ink-bottle {
+  right: clamp(1.5rem, 6vw, 5rem);
+  bottom: clamp(5rem, 11vw, 8rem);
+  width: 34px;
+  height: 38px;
+  border: 2px solid rgba(226, 190, 126, 0.55);
+  border-radius: 5px 5px 10px 10px;
+  background: linear-gradient(90deg, #111b1a, #45514a 48%, #111b1a);
+  box-shadow: 5px 8px 8px rgba(0, 0, 0, 0.3);
+  transform: rotate(4deg);
+}
+
+.auth-ink-bottle::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: -11px;
+  width: 14px;
+  height: 13px;
+  border: 2px solid #292a22;
+  border-radius: 3px 3px 2px 2px;
+  background: #111b1a;
+}
+
+.auth-ink-bottle i {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 8px;
+  height: 2px;
+  background: rgba(244, 223, 172, 0.28);
+}
+
+.auth-pen {
+  right: clamp(2rem, 8vw, 7rem);
+  bottom: clamp(2.5rem, 6vw, 4rem);
+  width: 125px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d5a45c, #f4d49a 12%, #263a35 18%, #263a35 82%, #d5a45c 84%);
+  box-shadow: 3px 4px 4px rgba(0, 0, 0, 0.28);
+  transform: rotate(-17deg);
+}
+
+.auth-pen::before {
+  content: '';
+  position: absolute;
+  left: -13px;
+  top: -2px;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 14px solid #d5a45c;
+}
+
+.auth-pen::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: -2px;
+  width: 3px;
+  height: 9px;
+  border-radius: 2px;
+  background: #d5a45c;
 }
 
 .auth-book-cover,
