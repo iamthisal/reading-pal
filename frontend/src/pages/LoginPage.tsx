@@ -54,6 +54,8 @@ const LoginPage = () => {
                     <p>Keep your library close, discover your next favorite book, and return to the pages that stay with you.</p>
                 </div>
                 <div className="auth-reading-object" aria-hidden="true">
+                    <span className="auth-book-cover auth-book-cover-back" />
+                    <span className="auth-book-cover auth-book-cover-front" />
                     <span className="auth-book-spine" />
                     <span className="auth-book-page auth-book-page-left" />
                     <span className="auth-book-page auth-book-page-right" />
