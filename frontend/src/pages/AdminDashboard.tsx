@@ -47,6 +47,10 @@ const AdminDashboard = () => {
                         <Users size={16} />
                         User approvals
                     </Link>
+                    <Link to="/admin/users/active" className="admin-nav-item">
+                        <Users size={16} />
+                        Active users
+                    </Link>
                     <Link to="/admin/books" className="admin-nav-item">
                         <BookPlus size={16} />
                         Book inventory

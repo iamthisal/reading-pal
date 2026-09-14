@@ -188,9 +188,13 @@ const AdminUsersPage = () => {
                         <LayoutDashboard size={16} />
                         Overview
                     </Link>
-                    <Link to="/admin/users/pending" className="admin-nav-item admin-nav-item-active">
+                    <Link to="/admin/users/pending" className={`admin-nav-item ${isPending ? 'admin-nav-item-active' : ''}`}>
                         <Users size={16} />
                         User approvals
+                    </Link>
+                    <Link to="/admin/users/active" className={`admin-nav-item ${!isPending ? 'admin-nav-item-active' : ''}`}>
+                        <Users size={16} />
+                        Active users
                     </Link>
                     <Link to="/admin/books" className="admin-nav-item">
                         <BookPlus size={16} />
