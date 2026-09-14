@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff, Tags } from 'lucide-react';
+import { BookMarked, BookOpen, BookPlus, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff, Tags, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 
 export interface Book {
@@ -28,7 +28,7 @@ interface Genre {
 }
 
 const AdminBooksPage = () => {
-    const { token } = useAuth();
+    const { logout, token } = useAuth();
 
     // Form state
     const [title, setTitle] = useState('');
@@ -424,31 +424,60 @@ const AdminBooksPage = () => {
     const emptyInventoryMessage = books.length === 0 ? 'No books added to the catalogue yet.' : 'No books match your search query.';
 
     return (
-        <div className="page-container">
-            <header className="dashboard-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Link to="/admin/dashboard" className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-                        <ArrowLeft size={16} />
-                        Dashboard
+        <div className="admin-shell">
+            <aside className="admin-sidebar">
+                <Link to="/admin/dashboard" className="admin-brand">
+                    <BookMarked size={23} />
+                    <span>Reading Pal</span>
+                </Link>
+
+                <nav className="admin-nav" aria-label="Administration navigation">
+                    <span className="admin-nav-label">Workspace</span>
+                    <Link to="/admin/dashboard" className="admin-nav-item">
+                        <LayoutDashboard size={16} />
+                        Overview
                     </Link>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <BookPlus size={28} color="var(--accent-color)" />
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Book Inventory Management</h1>
-                    </div>
+                    <Link to="/admin/users/pending" className="admin-nav-item">
+                        <Users size={16} />
+                        User approvals
+                    </Link>
+                    <Link to="/admin/books" className="admin-nav-item admin-nav-item-active">
+                        <BookPlus size={16} />
+                        Book inventory
+                    </Link>
+                    <Link to="/home" className="admin-nav-item">
+                        <BookOpen size={16} />
+                        Public catalogue
+                    </Link>
+                </nav>
+
+                <div className="admin-sidebar-bottom">
+                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
+                        <LogOut size={16} />
+                        Log out
+                    </button>
                 </div>
-                <button
-                    onClick={() => setIsFormOpen(prev => !prev)}
-                    className="btn-outline"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                    <BookPlus size={16} />
-                    {isFormOpen ? 'Hide Add Form' : 'Add New Book'}
-                </button>
-            </header>
+            </aside>
+
+            <main className="admin-main admin-inventory-main">
+                <header className="admin-topbar admin-inventory-topbar">
+                    <div>
+                        <p className="admin-eyebrow">Library operations</p>
+                        <h1>Book inventory</h1>
+                        <p className="admin-inventory-subtitle">Keep the catalogue current, useful, and ready for its next reader.</p>
+                    </div>
+                    <button
+                        onClick={() => setIsFormOpen(prev => !prev)}
+                        className="admin-primary-action"
+                    >
+                        <BookPlus size={17} />
+                        {isFormOpen ? 'Hide add form' : 'Add new book'}
+                    </button>
+                </header>
 
             {/* Notification Alerts */}
             {successMessage && (
-                <div style={{
+                <div className="admin-inventory-alert admin-inventory-alert-success" style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
@@ -465,7 +494,7 @@ const AdminBooksPage = () => {
             )}
 
             {errorMessage && (
-                <div className="error-message" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div className="admin-inventory-alert admin-inventory-alert-error error-message" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <AlertCircle size={20} color="var(--danger-color)" />
                     <span>{errorMessage}</span>
                 </div>
@@ -584,7 +613,7 @@ const AdminBooksPage = () => {
 
             {/* Add Book Form Panel */}
             {isFormOpen && (
-                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
+                <div className="admin-inventory-form glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
                     <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <BookPlus size={20} color="var(--accent-color)" />
                         Add New Book to Catalogue
@@ -716,15 +745,15 @@ const AdminBooksPage = () => {
             )}
 
             {/* Current Books Inventory List */}
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="admin-inventory-panel glass-panel" style={{ padding: '2rem' }}>
+                <div className="admin-inventory-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="admin-inventory-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Layers size={20} color="var(--accent-color)" />
                         <h2 style={{ fontSize: '1.25rem' }}>Current Inventory ({books.length})</h2>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', width: '280px' }}>
+                    <div className="admin-inventory-tools" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div className="admin-inventory-search" style={{ position: 'relative', width: '280px' }}>
                             <Search size={16} color="var(--text-secondary)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
                             <input
                                 type="text"
@@ -737,7 +766,7 @@ const AdminBooksPage = () => {
                         </div>
                         <button
                             onClick={fetchBooks}
-                            className="btn-outline"
+                            className="btn-outline admin-refresh-button"
                             title="Refresh List"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem' }}
                         >
@@ -758,7 +787,7 @@ const AdminBooksPage = () => {
                 )}
                 {!isLoading && filteredBooks.length > 0 && (
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <table className="admin-inventory-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
                                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
                                     <th style={{ padding: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ID</th>
@@ -878,6 +907,7 @@ const AdminBooksPage = () => {
                     </div>
                 )}
             </div>
+            </main>
         </div>
     );
 };
