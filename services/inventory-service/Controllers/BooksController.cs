@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InventoryService.Data;
 using InventoryService.DTOs;
+using InventoryService.Kafka;
 using InventoryService.Models;
+using Microsoft.Extensions.Logging;
 
 namespace InventoryService.Controllers
 {
@@ -12,10 +14,23 @@ namespace InventoryService.Controllers
     public class BooksController : ControllerBase
     {
         private readonly InventoryDbContext _context;
+        private readonly IBookEventPublisher _bookEventPublisher;
+        private readonly ILogger<BooksController> _logger;
 
         public BooksController(InventoryDbContext context)
+            : this(context, new NoOpBookEventPublisher(), LoggerFactory.Create(_ => { }).CreateLogger<BooksController>())
+        {
+        }
+
+        [ActivatorUtilitiesConstructor]
+        public BooksController(
+            InventoryDbContext context,
+            IBookEventPublisher bookEventPublisher,
+            ILogger<BooksController> logger)
         {
             _context = context;
+            _bookEventPublisher = bookEventPublisher;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -56,8 +71,14 @@ namespace InventoryService.Controllers
                 return Conflict(new { message = "A book cannot be removed while copies are currently borrowed." });
             }
 
+            var deletedBook = ToBookResponse(book);
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
+
+            if (!await PublishEventAsync("book-deleted", deletedBook))
+            {
+                return KafkaFailure(deletedBook.Id);
+            }
 
             return NoContent();
         }
@@ -96,6 +117,10 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
+            if (!await PublishEventAsync("book-created", response))
+            {
+                return KafkaFailure(book.Id);
+            }
 
             return CreatedAtAction(nameof(GetById), new { id = book.Id }, response);
         }
@@ -139,7 +164,13 @@ namespace InventoryService.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(ToBookResponse(book));
+            var response = ToBookResponse(book);
+            if (!await PublishEventAsync("book-updated", response))
+            {
+                return KafkaFailure(book.Id);
+            }
+
+            return Ok(response);
         }
 
         [HttpPatch("{id}/mark-unavailable")]
@@ -159,7 +190,13 @@ namespace InventoryService.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(ToBookResponse(book));
+            var response = ToBookResponse(book);
+            if (!await PublishEventAsync("book-updated", response))
+            {
+                return KafkaFailure(book.Id);
+            }
+
+            return Ok(response);
         }
 
         [HttpPatch("{id}/mark-available")]
@@ -179,7 +216,45 @@ namespace InventoryService.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(ToBookResponse(book));
+            var response = ToBookResponse(book);
+            if (!await PublishEventAsync("book-updated", response))
+            {
+                return KafkaFailure(book.Id);
+            }
+
+            return Ok(response);
+        }
+
+        private async Task<bool> PublishEventAsync(string eventType, BookResponse book)
+        {
+            var bookEvent = new BookEvent
+            {
+                EventType = eventType,
+                BookId = book.Id,
+                Book = book,
+                TimestampUtc = DateTime.UtcNow
+            };
+
+            try
+            {
+                await _bookEventPublisher.PublishAsync(bookEvent);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Failed to publish {EventType} for book {BookId} after the database change was committed.", eventType, book.Id);
+                return false;
+            }
+        }
+
+        private ObjectResult KafkaFailure(int bookId)
+        {
+            return StatusCode(503, new
+            {
+                message = "The database change was saved, but the Kafka event could not be published.",
+                databaseChangePersisted = true,
+                bookId
+            });
         }
 
         private static BookResponse ToBookResponse(Book book)

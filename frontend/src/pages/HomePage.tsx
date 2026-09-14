@@ -6,7 +6,6 @@ import {
     BookMarked,
     BookOpen,
     ChevronDown,
-    Grid3X3,
     Heart,
     LayoutDashboard,
     Library,
@@ -101,6 +100,8 @@ const HomePage = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenre, setSelectedGenre] = useState('All Categories');
+    const [selectedAuthor, setSelectedAuthor] = useState('All Authors');
+    const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
 
     const fetchBooks = async () => {
@@ -132,25 +133,31 @@ const HomePage = () => {
         return ['All Categories', ...uniqueGenres];
     }, [displayBooks]);
 
+    const authors = useMemo(() => {
+        const uniqueAuthors = Array.from(new Set(displayBooks.map(book => book.author))).filter(Boolean);
+        return ['All Authors', ...uniqueAuthors.sort((first, second) => first.localeCompare(second))];
+    }, [displayBooks]);
+
     const filteredBooks = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
 
         return displayBooks.filter(book => {
             const matchesGenre = selectedGenre === 'All Categories' || book.genre === selectedGenre;
+            const matchesAuthor = selectedAuthor === 'All Authors' || book.author === selectedAuthor;
+            const isAvailable = book.isAvailable ?? book.availableCopies > 0;
+            const matchesStatus = selectedStatus === 'All Statuses' ||
+                (selectedStatus === 'Available' ? isAvailable : !isAvailable);
             const matchesQuery = !query ||
                 book.title.toLowerCase().includes(query) ||
                 book.author.toLowerCase().includes(query) ||
                 book.isbn.toLowerCase().includes(query) ||
                 book.genre.toLowerCase().includes(query);
 
-            return matchesGenre && matchesQuery;
+            return matchesGenre && matchesAuthor && matchesStatus && matchesQuery;
         });
-    }, [displayBooks, searchQuery, selectedGenre]);
+    }, [displayBooks, searchQuery, selectedGenre, selectedAuthor, selectedStatus]);
 
-    const availableBooks = filteredBooks.filter(book => book.isAvailable ?? book.availableCopies > 0);
-    const unavailableBooks = filteredBooks.filter(book => !(book.isAvailable ?? book.availableCopies > 0));
-    const recommendationBooks = availableBooks.slice(0, 5);
-    const categoryBooks = [...availableBooks.slice(5), ...unavailableBooks].slice(0, 8);
+    const recommendationBooks = filteredBooks;
     const availableCount = books.filter(book => (book.isAvailable ?? book.availableCopies > 0)).length;
     const emptyMessage = books.length === 0 ? 'No books have been added yet.' : 'No books match your search.';
 
@@ -160,6 +167,13 @@ const HomePage = () => {
 
     const showSearchResults = () => {
         document.getElementById('recommendations')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const resetFilters = () => {
+        setSearchQuery('');
+        setSelectedGenre('All Categories');
+        setSelectedAuthor('All Authors');
+        setSelectedStatus('All Statuses');
     };
 
     const renderCover = (book: Book, size: 'large' | 'small') => {
@@ -198,15 +212,11 @@ const HomePage = () => {
                         <BookOpen size={16} />
                         Discover
                     </a>
-                    <a className="discover-nav-item" href="#categories">
-                        <Grid3X3 size={16} />
-                        Category
-                    </a>
                     <a className="discover-nav-item" href="#recommendations">
                         <Library size={16} />
                         My Library
                     </a>
-                    <a className="discover-nav-item" href="#categories">
+                    <a className="discover-nav-item" href="#recommendations">
                         <Heart size={16} />
                         Favorite
                     </a>
@@ -263,6 +273,26 @@ const HomePage = () => {
                                 <option key={genre} value={genre}>{genre}</option>
                             ))}
                         </select>
+                        <select
+                            value={selectedAuthor}
+                            onChange={e => setSelectedAuthor(e.target.value)}
+                            className="discover-filter-select"
+                            aria-label="Book author"
+                        >
+                            {authors.map(author => (
+                                <option key={author} value={author}>{author}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedStatus}
+                            onChange={e => setSelectedStatus(e.target.value)}
+                            className="discover-filter-select"
+                            aria-label="Book availability status"
+                        >
+                            <option value="All Statuses">All Statuses</option>
+                            <option value="Available">Available</option>
+                            <option value="Unavailable">Unavailable</option>
+                        </select>
                         <div className="discover-search-input">
                             <Search size={16} />
                             <input
@@ -276,6 +306,13 @@ const HomePage = () => {
                             />
                         </div>
                         <button type="button" className="discover-search-button" onClick={showSearchResults}>Search</button>
+                    </div>
+
+                    <div className="discover-filter-summary">
+                        <span>{filteredBooks.length} matching books</span>
+                        {(searchQuery || selectedGenre !== 'All Categories' || selectedAuthor !== 'All Authors' || selectedStatus !== 'All Statuses') && (
+                            <button type="button" className="discover-clear-button" onClick={resetFilters}>Clear filters</button>
+                        )}
                     </div>
 
                     {!user?.isValidated && (
@@ -310,46 +347,28 @@ const HomePage = () => {
 
                     {!isLoading && recommendationBooks.length > 0 && (
                         <div className="discover-book-row">
-                            {recommendationBooks.map(book => (
-                                <article key={book.id} className="discover-featured-book">
-                                    {renderCover(book, 'large')}
-                                    <div className="discover-book-meta">
-                                        <h3>{book.title}</h3>
-                                        <p>{book.author}</p>
-                                        <span>{book.availableCopies} of {book.totalCopies} copies</span>
-                                    </div>
-                                </article>
-                            ))}
+                            {recommendationBooks.map(book => {
+                                const isAvailable = book.isAvailable ?? book.availableCopies > 0;
+                                const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
+
+                                return (
+                                    <article key={book.id} className="discover-featured-book">
+                                        {renderCover(book, 'large')}
+                                        <div className="discover-book-meta">
+                                            <h3>{book.title}</h3>
+                                            <p>{book.author}</p>
+                                            <span>{book.availableCopies} of {book.totalCopies} copies</span>
+                                            <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
+                                                {statusText}
+                                            </span>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
                     )}
                 </section>
 
-                <section id="categories" className="discover-section">
-                    <div className="discover-section-header">
-                        <h2>Book Category</h2>
-                        <button type="button" className="discover-icon-button" title="Refresh categories" onClick={fetchBooks} disabled={isLoading}>
-                            <Grid3X3 size={17} />
-                        </button>
-                    </div>
-
-                    <div className="discover-category-grid">
-                        {(categoryBooks.length > 0 ? categoryBooks : recommendationBooks).map(book => {
-                            const isAvailable = book.isAvailable ?? book.availableCopies > 0;
-                            const statusText = book.availabilityStatus || (isAvailable ? 'Available' : 'Not available now');
-
-                            return (
-                                <article key={book.id} className="discover-category-book">
-                                    {renderCover(book, 'small')}
-                                    <h3>{book.genre}</h3>
-                                    <p>{book.title}</p>
-                                    <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
-                                        {statusText}
-                                    </span>
-                                </article>
-                            );
-                        })}
-                    </div>
-                </section>
             </main>
         </div>
     );
