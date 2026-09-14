@@ -194,7 +194,7 @@ body {
   border-right: 1px solid #ece8dc;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .discover-brand {
@@ -262,6 +262,10 @@ body {
 .discover-nav-button {
   width: 100%;
   text-align: left;
+}
+
+.discover-sidebar-bottom {
+  margin-top: auto;
 }
 
 .discover-main {
@@ -361,7 +365,7 @@ body {
   z-index: 1;
   width: min(900px, 100%);
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(180px, 1.5fr) 92px;
+  grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) minmax(180px, 1.5fr) 92px;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
@@ -482,6 +486,106 @@ body {
   position: relative;
   z-index: 1;
   margin-top: 2.6rem;
+}
+
+.discover-filter-rail {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 1.5rem;
+  padding: 1.15rem 1rem;
+  border: 1px solid #e6e0cf;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(43, 40, 31, 0.06);
+}
+
+.discover-filter-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ece8dc;
+  color: #123f38;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.discover-filter-reset {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #d65d4b;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.discover-filter-group {
+  min-width: 0;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.discover-filter-group legend {
+  margin-bottom: 0.7rem;
+  color: #777267;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.discover-check-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 34px;
+  color: #4c4942;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.discover-check-row input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.discover-custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #cfc8b5;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #ffffff;
+}
+
+.discover-check-row input:checked + .discover-custom-checkbox {
+  border-color: #fb6d55;
+  background: #fb6d55;
+}
+
+.discover-check-row input:focus-visible + .discover-custom-checkbox {
+  outline: 2px solid #f5d96b;
+  outline-offset: 2px;
+}
+
+.discover-check-row small {
+  color: #aaa69b;
+  font-size: 0.7rem;
+}
+
+.discover-filter-empty {
+  color: #aaa69b;
+  font-size: 0.78rem;
 }
 
 .discover-section-header {
@@ -625,6 +729,7 @@ body {
     min-height: auto;
     padding: 1rem;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
     overflow-x: auto;
@@ -653,6 +758,19 @@ body {
   .discover-category-grid {
     grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   }
+
+  .discover-filter-rail {
+    position: static;
+    flex: 1 1 100%;
+    margin-top: 1rem;
+  }
+
+  .discover-filter-group {
+    display: inline-block;
+    width: min(320px, 100%);
+    margin-right: 2rem;
+    vertical-align: top;
+  }
 }
 
 @media (max-width: 640px) {
@@ -679,6 +797,12 @@ body {
 
   .discover-search-panel {
     grid-template-columns: 1fr;
+  }
+
+  .discover-filter-group {
+    display: block;
+    width: 100%;
+    margin-right: 0;
   }
 
   .discover-category-select {
