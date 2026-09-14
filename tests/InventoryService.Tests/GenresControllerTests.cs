@@ -101,6 +101,21 @@ namespace InventoryService.Tests
         }
 
         [Fact]
+        public async Task Admin_Can_Delete_Unused_Genre()
+        {
+            using var context = GetDbContext();
+            var genre = new Genre { Name = "Unused" };
+            context.Genres.Add(genre);
+            await context.SaveChangesAsync();
+            var controller = new GenresController(context);
+
+            var result = await controller.Delete(genre.Id);
+
+            Assert.IsType<NoContentResult>(result);
+            Assert.Empty(await context.Genres.ToListAsync());
+        }
+
+        [Fact]
         public void Mutating_Genre_Endpoints_Require_Admin_Role()
         {
             var methods = new[]
