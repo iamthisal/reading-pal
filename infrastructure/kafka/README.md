@@ -2,6 +2,8 @@
 
 This document records the local Kafka infrastructure configured for Reading Pal and explains how teammates can start it and test Inventory events.
 
+For the separate Azure Container Instances deployment and its verification status, see [Azure Kafka Setup](./AZURE-SETUP.md).
+
 ## Current status
 
 The local setup has been completed and reported working:
@@ -17,7 +19,7 @@ Still pending:
 - Implementing the Kafka producer in the .NET Inventory Service.
 - Verifying that successful Inventory CRUD operations publish the expected events.
 - Adding automated Inventory/Kafka integration tests to CI.
-- Deploying Kafka to Azure. This document covers local infrastructure only.
+- Azure public-endpoint and application integration verification; see [Azure Kafka Setup](./AZURE-SETUP.md) for the deployed broker's status. This document covers local infrastructure only.
 
 The infrastructure configuration does not itself implement event publishing. The CRUD-to-Kafka integration must not be marked complete until the tests below pass.
 
