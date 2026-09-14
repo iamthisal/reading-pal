@@ -85,12 +85,14 @@ const LoginPage = () => {
 
                     {error && <div className="error-message">{error}</div>}
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} autoComplete="off">
                         <div className="form-group">
                             <label className="form-label" htmlFor="email">Email Address</label>
                             <input
                                 id="email"
+                                name="login-email"
                                 type="email"
+                                autoComplete="off"
                                 className="form-input"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -103,7 +105,9 @@ const LoginPage = () => {
                             <label className="form-label" htmlFor="password">Password</label>
                             <input
                                 id="password"
+                                name="login-password"
                                 type="password"
+                                autoComplete="new-password"
                                 className="form-input"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
