@@ -35,7 +35,7 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__Key: ${JWT_SECRET}
 
-      Kafka__BootstrapServers: kafka:19092
+      Kafka__BootstrapServers: kafka:19092it
       Kafka__Topics__BookCreated: book-created
       Kafka__Topics__BookUpdated: book-updated
       Kafka__Topics__BookDeleted: book-deleted
