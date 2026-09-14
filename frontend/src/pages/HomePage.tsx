@@ -6,6 +6,8 @@ import {
     BookMarked,
     BookOpen,
     ChevronDown,
+    Check,
+    Filter,
     Heart,
     LayoutDashboard,
     Library,
@@ -99,7 +101,7 @@ const HomePage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedGenre, setSelectedGenre] = useState('All Categories');
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [selectedAuthor, setSelectedAuthor] = useState('All Authors');
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
@@ -128,9 +130,14 @@ const HomePage = () => {
         return books.length >= 5 ? books : [...books, ...fillers].slice(0, 8);
     }, [books]);
 
-    const genres = useMemo(() => {
-        const uniqueGenres = Array.from(new Set(displayBooks.map(book => book.genre))).filter(Boolean);
-        return ['All Categories', ...uniqueGenres];
+    const genreOptions = useMemo(() => {
+        const counts = new Map<string, number>();
+        displayBooks.forEach(book => {
+            if (book.genre) counts.set(book.genre, (counts.get(book.genre) || 0) + 1);
+        });
+        return Array.from(counts.entries())
+            .map(([name, count]) => ({ name, count }))
+            .sort((first, second) => first.name.localeCompare(second.name));
     }, [displayBooks]);
 
     const authors = useMemo(() => {
@@ -142,7 +149,7 @@ const HomePage = () => {
         const query = searchQuery.trim().toLowerCase();
 
         return displayBooks.filter(book => {
-            const matchesGenre = selectedGenre === 'All Categories' || book.genre === selectedGenre;
+            const matchesGenre = selectedGenres.length === 0 || selectedGenres.includes(book.genre);
             const matchesAuthor = selectedAuthor === 'All Authors' || book.author === selectedAuthor;
             const isAvailable = book.isAvailable ?? book.availableCopies > 0;
             const matchesStatus = selectedStatus === 'All Statuses' ||
@@ -155,7 +162,7 @@ const HomePage = () => {
 
             return matchesGenre && matchesAuthor && matchesStatus && matchesQuery;
         });
-    }, [displayBooks, searchQuery, selectedGenre, selectedAuthor, selectedStatus]);
+    }, [displayBooks, searchQuery, selectedGenres, selectedAuthor, selectedStatus]);
 
     const recommendationBooks = filteredBooks;
     const availableCount = books.filter(book => (book.isAvailable ?? book.availableCopies > 0)).length;
@@ -171,7 +178,7 @@ const HomePage = () => {
 
     const resetFilters = () => {
         setSearchQuery('');
-        setSelectedGenre('All Categories');
+        setSelectedGenres([]);
         setSelectedAuthor('All Authors');
         setSelectedStatus('All Statuses');
     };
@@ -222,6 +229,49 @@ const HomePage = () => {
                     </a>
                 </nav>
 
+                <aside className="discover-filter-rail" aria-label="Book filters">
+                    <div className="discover-filter-heading">
+                        <Filter size={16} />
+                        <span>Filters</span>
+                        {(selectedGenres.length > 0 || selectedStatus === 'Available') && (
+                            <button type="button" className="discover-filter-reset" onClick={resetFilters}>Clear</button>
+                        )}
+                    </div>
+
+                    <fieldset className="discover-filter-group">
+                        <legend>Stock status</legend>
+                        <label className="discover-check-row">
+                            <input
+                                type="checkbox"
+                                checked={selectedStatus === 'Available'}
+                                onChange={e => setSelectedStatus(e.target.checked ? 'Available' : 'All Statuses')}
+                            />
+                            <span className="discover-custom-checkbox"><Check size={12} /></span>
+                            <span>Available</span>
+                            <small>{availableCount}</small>
+                        </label>
+                    </fieldset>
+
+                    <fieldset className="discover-filter-group">
+                        <legend>Categories</legend>
+                        {genreOptions.map(option => (
+                            <label className="discover-check-row" key={option.name}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedGenres.includes(option.name)}
+                                    onChange={e => setSelectedGenres(current => e.target.checked
+                                        ? [...current, option.name]
+                                        : current.filter(genre => genre !== option.name))}
+                                />
+                                <span className="discover-custom-checkbox"><Check size={12} /></span>
+                                <span>{option.name}</span>
+                                <small>{option.count}</small>
+                            </label>
+                        ))}
+                        {genreOptions.length === 0 && <p className="discover-filter-empty">No categories yet</p>}
+                    </fieldset>
+                </aside>
+
                 <div className="discover-sidebar-bottom">
                     {user?.role === 'Admin' ? (
                         <Link to="/admin/dashboard" className="discover-nav-item">
@@ -264,16 +314,6 @@ const HomePage = () => {
 
                     <div className="discover-search-panel">
                         <select
-                            value={selectedGenre}
-                            onChange={e => setSelectedGenre(e.target.value)}
-                            className="discover-category-select"
-                            aria-label="Book category"
-                        >
-                            {genres.map(genre => (
-                                <option key={genre} value={genre}>{genre}</option>
-                            ))}
-                        </select>
-                        <select
                             value={selectedAuthor}
                             onChange={e => setSelectedAuthor(e.target.value)}
                             className="discover-filter-select"
@@ -310,7 +350,7 @@ const HomePage = () => {
 
                     <div className="discover-filter-summary">
                         <span>{filteredBooks.length} matching books</span>
-                        {(searchQuery || selectedGenre !== 'All Categories' || selectedAuthor !== 'All Authors' || selectedStatus !== 'All Statuses') && (
+                        {(searchQuery || selectedGenres.length > 0 || selectedAuthor !== 'All Authors' || selectedStatus !== 'All Statuses') && (
                             <button type="button" className="discover-clear-button" onClick={resetFilters}>Clear filters</button>
                         )}
                     </div>
