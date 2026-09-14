@@ -53,6 +53,12 @@ const LoginPage = () => {
                     <h1>Make room for a good story.</h1>
                     <p>Keep your library close, discover your next favorite book, and return to the pages that stay with you.</p>
                 </div>
+                <div className="auth-reading-object" aria-hidden="true">
+                    <span className="auth-book-spine" />
+                    <span className="auth-book-page auth-book-page-left" />
+                    <span className="auth-book-page auth-book-page-right" />
+                    <span className="auth-book-page auth-book-page-turn" />
+                </div>
                 <div className="auth-book-stack" aria-hidden="true">
                     <span className="auth-book auth-book-one">READ</span>
                     <span className="auth-book auth-book-two">WANDER</span>

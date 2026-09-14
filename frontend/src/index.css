@@ -965,6 +965,75 @@ body {
   animation: auth-books-float 5s ease-in-out 0.7s infinite;
 }
 
+.auth-reading-object {
+  position: absolute;
+  right: clamp(3rem, 16vw, 13rem);
+  bottom: clamp(11rem, 23vw, 17rem);
+  z-index: 1;
+  width: 150px;
+  height: 86px;
+  perspective: 500px;
+  transform: rotate(-7deg);
+  animation: auth-open-book-float 5s ease-in-out 0.3s infinite;
+}
+
+.auth-book-spine,
+.auth-book-page {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  height: 68px;
+  border-radius: 4px 12px 5px 4px;
+  transform-origin: bottom center;
+}
+
+.auth-book-spine {
+  left: 50%;
+  bottom: -2px;
+  z-index: 2;
+  width: 8px;
+  height: 72px;
+  border-radius: 4px;
+  background: #d65d4b;
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.auth-book-page {
+  width: 76px;
+  background: #fff8db;
+  box-shadow: inset 0 -5px 0 rgba(18, 63, 56, 0.08), 4px 7px 0 rgba(0, 0, 0, 0.12);
+}
+
+.auth-book-page::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 18px;
+  height: 2px;
+  background: rgba(18, 63, 56, 0.2);
+  box-shadow: 0 9px 0 rgba(18, 63, 56, 0.14), 0 18px 0 rgba(18, 63, 56, 0.1);
+}
+
+.auth-book-page-left {
+  left: 0;
+  transform: rotateY(18deg) rotateZ(2deg);
+}
+
+.auth-book-page-right {
+  right: 0;
+  border-radius: 12px 4px 4px 5px;
+  transform: rotateY(-18deg) rotateZ(-2deg);
+}
+
+.auth-book-page-turn {
+  right: 1px;
+  z-index: 3;
+  background: #f5d96b;
+  transform-origin: left bottom;
+  animation: auth-page-turn 4.5s ease-in-out 1.2s infinite;
+}
+
 .auth-book {
   position: absolute;
   display: flex;
@@ -1066,10 +1135,36 @@ body {
   }
 }
 
+@keyframes auth-open-book-float {
+  0%, 100% {
+    transform: rotate(-7deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-4deg) translateY(-7px);
+  }
+}
+
+@keyframes auth-page-turn {
+  0%, 18% {
+    opacity: 0.95;
+    transform: rotateY(0deg);
+  }
+  48%, 68% {
+    opacity: 0.65;
+    transform: rotateY(-165deg);
+  }
+  90%, 100% {
+    opacity: 0.95;
+    transform: rotateY(-180deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-showcase-copy,
   .auth-form-card,
-  .auth-book-stack {
+  .auth-book-stack,
+  .auth-reading-object,
+  .auth-book-page-turn {
     animation: none;
   }
 }
@@ -2159,6 +2254,13 @@ body {
     right: 1.25rem;
     bottom: 1rem;
     transform: scale(0.58) rotate(-8deg);
+    transform-origin: right bottom;
+  }
+
+  .auth-reading-object {
+    right: 1.5rem;
+    bottom: 7rem;
+    transform: scale(0.62) rotate(-7deg);
     transform-origin: right bottom;
   }
 
