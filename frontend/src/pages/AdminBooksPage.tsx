@@ -145,6 +145,7 @@ const AdminBooksPage = () => {
             });
             setGenres(prev => prev.map(item => item.id === genre.id ? response.data : item).sort((a, b) => a.name.localeCompare(b.name)));
             setBooks(prev => prev.map(book => book.genre.toLowerCase() === genre.name.toLowerCase() ? { ...book, genre: response.data.name } : book));
+            setGenre(currentGenre => currentGenre.toLowerCase() === genre.name.toLowerCase() ? response.data.name : currentGenre);
             setEditingGenreId(null);
             setEditingGenreName('');
         } catch (err: unknown) {
@@ -162,6 +163,7 @@ const AdminBooksPage = () => {
         try {
             await axios.delete(`${INVENTORY_API_BASE_URL}/api/genres/${genre.id}`, { headers: { Authorization: `Bearer ${token}` } });
             setGenres(prev => prev.filter(item => item.id !== genre.id));
+            setGenre(currentGenre => currentGenre.toLowerCase() === genre.name.toLowerCase() ? '' : currentGenre);
         } catch (err: unknown) {
             setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to delete genre.' : 'Failed to delete genre.');
         } finally {
