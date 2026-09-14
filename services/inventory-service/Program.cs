@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using InventoryService.Data;
+using InventoryService.Kafka;
+using Confluent.Kafka;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection("Kafka"));
+builder.Services.AddSingleton<IProducer<string, string>>(serviceProvider =>
+{
+    var kafkaOptions = serviceProvider.GetRequiredService<IOptions<KafkaOptions>>().Value;
+    if (string.IsNullOrWhiteSpace(kafkaOptions.BootstrapServers))
+    {
+        throw new InvalidOperationException("Kafka:BootstrapServers must be configured.");
+    }
+
+    if (!Enum.TryParse<SecurityProtocol>(kafkaOptions.SecurityProtocol, ignoreCase: true, out var securityProtocol))
+    {
+        throw new InvalidOperationException($"Unsupported Kafka security protocol '{kafkaOptions.SecurityProtocol}'.");
+    }
+
+    var producerConfig = new ProducerConfig
+    {
+        BootstrapServers = kafkaOptions.BootstrapServers,
+        SecurityProtocol = securityProtocol,
+        EnableIdempotence = true,
+        Acks = Acks.All,
+        MessageTimeoutMs = 10000
+    };
+
+    return new ProducerBuilder<string, string>(producerConfig).Build();
+});
+builder.Services.AddSingleton<IBookEventPublisher, KafkaBookEventPublisher>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
     ?? builder.Configuration["ApplicationInsights:ConnectionString"];
