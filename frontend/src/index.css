@@ -1280,6 +1280,193 @@ body {
   border-color: #b9e8cc !important;
 }
 
+.admin-users-main {
+  padding-bottom: 4rem;
+}
+
+.admin-users-topbar {
+  align-items: center;
+}
+
+.admin-users-subtitle {
+  max-width: 620px;
+  margin-top: 0.65rem;
+  color: #777267;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.admin-users-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-users-mode-pending {
+  background: #fff8db;
+  color: #7a5a08;
+}
+
+.admin-users-mode-active {
+  background: #e4f7ed;
+  color: #0f6b47;
+}
+
+.admin-users-panel {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid #e6e0cf;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 14px 32px rgba(43, 40, 31, 0.07);
+}
+
+.admin-users-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ece8dc;
+}
+
+.admin-users-panel-heading h2 {
+  margin-top: 0.35rem;
+  color: #2e2b28;
+  font-size: 1.2rem;
+}
+
+.admin-users-count {
+  color: #777267;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-users-error {
+  margin-top: 1rem;
+  border-left: 1px solid #ffc9c9;
+}
+
+.admin-users-panel > p {
+  color: #777267 !important;
+}
+
+.admin-users-panel > div[style*="rgba(0,0,0,0.2)"] {
+  margin-top: 1rem;
+  background: #f3f0e7 !important;
+}
+
+.admin-users-panel > div[style*="rgba(0,0,0,0.2)"] p {
+  color: #777267 !important;
+}
+
+.admin-users-table {
+  color: #4c4942;
+  font-size: 0.84rem;
+}
+
+.admin-users-table th {
+  padding: 0.85rem 0.75rem !important;
+  border-bottom: 1px solid #ded8c8 !important;
+  color: #777267 !important;
+  font-size: 0.7rem;
+  font-weight: 850 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-users-table td {
+  padding: 0.95rem 0.75rem !important;
+  border-bottom: 1px solid #ece8dc !important;
+  color: #605d55 !important;
+  vertical-align: middle;
+}
+
+.admin-users-table tbody tr:hover {
+  background: #fbfaf5;
+}
+
+.admin-users-table td:nth-child(2) {
+  color: #d65d4b !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+}
+
+.admin-users-table td:nth-child(2)::after {
+  content: '  >';
+  color: #fb6d55;
+  font-size: 0.7rem;
+}
+
+.admin-users-table td:nth-child(4) span {
+  display: inline-flex;
+  border-radius: 999px !important;
+  padding: 0.35rem 0.6rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 800;
+}
+
+.admin-users-table td:nth-child(4) span[style*="16, 185"] {
+  background: #e4f7ed !important;
+  color: #0f6b47 !important;
+}
+
+.admin-users-table td:nth-child(4) span[style*="245, 158"] {
+  background: #fff8db !important;
+  color: #7a5a08 !important;
+}
+
+.admin-user-modal-backdrop {
+  padding: 1rem;
+  background: rgba(18, 63, 56, 0.32) !important;
+  backdrop-filter: blur(5px);
+}
+
+.admin-user-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #e6e0cf;
+  border-radius: 12px;
+  background: #fffdf8 !important;
+  color: #2e2b28;
+  box-shadow: 0 24px 60px rgba(43, 40, 31, 0.2) !important;
+}
+
+.admin-user-modal h2,
+.admin-user-modal h3 {
+  color: #2e2b28 !important;
+}
+
+.admin-user-modal p,
+.admin-user-modal span {
+  color: #777267 !important;
+}
+
+.admin-user-details {
+  border: 1px solid #ece8dc;
+  background: #f3f0e7 !important;
+}
+
+.admin-user-details div {
+  color: #2e2b28 !important;
+}
+
+.admin-user-modal [style*="rgba(0,0,0,0.15)"] {
+  border: 1px solid #ece8dc !important;
+  background: #ffffff !important;
+}
+
+.admin-user-modal [style*="rgba(0,0,0,0.15)"] h4 {
+  color: #123f38 !important;
+  border-bottom-color: #ece8dc !important;
+}
+
 @media (max-width: 980px) {
   .discover-shell {
     grid-template-columns: 1fr;
@@ -1372,6 +1559,14 @@ body {
 
   .admin-inventory-panel,
   .admin-inventory-form {
+    width: 100%;
+  }
+
+  .admin-users-topbar {
+    align-items: flex-start;
+  }
+
+  .admin-users-panel {
     width: 100%;
   }
 }
@@ -1476,5 +1671,22 @@ body {
 
   .admin-inventory-table {
     min-width: 980px;
+  }
+
+  .admin-users-topbar {
+    align-items: stretch;
+  }
+
+  .admin-users-mode {
+    align-self: flex-start;
+  }
+
+  .admin-users-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-users-table {
+    min-width: 720px;
   }
 }
