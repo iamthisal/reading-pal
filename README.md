@@ -2,32 +2,34 @@
 
 # ReadingPal
 
-A library/book rental management system for admin-driven checkout and check-in workflows
+A library/book rental management system for user registration, book inventory management, and admin-driven library operations.
 
 ## Features
 
 - JWT authentication and role-based authorization
-- User registration, viewing, and profile management
-- Add new books to the inventory and assign categories to books
-- Lend a book and assign it to a member/user
-- Calculate fines for overdue books
-- Send notifications when a book is issued, returned, or overdue
-- Kafka-based asynchronous communication between services
+- User registration, login, validation, profile viewing, and profile updates
+- Admin dashboards for pending users, active users, and access management
+- Book inventory CRUD with ISBN duplicate checks, cover image URLs, copy counts, and availability status
+- Genre management for creating, updating, listing, and deleting book categories
+- Kafka event publishing for book created, updated, and deleted events
+- Docker Compose support for local service/database orchestration
+- Unit, integration, and Selenium test coverage for user and inventory workflows
 
 ## Technology Stack
 
-- Frontend: React, TypeScript
-- Backend: ASP.NET Core Web API, .NET, REST, JWT, and xUnit
-- Messaging: Apache Kafka and ZooKeeper
-- DevOps: GitHub Actions, Docker, Docker Compose, Microsoft Azure, and GitHub Environments
+- Frontend: React, TypeScript, Vite, React Router, Axios, and lucide-react
+- Backend: ASP.NET Core Web API, Entity Framework Core, REST, JWT, BCrypt, and xUnit
+- Database: MySQL
+- Messaging: Apache Kafka, with a KRaft-based stack under `infrastructure/kafka`
+- DevOps: GitHub Actions, Docker, Docker Compose, Microsoft Azure, and Azure Static Web Apps
 - Monitoring: Azure Application Insights
 
 ## Microservices
 
-- `user-service` - Accounts, login, logout, JWT authentication, users, roles, and profiles; not started yet.
-- `inventory-service` - Book catalog CRUD, search/browse, and stock tracking for total and available copies; not started yet.
-- `lending-service` - Admin checkout/check-in, rental history, renewals, cancellations, overdue flagging, and late fee display; not started yet.
-- `notification-service` - Checkout, due-soon, and overdue alerts, plus admin/user notification logs; not started yet.
+- `user-service` - Implemented. Handles registration, login/JWT authentication, profile management, admin-only pending/active user lists, user acceptance, rejection, and access revocation.
+- `inventory-service` - Implemented. Handles books, genres, inventory copy counts, availability changes, JWT-protected admin operations, MySQL migrations, and Kafka publication for book events.
+- `lending-service` - Planned. Will handle reservations, checkout/check-in, borrowing history, renewals, cancellations, overdue detection, and fine display.
+- `notification-service` - Planned. Will handle due-soon, overdue, reservation, and user/admin notification logs.
 
 ## Branching Strategy
 
@@ -55,21 +57,42 @@ ReadingPal/
 |-- .github/
 |   |-- PULL_REQUEST_TEMPLATE.md
 |   `-- workflows/
-|       |-- README.md
-|       `-- .gitkeep
+|       |-- ci.yml
+|       |-- cd.yml
+|       |-- ci_inventry.yml
+|       |-- cd_inventry.yml
+|       `-- azure-static-web-apps-polite-water-0c0e68a00.yml
 |-- services/
 |   |-- user-service/
-|   |   `-- .gitkeep
+|   |   |-- Controllers/
+|   |   |-- Data/
+|   |   |-- DTOs/
+|   |   |-- Migrations/
+|   |   |-- Models/
+|   |   |-- Dockerfile
+|   |   `-- UserService.csproj
 |   |-- inventory-service/
-|   |   `-- .gitkeep
-|   |-- lending-service/
-|   |   `-- .gitkeep
-|   `-- notification-service/
-|       `-- .gitkeep
+|   |   |-- Controllers/
+|   |   |-- Data/
+|   |   |-- DTOs/
+|   |   |-- Kafka/
+|   |   |-- Migrations/
+|   |   |-- Models/
+|   |   |-- Dockerfile
+|   |   `-- InventoryService.csproj
 |-- frontend/
-|   `-- .gitkeep
+|   |-- src/
+|   |   |-- components/
+|   |   |-- contexts/
+|   |   |-- pages/
+|   |   `-- config/
+|   |-- package.json
+|   `-- vite.config.ts
 |-- tests/
-|   `-- .gitkeep
+|   |-- UserService.Tests/
+|   |-- UserService.Selenium/
+|   |-- InventoryService.Tests/
+|   `-- InventoryService.Selenium/
 |-- deploy/
 |   |-- README.md
 |   |-- docker/
@@ -78,6 +101,8 @@ ReadingPal/
 |   `-- azure/
 |       |-- README.md
 |       `-- .gitkeep
+|-- infrastructure/
+|   `-- kafka/
 |-- docker-compose.yml
 |-- .editorconfig
 |-- .env.example
@@ -88,4 +113,8 @@ ReadingPal/
 
 ## Status
 
-The user-service foundation is live and deployed to Azure, with GitHub Actions CI/CD configured and working for automated validation and deployment. The project includes a React frontend and an ASP.NET Core user service with JWT authentication, user registration, login, profile management, and admin user management flows. The inventory, lending, and notification services are still in progress, so the system is not yet complete end-to-end, but the core backend and deployment pipeline are operational.
+ReadingPal currently has the core user and inventory foundations in place. The React frontend includes login, registration, home, profile, admin dashboard, admin user management, and admin book management pages. The `user-service` and `inventory-service` are implemented as ASP.NET Core Web APIs with MySQL persistence, EF Core migrations, JWT-based authorization, health endpoints, Dockerfiles, and GitHub Actions workflows.
+
+Inventory work has progressed beyond the original placeholder state: admins can create, update, remove, and toggle availability for books; manage genres; store cover image URLs; and publish Kafka events when books change. The repository also includes unit/integration tests and Selenium tests for major user and inventory flows.
+
+Still pending: the lending and notification services are not implemented yet, so reservations, checkout/check-in, borrowing history, overdue fine calculation, and in-app notification delivery are not complete end to end.
