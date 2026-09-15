@@ -1,3 +1,4 @@
+#CI workflow dedicated exclusively to building and testing the Inventory Service backend.
 name: CI - Inventory Service
 
 on:
