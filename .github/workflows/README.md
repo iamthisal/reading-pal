@@ -1,45 +1,27 @@
 # GitHub Actions Workflow Plan
 
-No workflow YAML files are included yet because the application services have not been implemented.
+This directory contains the GitHub Actions workflows that handle Continuous Integration (CI) and Continuous Deployment (CD) for the ReadingPal services and frontend.
 
-When the services are added, create workflow files here for CI, image builds, and deployment.
+## Active Workflows
 
-## Suggested Future Workflows
+- `ci.yml` - CI Pipeline for the User Service and Frontend. Runs unit tests, formatting checks, and builds Docker images for PRs and pushes to `main` and `develop`.
+- `cd.yml` - CD Pipeline for the User Service. Deploys the built Docker image to Azure App Services upon successful CI run on `main`.
+- `ci_inventry.yml` - Dedicated CI Pipeline for the Inventory Service backend. Builds the .NET project and runs unit tests.
+- `cd_inventry.yml` - Dedicated CD Pipeline for the Inventory Service backend. Deploys the built Docker image to Azure App Services.
+- `azure-static-web-apps-polite-water-0c0e68a00.yml` - Auto-generated CD workflow for the React Frontend using Azure Static Web Apps.
 
-- `ci.yml` - Run backend tests, frontend checks, formatting, and build validation.
-- `docker-build.yml` - Build and publish Docker images for changed services.
-- `deploy-dev.yml` - Deploy the latest successful builds to the development Azure environment.
-- `deploy-prod.yml` - Deploy approved releases to the production Azure environment.
+## Deployment Environments
 
-## Suggested GitHub Environments
+- `development` (Local testing via Docker Compose)
+- `production` (Azure App Services, Azure Static Web Apps, and Azure Container Instances)
 
-- `development`
-- `production`
+## Configured Repository Secrets
 
-Use GitHub Environment protection rules for production deployments.
-
-## Suggested Repository Secrets
-
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
-- `AZURE_SUBSCRIPTION_ID`
-- `AZURE_RESOURCE_GROUP`
-- `AZURE_CONTAINER_REGISTRY`
-- `MYSQL_CONNECTION_STRING`
-- `JWT_SECRET`
-- `APPLICATIONINSIGHTS_CONNECTION_STRING`
-
-## Suggested Repository Variables
-
-- `FRONTEND_PORT`
-- `USER_SERVICE_PORT`
-- `INVENTORY_SERVICE_PORT`
-- `LENDING_SERVICE_PORT`
-- `NOTIFICATION_SERVICE_PORT`
-- `KAFKA_BOOTSTRAP_SERVERS`
+- `AZURE_WEBAPP_PUBLISH_PROFILE` (Used by User Service deployment)
+- `AZURE_INVENTORY_WEBAPP_PUBLISH_PROFILE` (Used by Inventory Service deployment)
+- GitHub also manages an auto-generated token for Azure Static Web Apps deployment.
 
 ## Notes
 
-- Add workflow files only after the corresponding service has real code, tests, and a Dockerfile.
-- Prefer one CI workflow for pull requests and separate deployment workflows for environment-specific releases.
-- Use path filters so service-specific builds only run when files for that service change.
+- Backend CI/CD is separated by service (`ci.yml` vs `ci_inventry.yml`) to allow independent builds and reduce CI execution time.
+- Docker builds use `ghcr.io` for container image hosting.
