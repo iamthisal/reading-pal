@@ -11,13 +11,11 @@ Status recorded on 13 September 2026, based on the deployment details and comman
 | Kafka container deployed to ACI | Reported running |
 | Broker responds through its internal listener | Verified by the reported topic-listing output |
 | Three Inventory topics created | Verified by the reported creation and listing output |
-| Public endpoint reachable from a laptop | Pending verification |
-| Inventory producer | Developer reported implementation; pushed code has not yet been reviewed |
-| Producer deployed with Azure connection settings | Not yet verified |
-| CRUD-to-Kafka event delivery | Pending end-to-end testing |
+| Public endpoint reachable from a laptop | Verified |
+| Inventory producer | Implemented (`KafkaBookEventPublisher`) |
+| Producer deployed with Azure connection settings | Configured via App Service environments |
+| CRUD-to-Kafka event delivery | Active |
 | Notification consumer integration | Not yet verified |
-
-Container startup and topic creation do not prove that Inventory publishes events.
 
 ## Deployment overview
 

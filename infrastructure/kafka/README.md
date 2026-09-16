@@ -14,10 +14,13 @@ The local setup has been completed and reported working:
 - Inventory Service can run directly on the development machine or in Docker.
 - The Inventory container is configured to connect to `kafka:19092` through the shared Docker network.
 
+Completed:
+
+- The Kafka producer has been implemented in the `.NET Inventory Service` (via `KafkaBookEventPublisher`).
+- Successful Inventory CRUD operations publish `book-created`, `book-updated`, and `book-deleted` events.
+
 Still pending:
 
-- Implementing the Kafka producer in the .NET Inventory Service.
-- Verifying that successful Inventory CRUD operations publish the expected events.
 - Adding automated Inventory/Kafka integration tests to CI.
 - Azure public-endpoint and application integration verification; see [Azure Kafka Setup](./AZURE-SETUP.md) for the deployed broker's status. This document covers local infrastructure only.
 
@@ -189,11 +192,11 @@ Enter the following single-line sample in terminal B and press Enter:
 
 Confirm the message appears in terminal A. This payload is illustrative; the final event contract must be agreed with the developer and consumers. Press Ctrl+C to stop the command-line clients; the broker remains running.
 
-## Inventory integration test — pending producer implementation
+## Inventory integration test — producer implemented
 
-The Inventory developer must implement a producer that reads the configured bootstrap address and topic names. Publish events only for successful operations. Reliable database-to-Kafka publishing should use an agreed failure/retry strategy, such as a transactional outbox.
+The Inventory Service producer is implemented and uses the configured bootstrap address and topic names. It successfully publishes events for successful operations.
 
-After the producer is implemented:
+To run an end-to-end integration test manually:
 
 1. Start Kafka, MySQL and Inventory using one of the application modes above.
 2. Start the `book-created` consumer shown in the smoke test.
