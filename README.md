@@ -113,8 +113,8 @@ ReadingPal/
 
 ## Status
 
-ReadingPal currently has the core user and inventory foundations in place. The React frontend includes login, registration, home, profile, admin dashboard, admin user management, and admin book management pages. The `user-service` and `inventory-service` are implemented as ASP.NET Core Web APIs with MySQL persistence, EF Core migrations, JWT-based authorization, health endpoints, Dockerfiles, and GitHub Actions workflows.
+ReadingPal currently has the core user and inventory foundations in place. The React frontend includes login, registration, home, profile, admin dashboard, admin user management, and admin book management pages. The `user-service` and `inventory-service` are implemented as ASP.NET Core Web APIs with MySQL persistence, EF Core migrations, JWT-based authorization, health endpoints, Dockerfiles, and active GitHub Actions CI/CD workflows for Azure App Services deployment.
 
-Inventory work has progressed beyond the original placeholder state: admins can create, update, remove, and toggle availability for books; manage genres; store cover image URLs; and publish Kafka events when books change. The repository also includes unit/integration tests and Selenium tests for major user and inventory flows.
+Inventory work has progressed beyond the original placeholder state: admins can create, update, remove, and toggle availability for books; manage genres; store cover image URLs; and actively publish Kafka events to an Azure Container Instance when books change. The repository also includes unit/integration tests and Selenium tests for major user and inventory flows.
 
 Still pending: the lending and notification services are not implemented yet, so reservations, checkout/check-in, borrowing history, overdue fine calculation, and in-app notification delivery are not complete end to end.

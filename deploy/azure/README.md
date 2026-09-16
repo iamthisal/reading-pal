@@ -1,12 +1,13 @@
 # Azure
 
-This folder is reserved for Azure infrastructure and deployment configuration.
+This folder contains Azure infrastructure and deployment documentation.
 
-Future files may include Bicep, Terraform, or Azure CLI scripts for:
+## Configured Resources
 
-- Azure Container Registry
-- Azure Container Apps or App Services
-- Azure Database for MySQL
-- Azure Key Vault
-- Azure Application Insights
-- Environment-specific parameters
+The ReadingPal architecture relies on the following active Azure services:
+
+- **Azure App Services**: Hosts the `.NET` backend microservices (`user-service`, `inventory-service`). Deployments are managed via GitHub Actions Publish Profiles.
+- **Azure Static Web Apps**: Hosts the React frontend application.
+- **Azure Container Instances (ACI)**: Hosts the KRaft-based Apache Kafka broker. For detailed setup and status, see the [Kafka Azure Setup](../../infrastructure/kafka/AZURE-SETUP.md).
+- **Azure Application Insights**: Integrated into the backend services for telemetry, distributed tracing, and logging.
+- **Azure Database for MySQL**: The primary relational data store for the backend services.
