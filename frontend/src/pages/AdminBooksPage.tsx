@@ -127,7 +127,20 @@ const AdminBooksPage = () => {
             setNewGenreName('');
             setGenreErrorMessage('');
         } catch (err: unknown) {
-            setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to add genre.' : 'Failed to add genre.');
+            if (axios.isAxiosError(err)) {
+                const status = err.response?.status;
+                const msg = err.response?.data?.message || err.response?.data?.title;
+                if (status === 401 || status === 403) {
+                    setGenreErrorMessage(`Unauthorized (${status}): Only admins can add genres. Your token may not have the Admin role.`);
+                } else if (msg) {
+                    setGenreErrorMessage(msg);
+                } else {
+                    setGenreErrorMessage(`Failed to add genre (HTTP ${status}). ${err.message}`);
+                }
+                console.error('Genre create error:', status, err.response?.data);
+            } else {
+                setGenreErrorMessage('Failed to add genre.');
+            }
         } finally {
             setIsGenreSubmitting(false);
         }
