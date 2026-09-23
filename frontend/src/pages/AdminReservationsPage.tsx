@@ -37,7 +37,7 @@ export default function AdminReservationsPage() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setReservations(current => current.filter(row => row.id !== reservation.id));
-            setSuccess(`Accepted ${reservation.bookTitle} for ${reservation.userName}. Notification event queued.`);
+            setSuccess(`${reservation.bookTitle} is now borrowed by ${reservation.userName} for 14 days. Notification event queued.`);
         } catch (err) {
             const status = axios.isAxiosError(err) ? err.response?.status : undefined;
             if (status === 409 || status === 404) {
@@ -88,6 +88,7 @@ export default function AdminReservationsPage() {
                     <Link to="/admin/users/active" className="admin-nav-item"><Users size={16} />Active users</Link>
                     <Link to="/admin/books" className="admin-nav-item"><BookPlus size={16} />Book inventory</Link>
                     <Link to="/admin/reservations/pending" className="admin-nav-item admin-nav-item-active" aria-current="page"><BookMarked size={16} />Pending reservations</Link>
+                    <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
                     <Link to="/home" className="admin-nav-item"><BookOpen size={16} />Public catalogue</Link>
                 </nav>
                 <div className="admin-sidebar-bottom">
@@ -123,7 +124,7 @@ export default function AdminReservationsPage() {
                                         <td>{reservation.userName}</td>
                                         <td>{reservation.bookTitle}</td>
                                         <td><time dateTime={reservation.reservationDate}>{timestampFormat.format(new Date(reservation.reservationDate))}</time></td>
-                                        <td><button type="button" className="btn-outline" disabled={acceptingId !== null}
+                                        <td><button type="button" className="reservation-accept-button" disabled={acceptingId !== null}
                                             aria-label={`Accept ${reservation.bookTitle} for ${reservation.userName}`}
                                             onClick={() => void acceptReservation(reservation)}>
                                             {acceptingId === reservation.id ? 'Accepting…' : 'Accept'}
