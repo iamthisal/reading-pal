@@ -55,6 +55,7 @@ const AdminDashboard = () => {
                         <BookPlus size={16} />
                         Book inventory
                     </Link>
+                    <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue
@@ -96,10 +97,11 @@ const AdminDashboard = () => {
                             <p className="admin-eyebrow">Quick access</p>
                             <h2 id="admin-actions-heading">What needs your attention?</h2>
                         </div>
-                        <span className="admin-section-note">4 tools available</span>
+                        <span className="admin-section-note">5 tools available</span>
                     </div>
 
                     <div className="admin-action-grid">
+                        <Link to="/admin/reservations/pending" className="admin-action-card admin-action-card-yellow"><span className="admin-action-icon"><BookMarked size={21} /></span><span className="admin-action-copy"><strong>Pending reservations</strong><small>View the pickup queue, oldest first</small></span><ArrowUpRight className="admin-action-arrow" size={18} /></Link>
                         <Link to="/admin/users/pending" className="admin-action-card admin-action-card-coral">
                             <span className="admin-action-icon"><Users size={21} /></span>
                             <span className="admin-action-copy"><strong>Pending requests</strong><small>Manage new members awaiting approval</small></span>
