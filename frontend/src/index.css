@@ -2508,3 +2508,5 @@ body {
     width: 100%;
   }
 }
+
+.admin-reservations-table td:nth-child(2)::after { content: none; }
