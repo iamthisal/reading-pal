@@ -10,5 +10,5 @@ public sealed class ReservationAcceptedEvent
     public int UserId { get; init; }
     public int BookId { get; init; }
     public DateTime ReservationDate { get; init; }
-    public string Status { get; init; } = "Accepted";
+    public string Status { get; init; } = "Borrowed";
 }
