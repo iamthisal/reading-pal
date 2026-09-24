@@ -212,6 +212,53 @@ namespace LendingService.Controllers
             });
         }
 
+        [HttpPost("{id:int}/reject")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reject(int id, CancellationToken cancellationToken)
+        {
+            var reservation = await _context.Reservations.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (reservation == null)
+                return NotFound(new { message = "Reservation not found." });
+            if (reservation.Status != "Pending")
+                return Conflict(new { message = "Only pending reservations can be rejected. Refresh the queue." });
+
+            // Reserving did not decrement inventory, so cancellation only changes Lending state.
+            reservation.Status = "Cancelled";
+            var cancelledEvent = new ReservationCancelledEvent
+            {
+                ReservationId = reservation.Id,
+                UserId = reservation.UserId,
+                BookId = reservation.BookId,
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+            };
+            _context.ReservationEvents.Add(new ReservationEventOutbox
+            {
+                Id = cancelledEvent.EventId,
+                ReservationId = reservation.Id,
+                CreatedAtUtc = cancelledEvent.TimestampUtc,
+                Payload = JsonSerializer.Serialize(cancelledEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            });
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new { message = "This reservation was already processed. Refresh the queue." });
+            }
+
+            catch (DbUpdateException)
+            {
+                var currentStatus = await _context.Reservations.AsNoTracking()
+                    .Where(r => r.Id == id).Select(r => r.Status).SingleOrDefaultAsync(cancellationToken);
+                if (currentStatus != "Pending")
+                    return Conflict(new { message = "This reservation was already processed. Refresh the queue." });
+                throw;
+            }
+            return Ok(new { reservation.Id, reservation.Status, eventId = cancelledEvent.EventId,
+                message = "Reservation cancelled. Cancellation event queued for Kafka. Copy counts are unchanged." });
+        }
+
         [HttpPost]
         public async Task<ActionResult<ReservationResponse>> ReserveBook([FromBody] ReserveBookRequest request)
         {
