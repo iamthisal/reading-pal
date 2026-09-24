@@ -23,31 +23,36 @@ export default function AdminReservationsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [refresh, setRefresh] = useState(0);
-    const [acceptingId, setAcceptingId] = useState<number | null>(null);
+    const [processingId, setProcessingId] = useState<number | null>(null);
+    const [processingAction, setProcessingAction] = useState<'accept' | 'reject' | null>(null);
     const [actionError, setActionError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const acceptReservation = async (reservation: PendingReservation) => {
-        if (acceptingId !== null) return;
-        setAcceptingId(reservation.id);
+    const processReservation = async (reservation: PendingReservation, action: 'accept' | 'reject') => {
+        if (processingId !== null) return;
+        setProcessingId(reservation.id);
+        setProcessingAction(action);
         setActionError('');
         setSuccess('');
         try {
-            await axios.post(`${LENDING_API_BASE_URL}/api/reservations/${reservation.id}/accept`, {}, {
+            await axios.post(`${LENDING_API_BASE_URL}/api/reservations/${reservation.id}/${action}`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setReservations(current => current.filter(row => row.id !== reservation.id));
-            setSuccess(`${reservation.bookTitle} is now borrowed by ${reservation.userName} for 14 days. Notification event queued.`);
+            setSuccess(action === 'accept'
+                ? `${reservation.bookTitle} is now borrowed by ${reservation.userName} for 14 days. Notification event queued.`
+                : `Reservation for ${reservation.bookTitle} by ${reservation.userName} was cancelled. Notification event queued.`);
         } catch (err) {
             const status = axios.isAxiosError(err) ? err.response?.status : undefined;
             if (status === 409 || status === 404) {
                 setActionError('This reservation is no longer pending. The queue has been refreshed.');
                 setRefresh(value => value + 1);
             } else {
-                setActionError('Could not confirm acceptance. Refresh the queue before trying again.');
+                setActionError('Could not confirm the action. Refresh the queue before trying again.');
             }
         } finally {
-            setAcceptingId(null);
+            setProcessingId(null);
+            setProcessingAction(null);
         }
     };
 
@@ -102,7 +107,7 @@ export default function AdminReservationsPage() {
                         <h1>Pending reservations</h1>
                         <p className="admin-users-subtitle">Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</p>
                     </div>
-                    <button type="button" className="btn-outline" disabled={isLoading || acceptingId !== null} onClick={() => setRefresh(value => value + 1)}>
+                    <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
                         {isLoading ? 'Loading…' : 'Refresh'}
                     </button>
                 </header>
@@ -124,11 +129,16 @@ export default function AdminReservationsPage() {
                                         <td>{reservation.userName}</td>
                                         <td>{reservation.bookTitle}</td>
                                         <td><time dateTime={reservation.reservationDate}>{timestampFormat.format(new Date(reservation.reservationDate))}</time></td>
-                                        <td><button type="button" className="reservation-accept-button" disabled={acceptingId !== null}
+                                        <td><div className="reservation-actions"><button type="button" className="reservation-accept-button" disabled={processingId !== null}
                                             aria-label={`Accept ${reservation.bookTitle} for ${reservation.userName}`}
-                                            onClick={() => void acceptReservation(reservation)}>
-                                            {acceptingId === reservation.id ? 'Accepting…' : 'Accept'}
-                                        </button></td>
+                                            onClick={() => void processReservation(reservation, 'accept')}>
+                                            {processingId === reservation.id && processingAction === 'accept' ? 'Accepting…' : 'Accept'}
+                                        </button>
+                                        <button type="button" className="reservation-accept-button reservation-reject-button" disabled={processingId !== null}
+                                            aria-label={`Reject ${reservation.bookTitle} for ${reservation.userName}`}
+                                            onClick={() => void processReservation(reservation, 'reject')}>
+                                            {processingId === reservation.id && processingAction === 'reject' ? 'Rejecting…' : 'Reject'}
+                                        </button></div></td>
                                     </tr>
                                 ))}</tbody>
                             </table>
