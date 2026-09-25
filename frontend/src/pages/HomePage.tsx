@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
     Bell,
@@ -109,8 +109,8 @@ const HomePage = () => {
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
 
-    const fetchBooks = async () => {
-        setIsLoading(true);
+    const fetchBooks = useCallback(async (background = false) => {
+        if (!background) setIsLoading(true);
         try {
             const response = await axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`);
             setBooks(response.data);
@@ -119,9 +119,9 @@ const HomePage = () => {
             console.error('Failed to fetch catalogue:', err);
             setErrorMessage('Unable to load the book catalogue. Please ensure the Inventory Service is running.');
         } finally {
-            setIsLoading(false);
+            if (!background) setIsLoading(false);
         }
-    };
+    }, []);
 
     const handleReserve = async (bookId: number) => {
         if (!user || !token) return;
@@ -151,8 +151,12 @@ const HomePage = () => {
     };
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        void fetchBooks();
+        const refresh = () => { if (!document.hidden) void fetchBooks(true); };
+        const timer = window.setInterval(refresh, 10000);
+        window.addEventListener('focus', refresh);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+    }, [fetchBooks]);
 
     const displayBooks = useMemo(() => {
         const titles = new Set(books.map(book => book.title.trim().toLowerCase()));
@@ -329,7 +333,7 @@ const HomePage = () => {
                             <span>{user?.email || 'Reader'}</span>
                             <ChevronDown size={14} />
                         </div>
-                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={fetchBooks} disabled={isLoading}>
+                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
                             <RefreshCw size={17} />
                         </button>
                         <button type="button" className="discover-icon-button" title="Notifications">
