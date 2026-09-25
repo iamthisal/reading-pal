@@ -55,6 +55,41 @@ namespace InventoryService.Controllers
             return Ok(ToBookResponse(book));
         }
 
+        [HttpPost("{id:int}/checkouts/{reservationId:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Checkout(int id, int reservationId, CancellationToken cancellationToken)
+        {
+            if (id <= 0 || reservationId <= 0)
+                return BadRequest(new { message = "Book and reservation IDs must be positive." });
+
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            var previous = await _context.BookCheckouts.AsNoTracking()
+                .SingleOrDefaultAsync(c => c.Id == reservationId, cancellationToken);
+            if (previous != null)
+                return previous.BookId == id
+                    ? Ok(new { bookId = id, reservationId, previous.CheckoutDateUtc })
+                    : Conflict(new { message = "This reservation already checked out a different book." });
+
+            var checkoutDateUtc = DateTime.UtcNow;
+            var updated = await _context.Books.Where(b => b.Id == id && b.AvailableCopies > 0)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(b => b.AvailableCopies, b => b.AvailableCopies - 1)
+                    .SetProperty(b => b.UpdatedAt, checkoutDateUtc), cancellationToken);
+            if (updated == 0)
+            {
+                var exists = await _context.Books.AnyAsync(b => b.Id == id, cancellationToken);
+                return exists
+                    ? Conflict(new { message = "No copies are available for checkout." })
+                    : NotFound(new { message = "Book not found." });
+            }
+
+            _context.BookCheckouts.Add(new BookCheckout { Id = reservationId, BookId = id, CheckoutDateUtc = checkoutDateUtc });
+            // The count and retry record commit together. A failed transaction cannot deduct a copy.
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return Ok(new { bookId = id, reservationId, checkoutDateUtc });
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
