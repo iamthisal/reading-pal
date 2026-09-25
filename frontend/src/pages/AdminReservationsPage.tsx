@@ -10,6 +10,7 @@ interface PendingReservation {
     userName: string;
     bookTitle: string;
     reservationDate: string;
+    status: string;
 }
 
 const timestampFormat = new Intl.DateTimeFormat(undefined, {
@@ -45,10 +46,11 @@ export default function AdminReservationsPage() {
         } catch (err) {
             const status = axios.isAxiosError(err) ? err.response?.status : undefined;
             if (status === 409 || status === 404) {
-                setActionError('This reservation is no longer pending. The queue has been refreshed.');
+                setActionError(axios.isAxiosError(err) ? err.response?.data?.message || 'The reservation changed. The queue has been refreshed.' : 'The reservation changed.');
                 setRefresh(value => value + 1);
             } else {
-                setActionError('Could not confirm the action. Refresh the queue before trying again.');
+                setActionError(axios.isAxiosError(err) ? err.response?.data?.message || 'Could not confirm the action. Refresh and retry.' : 'Could not confirm the action.');
+                setRefresh(value => value + 1);
             }
         } finally {
             setProcessingId(null);
@@ -132,9 +134,10 @@ export default function AdminReservationsPage() {
                                         <td><div className="reservation-actions"><button type="button" className="reservation-accept-button" disabled={processingId !== null}
                                             aria-label={`Accept ${reservation.bookTitle} for ${reservation.userName}`}
                                             onClick={() => void processReservation(reservation, 'accept')}>
-                                            {processingId === reservation.id && processingAction === 'accept' ? 'Accepting…' : 'Accept'}
+                                            {processingId === reservation.id && processingAction === 'accept' ? 'Accepting…' : reservation.status === 'Accepting' ? 'Retry Accept' : 'Accept'}
                                         </button>
-                                        <button type="button" className="reservation-accept-button reservation-reject-button" disabled={processingId !== null}
+                                        <button type="button" className="reservation-accept-button reservation-reject-button" disabled={processingId !== null || reservation.status === 'Accepting'}
+                                            title={reservation.status === 'Accepting' ? 'Checkout is awaiting confirmation. Retry Accept to complete it.' : undefined}
                                             aria-label={`Reject ${reservation.bookTitle} for ${reservation.userName}`}
                                             onClick={() => void processReservation(reservation, 'reject')}>
                                             {processingId === reservation.id && processingAction === 'reject' ? 'Rejecting…' : 'Reject'}
