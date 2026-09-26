@@ -4,6 +4,10 @@ using LendingService.DTOs;
 using LendingService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Text.Json;
+using LendingService.Kafka;
 
 namespace LendingService.Controllers
 {
@@ -21,6 +25,132 @@ namespace LendingService.Controllers
             _context = context;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+        }
+
+        [HttpGet("pending")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<PendingReservationResponse>>> GetPending(CancellationToken cancellationToken)
+        {
+            var reservations = await _context.Reservations.AsNoTracking()
+                .Where(r => r.Status == "Pending")
+                .OrderBy(r => r.ReservationDate)
+                .ThenBy(r => r.Id)
+                .ToListAsync(cancellationToken);
+
+            if (reservations.Count == 0)
+                return Ok(Array.Empty<PendingReservationResponse>());
+
+            if (!Uri.TryCreate(_configuration["UserService:BaseUrl"], UriKind.Absolute, out var userBaseUrl)
+                || !Uri.TryCreate(_configuration["InventoryService:BaseUrl"], UriKind.Absolute, out var inventoryBaseUrl))
+                return StatusCode(500, new { message = "Reservation lookup service configuration is missing or invalid." });
+
+            using var client = _httpClientFactory.CreateClient();
+            var names = new Dictionary<int, string>();
+            var titles = new Dictionary<int, string>();
+            try
+            {
+                foreach (var group in new[] { "active", "pending" })
+                {
+                    using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(userBaseUrl, $"/api/admin/users/{group}"));
+                    request.Headers.TryAddWithoutValidation("Authorization", Request.Headers.Authorization.ToString());
+                    using var response = await client.SendAsync(request, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+                    var users = await response.Content.ReadFromJsonAsync<List<UserNameResponse>>(cancellationToken)
+                        ?? throw new JsonException("Missing user response.");
+                    foreach (var user in users)
+                        names[user.Id] = $"{user.FirstName} {user.LastName}".Trim();
+                }
+
+                foreach (var bookId in reservations.Select(r => r.BookId).Distinct())
+                {
+                    using var response = await client.GetAsync(new Uri(inventoryBaseUrl, $"/api/Books/{bookId}"), cancellationToken);
+                    if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        titles[bookId] = $"Deleted book (#{bookId})";
+                        continue;
+                    }
+                    response.EnsureSuccessStatusCode();
+                    var book = await response.Content.ReadFromJsonAsync<BookTitleResponse>(cancellationToken);
+                    titles[bookId] = book?.Title ?? throw new JsonException("Missing book response.");
+                }
+            }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException
+                || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
+            {
+                return StatusCode(503, new { message = "Unable to load reservation details from User or Inventory Service. Please try again." });
+            }
+
+            return Ok(reservations.Select(r => new PendingReservationResponse
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                BookId = r.BookId,
+                UserName = names.GetValueOrDefault(r.UserId, $"User unavailable (#{r.UserId})"),
+                BookTitle = titles[r.BookId],
+                Status = r.Status,
+                // MySQL datetime values have no Kind; reservations are written in UTC.
+                ReservationDate = DateTime.SpecifyKind(r.ReservationDate, DateTimeKind.Utc)
+            }).ToList());
+        }
+
+        private sealed class UserNameResponse
+        {
+            public int Id { get; set; }
+            public string? FirstName { get; set; }
+            public string? LastName { get; set; }
+        }
+
+        private sealed class BookTitleResponse
+        {
+            public string? Title { get; set; }
+        }
+
+        [HttpPost("{id:int}/accept")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Accept(int id, CancellationToken cancellationToken)
+        {
+            var reservation = await _context.Reservations.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (reservation == null)
+                return NotFound(new { message = "Reservation not found." });
+            if (reservation.Status != "Pending")
+                return Conflict(new { message = "Only pending reservations can be accepted. Refresh the queue." });
+
+            var acceptedEvent = new ReservationAcceptedEvent
+            {
+                ReservationId = reservation.Id,
+                UserId = reservation.UserId,
+                BookId = reservation.BookId,
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+            };
+            reservation.Status = "Accepted";
+            _context.ReservationEvents.Add(new ReservationEventOutbox
+            {
+                Id = acceptedEvent.EventId,
+                ReservationId = reservation.Id,
+                CreatedAtUtc = acceptedEvent.TimestampUtc,
+                Payload = JsonSerializer.Serialize(acceptedEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            });
+
+            try
+            {
+                // The status and event commit together. The publisher retries Kafka delivery independently.
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new { message = "This reservation was already processed. Refresh the queue." });
+            }
+            catch (DbUpdateException)
+            {
+                // A competing acceptance can hit the unique event index before the status check.
+                var currentStatus = await _context.Reservations.AsNoTracking()
+                    .Where(r => r.Id == id).Select(r => r.Status).SingleOrDefaultAsync(cancellationToken);
+                if (currentStatus != "Pending")
+                    return Conflict(new { message = "This reservation was already processed. Refresh the queue." });
+                throw;
+            }
+
+            return Ok(new { reservation.Id, reservation.Status, eventId = acceptedEvent.EventId, message = "Reservation accepted. Notification event queued for Kafka." });
         }
 
         [HttpPost]

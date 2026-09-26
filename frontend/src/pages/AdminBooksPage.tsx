@@ -464,6 +464,7 @@ const AdminBooksPage = () => {
                         <BookPlus size={16} />
                         Book inventory
                     </Link>
+                    <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue

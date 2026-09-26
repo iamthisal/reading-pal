@@ -3,6 +3,9 @@ using LendingService.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using LendingService.Kafka;
+using Confluent.Kafka;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,25 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddHttpClient();
+builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection("Kafka"));
+builder.Services.AddSingleton<IProducer<string, string>>(services =>
+{
+    var options = services.GetRequiredService<IOptions<KafkaOptions>>().Value;
+    if (string.IsNullOrWhiteSpace(options.BootstrapServers)
+        || !Enum.TryParse<SecurityProtocol>(options.SecurityProtocol, true, out var protocol))
+        throw new InvalidOperationException("Configure Kafka BootstrapServers and a valid SecurityProtocol.");
+    return new ProducerBuilder<string, string>(new ProducerConfig
+    {
+        BootstrapServers = options.BootstrapServers,
+        SecurityProtocol = protocol,
+        EnableIdempotence = true,
+        Acks = Acks.All,
+        MessageTimeoutMs = 10000
+    }).Build();
+});
+builder.Services.AddSingleton<IReservationEventPublisher, KafkaReservationEventPublisher>();
+builder.Services.AddScoped<ReservationOutboxDispatcher>();
+builder.Services.AddHostedService<ReservationOutboxWorker>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
     ?? builder.Configuration["ApplicationInsights:ConnectionString"];
