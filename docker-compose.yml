@@ -68,6 +68,7 @@ services:
       Kafka__SecurityProtocol: Plaintext
       Kafka__Topics__ReservationAccepted: reservation-accepted
       Kafka__Topics__ReservationCancelled: reservation-cancelled
+      Kafka__Topics__BookReturned: book-returned
       Frontend__Url: http://localhost:5173
     ports:
       - "${LENDING_SERVICE_PORT:-5148}:8080"
