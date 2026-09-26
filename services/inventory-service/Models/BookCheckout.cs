@@ -6,4 +6,5 @@ public class BookCheckout
     public int Id { get; set; } // Lending reservation ID
     public int BookId { get; set; }
     public DateTime CheckoutDateUtc { get; set; }
+    public DateTime? ReturnDateUtc { get; set; }
 }
