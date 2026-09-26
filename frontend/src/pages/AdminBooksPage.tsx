@@ -65,8 +65,8 @@ const AdminBooksPage = () => {
     const [genreErrorMessage, setGenreErrorMessage] = useState('');
     const [isGenreSubmitting, setIsGenreSubmitting] = useState(false);
 
-    const fetchBooks = useCallback(async () => {
-        setIsLoading(true);
+    const fetchBooks = useCallback(async (background = false) => {
+        if (!background) setIsLoading(true);
         try {
             const response = await axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -77,10 +77,16 @@ const AdminBooksPage = () => {
             console.error('Failed to fetch books:', err);
             setErrorMessage('Unable to connect to the Inventory Service. Please ensure it is running on port 5001.');
         } finally {
-            setIsLoading(false);
+            if (!background) setIsLoading(false);
         }
     }, [token]);
 
+    useEffect(() => {
+        const refresh = () => { if (!document.hidden) void fetchBooks(true); };
+        const timer = window.setInterval(refresh, 10000);
+        window.addEventListener('focus', refresh);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+    }, [fetchBooks]);
     useEffect(() => {
         let isMounted = true;
         const load = async () => {
@@ -786,7 +792,7 @@ const AdminBooksPage = () => {
                             />
                         </div>
                         <button
-                            onClick={fetchBooks}
+                            onClick={() => void fetchBooks()}
                             className="btn-outline admin-refresh-button"
                             title="Refresh List"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem' }}

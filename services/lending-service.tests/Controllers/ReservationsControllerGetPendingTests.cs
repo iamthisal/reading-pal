@@ -26,6 +26,32 @@ public class ReservationsControllerGetPendingTests
     }
 
     [Fact]
+    public async Task GetPending_IncludesReservationsStuckInAcceptingState()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        context.Reservations.Add(new Reservation { Id = 1, BookId = 10, UserId = 20, Status = "Accepting" });
+        await context.SaveChangesAsync();
+
+        var handler = new FakeHttpMessageHandler(request =>
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (path.Contains("/api/admin/users/"))
+                return JsonResponse.Ok(Array.Empty<object>());
+            if (path.Contains("/api/Books/10"))
+                return JsonResponse.Ok(new { Title = "Clean Code" });
+            throw new InvalidOperationException($"Unexpected request to {path}");
+        });
+        var controller = new ReservationsController(context, new FakeHttpClientFactory(handler), ControllerTestFactory.CreateConfiguration());
+        ControllerTestFactory.AttachHttpContext(controller);
+
+        var result = await controller.GetPending(CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var reservation = Assert.Single(Assert.IsAssignableFrom<IEnumerable<PendingReservationResponse>>(ok.Value));
+        Assert.Equal("Accepting", reservation.Status);
+    }
+
+    [Fact]
     public async Task GetPending_WhenServiceUrlsAreNotConfigured_Returns500()
     {
         using var context = ControllerTestFactory.CreateDbContext();
