@@ -14,6 +14,7 @@ public sealed class KafkaReservationEventPublisher(IProducer<string, string> pro
         var eventType = payload.RootElement.GetProperty("eventType").GetString();
         var topic = eventType switch
         {
+            "book-returned" => options.Value.Topics.BookReturned,
             "reservation-accepted" => options.Value.Topics.ReservationAccepted,
             "reservation-cancelled" => options.Value.Topics.ReservationCancelled,
             _ => throw new InvalidOperationException($"Unsupported reservation event type '{eventType}'.")
