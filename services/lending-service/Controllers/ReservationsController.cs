@@ -40,9 +40,27 @@ namespace LendingService.Controllers
             if (reservations.Count == 0)
                 return Ok(Array.Empty<PendingReservationResponse>());
 
+            var (names, titles, lookupError) = await LookupDetails(reservations.Select(r => r.BookId), cancellationToken);
+            if (lookupError != null) return lookupError;
+
+            return Ok(reservations.Select(r => new PendingReservationResponse
+            {
+                Id = r.Id,
+                UserId = r.UserId,
+                BookId = r.BookId,
+                UserName = names.GetValueOrDefault(r.UserId, $"User unavailable (#{r.UserId})"),
+                BookTitle = titles[r.BookId],
+                Status = r.Status,
+                // MySQL datetime values have no Kind; reservations are written in UTC.
+                ReservationDate = DateTime.SpecifyKind(r.ReservationDate, DateTimeKind.Utc)
+            }).ToList());
+        }
+
+        private async Task<(Dictionary<int, string> Names, Dictionary<int, string> Titles, ObjectResult? Error)> LookupDetails(IEnumerable<int> bookIds, CancellationToken cancellationToken)
+        {
             if (!Uri.TryCreate(_configuration["UserService:BaseUrl"], UriKind.Absolute, out var userBaseUrl)
                 || !Uri.TryCreate(_configuration["InventoryService:BaseUrl"], UriKind.Absolute, out var inventoryBaseUrl))
-                return StatusCode(500, new { message = "Reservation lookup service configuration is missing or invalid." });
+                return (new(), new(), StatusCode(500, new { message = "Reservation lookup service configuration is missing or invalid." }));
 
             using var client = _httpClientFactory.CreateClient();
             var names = new Dictionary<int, string>();
@@ -61,7 +79,7 @@ namespace LendingService.Controllers
                         names[user.Id] = $"{user.FirstName} {user.LastName}".Trim();
                 }
 
-                foreach (var bookId in reservations.Select(r => r.BookId).Distinct())
+                foreach (var bookId in bookIds.Distinct())
                 {
                     using var response = await client.GetAsync(new Uri(inventoryBaseUrl, $"/api/Books/{bookId}"), cancellationToken);
                     if (response.StatusCode == HttpStatusCode.NotFound)
@@ -77,19 +95,37 @@ namespace LendingService.Controllers
             catch (Exception ex) when (ex is HttpRequestException or JsonException
                 || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
             {
-                return StatusCode(503, new { message = "Unable to load reservation details from User or Inventory Service. Please try again." });
+                return (names, titles, StatusCode(503, new { message = "Unable to load reservation details from User or Inventory Service. Please try again." }));
             }
 
-            return Ok(reservations.Select(r => new PendingReservationResponse
+            return (names, titles, null);
+        }
+
+        [HttpGet("borrowed")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<BorrowRecordResponse>>> GetBorrowed(CancellationToken cancellationToken)
+        {
+            var records = await _context.BorrowRecords.AsNoTracking()
+                .Where(b => b.ReturnDate == null)
+                .OrderBy(b => b.DueDate).ThenBy(b => b.Id)
+                .ToListAsync(cancellationToken);
+            if (records.Count == 0) return Ok(Array.Empty<BorrowRecordResponse>());
+
+            var (names, titles, lookupError) = await LookupDetails(records.Select(b => b.BookId), cancellationToken);
+            if (lookupError != null) return lookupError;
+
+            var now = DateTime.UtcNow;
+            return Ok(records.Select(b => new BorrowRecordResponse
             {
-                Id = r.Id,
-                UserId = r.UserId,
-                BookId = r.BookId,
-                UserName = names.GetValueOrDefault(r.UserId, $"User unavailable (#{r.UserId})"),
-                BookTitle = titles[r.BookId],
-                Status = r.Status,
-                // MySQL datetime values have no Kind; reservations are written in UTC.
-                ReservationDate = DateTime.SpecifyKind(r.ReservationDate, DateTimeKind.Utc)
+                Id = b.Id,
+                ReservationId = b.ReservationId,
+                UserId = b.UserId,
+                BookId = b.BookId,
+                UserName = names.GetValueOrDefault(b.UserId, $"User unavailable (#{b.UserId})"),
+                BookTitle = titles[b.BookId],
+                CheckoutDate = DateTime.SpecifyKind(b.CheckoutDate, DateTimeKind.Utc),
+                DueDate = DateTime.SpecifyKind(b.DueDate, DateTimeKind.Utc),
+                IsOverdue = b.DueDate < now
             }).ToList());
         }
 
@@ -115,6 +151,18 @@ namespace LendingService.Controllers
             if (reservation.Status != "Pending")
                 return Conflict(new { message = "Only pending reservations can be accepted. Refresh the queue." });
 
+            // Match existing Lending timestamps: store UTC and retain the checkout time.
+            var checkoutDate = DateTime.UtcNow;
+            var dueDate = checkoutDate.AddDays(14);
+            var borrowRecord = new BorrowRecord
+            {
+                ReservationId = reservation.Id,
+                BookId = reservation.BookId,
+                UserId = reservation.UserId,
+                CheckoutDate = checkoutDate,
+                DueDate = dueDate
+            };
+            _context.BorrowRecords.Add(borrowRecord);
             var acceptedEvent = new ReservationAcceptedEvent
             {
                 ReservationId = reservation.Id,
@@ -122,7 +170,9 @@ namespace LendingService.Controllers
                 BookId = reservation.BookId,
                 ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
             };
-            reservation.Status = "Accepted";
+            reservation.Status = "Borrowed";
+            reservation.CheckoutDate = checkoutDate;
+            reservation.DueDate = dueDate;
             _context.ReservationEvents.Add(new ReservationEventOutbox
             {
                 Id = acceptedEvent.EventId,
@@ -133,7 +183,7 @@ namespace LendingService.Controllers
 
             try
             {
-                // The status and event commit together. The publisher retries Kafka delivery independently.
+                // Borrow record, status, dates, and event commit together.
                 await _context.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
@@ -150,7 +200,16 @@ namespace LendingService.Controllers
                 throw;
             }
 
-            return Ok(new { reservation.Id, reservation.Status, eventId = acceptedEvent.EventId, message = "Reservation accepted. Notification event queued for Kafka." });
+            return Ok(new
+            {
+                reservation.Id,
+                reservation.Status,
+                borrowRecordId = borrowRecord.Id,
+                checkoutDate,
+                dueDate,
+                eventId = acceptedEvent.EventId,
+                message = "Book borrowed. Reservation acceptance event queued for Kafka."
+            });
         }
 
         [HttpPost]

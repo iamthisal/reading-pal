@@ -45,4 +45,6 @@ public static class JsonResponse
     };
 
     public static HttpResponseMessage NotFound() => new(HttpStatusCode.NotFound);
+
+    public static HttpResponseMessage Conflict() => new(HttpStatusCode.Conflict);
 }

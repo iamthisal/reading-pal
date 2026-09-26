@@ -2510,3 +2510,44 @@ body {
 }
 
 .admin-reservations-table td:nth-child(2)::after { content: none; }
+
+.borrow-status {
+  display: inline-block;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.borrow-status-overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.reservation-accept-button {
+  background-color: #2563eb;
+  color: #fff;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reservation-accept-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.reservation-accept-button:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.reservation-accept-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
