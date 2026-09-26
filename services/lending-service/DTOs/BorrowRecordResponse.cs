@@ -11,4 +11,7 @@ public class BorrowRecordResponse
     public DateTime CheckoutDate { get; set; }
     public DateTime DueDate { get; set; }
     public bool IsOverdue { get; set; }
+    public bool IsReturning { get; set; }
+    public int DaysOverdue { get; set; }
+    public decimal FineAmount { get; set; }
 }
