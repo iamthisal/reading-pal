@@ -9,6 +9,7 @@ import {
     Check,
     Filter,
     Heart,
+    History,
     LayoutDashboard,
     Library,
     LogOut,
@@ -16,7 +17,7 @@ import {
     Search,
     User,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { INVENTORY_API_BASE_URL, LENDING_API_BASE_URL } from '../config/api';
 
 interface Book {
@@ -96,6 +97,13 @@ const mockBooks: Book[] = [
 ];
 
 const HomePage = () => {
+    const location = useLocation();
+    useEffect(() => {
+        const target = location.hash.slice(1);
+        if (target === 'recommendations' || target === 'discover') {
+            document.getElementById(target)?.scrollIntoView({ block: 'start' });
+        }
+    }, [location.hash, location.key]);
     const { logout, user, token } = useAuth();
     const [books, setBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -261,6 +269,7 @@ const HomePage = () => {
                         <Heart size={16} />
                         Favorite
                     </a>
+                    {user?.role === 'User' && <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>}
                 </nav>
 
                 <aside className="discover-filter-rail" aria-label="Book filters">
