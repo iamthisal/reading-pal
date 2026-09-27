@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
+import MyBorrowingsPage from './pages/MyBorrowingsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AdminReservationsPage from './pages/AdminReservationsPage';
@@ -33,6 +34,7 @@ function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-borrowings" element={<MyBorrowingsPage />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
