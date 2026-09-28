@@ -12,6 +12,7 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import AdminBooksPage from './pages/AdminBooksPage';
 import AdminReservationsPage from './pages/AdminReservationsPage';
 import AdminBorrowedBooksPage from './pages/AdminBorrowedBooksPage';
+import AdminReservationHistoryPage from './pages/AdminReservationHistoryPage';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -44,6 +45,7 @@ function App() {
             <Route path="/admin/books" element={<AdminBooksPage />} />
             <Route path="/admin/reservations/pending" element={<AdminReservationsPage />} />
             <Route path="/admin/borrowed" element={<AdminBorrowedBooksPage />} />
+            <Route path="/admin/reservations/history" element={<AdminReservationHistoryPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />
