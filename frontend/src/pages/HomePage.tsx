@@ -117,6 +117,12 @@ const HomePage = () => {
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
 
+    useEffect(() => {
+        if (!reservationSuccess) return;
+        const timeout = window.setTimeout(() => setReservationSuccess(''), 5000);
+        return () => window.clearTimeout(timeout);
+    }, [reservationSuccess]);
+
     const fetchBooks = useCallback(async (background = false) => {
         if (!background) setIsLoading(true);
         try {
@@ -421,7 +427,7 @@ const HomePage = () => {
                     {errorMessage && <div className="discover-error">{errorMessage}</div>}
                     {reservationError && <div className="discover-error" style={{ marginTop: '10px' }}>{reservationError}</div>}
                     {reservationSuccess && (
-                        <div style={{ marginTop: '10px', padding: '12px', background: '#e6f4ea', color: '#137333', borderRadius: '8px', fontSize: '0.875rem', border: '1px solid #ceead6' }}>
+                        <div role="status" style={{ marginTop: '6px', marginBottom: '20px', padding: '12px', background: '#e6f4ea', color: '#137333', borderRadius: '8px', fontSize: '0.875rem', border: '1px solid #ceead6' }}>
                             {reservationSuccess}
                         </div>
                     )}
