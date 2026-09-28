@@ -29,8 +29,10 @@ public sealed class MyBorrowingsController(LendingDbContext db, IHttpClientFacto
             .Where(r => r.UserId == userId && (r.Status == "Pending" || r.Status == "Accepting"))
             .OrderBy(r => r.ReservationDate).ThenBy(r => r.Id).ToListAsync(cancellationToken);
         var titles = new Dictionary<int, string>();
+        var cancelled = await db.Reservations.AsNoTracking().Where(r => r.UserId == userId && r.Status == "Cancelled")
+            .OrderByDescending(r => r.ReservationDate).ThenByDescending(r => r.Id).ToListAsync(cancellationToken);
         using var client = clients.CreateClient();
-        foreach (var bookId in loans.Select(b => b.BookId).Concat(pending.Select(r => r.BookId)).Distinct())
+        foreach (var bookId in loans.Select(b => b.BookId).Concat(pending.Select(r => r.BookId)).Concat(cancelled.Select(r => r.BookId)).Distinct())
         {
             titles[bookId] = $"Book #{bookId} (title unavailable)";
             if (!Uri.TryCreate(configuration["InventoryService:BaseUrl"], UriKind.Absolute, out var inventoryUrl)) continue;
@@ -68,6 +70,8 @@ public sealed class MyBorrowingsController(LendingDbContext db, IHttpClientFacto
             };
         }).ToList();
         return Ok(new {
+            cancelled = cancelled.Select(r => new { r.Id, r.BookId, bookTitle = titles[r.BookId],
+                reservationDate = DateTime.SpecifyKind(r.ReservationDate, DateTimeKind.Utc), r.Status }),
             pending = pending.Select(r => new { r.Id, r.BookId, bookTitle = titles[r.BookId],
                 reservationDate = DateTime.SpecifyKind(r.ReservationDate, DateTimeKind.Utc),
                 r.Status, canCancel = r.Status == "Pending" }),
