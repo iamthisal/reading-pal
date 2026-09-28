@@ -1,3 +1,4 @@
+import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -21,8 +22,8 @@ export default function AdminReservationHistoryPage() {
     const [filter, setFilter] = useState('All');
     useEffect(() => {
         const controller = new AbortController();
-        const load = async () => {
-            setLoading(true); setError('');
+        const load = async (background = false) => {
+            if (!background) setLoading(true); setError('');
             try {
                 const response = await axios.get<HistoryRecord[]>(`${LENDING_API_BASE_URL}/api/reservations/history`, {
                     headers: { Authorization: `Bearer ${token}` }, signal: controller.signal,
@@ -33,10 +34,11 @@ export default function AdminReservationHistoryPage() {
                     setRecords([]);
                     setError(axios.isAxiosError(err) ? err.response?.data?.message || 'Unable to load reservation history. Please refresh.' : 'Unable to load reservation history.');
                 }
-            } finally { if (!controller.signal.aborted) setLoading(false); }
+            } finally { if (!controller.signal.aborted && !background) setLoading(false); }
         };
         void load();
-        return () => controller.abort();
+        const stopRefresh = refreshWhileVisible(() => load(true));
+        return () => { stopRefresh(); controller.abort(); };
     }, [token, refresh]);
     const visible = records.filter(record => filter === 'All' || record.status === filter);
     return <div className="admin-shell">

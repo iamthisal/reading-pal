@@ -1,3 +1,4 @@
+import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -60,8 +61,8 @@ export default function AdminReservationsPage() {
 
     useEffect(() => {
         const controller = new AbortController();
-        const fetchReservations = async () => {
-            setIsLoading(true);
+        const fetchReservations = async (background = false) => {
+            if (!background) setIsLoading(true);
             setError('');
             try {
                 const response = await axios.get<PendingReservation[]>(`${LENDING_API_BASE_URL}/api/reservations/pending`, {
@@ -77,11 +78,12 @@ export default function AdminReservationsPage() {
                         : 'Unable to load pending reservations. Please try refreshing.');
                 }
             } finally {
-                if (!controller.signal.aborted) setIsLoading(false);
+                if (!controller.signal.aborted && !background) setIsLoading(false);
             }
         };
         if (token) void fetchReservations();
-        return () => controller.abort();
+        const stopRefresh = refreshWhileVisible(() => token ? fetchReservations(true) : Promise.resolve());
+        return () => { stopRefresh(); controller.abort(); };
     }, [token, refresh]);
 
     return (
