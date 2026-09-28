@@ -11,7 +11,7 @@ interface Loan {
     status: string; daysOverdue: number; fineAmount: number; fineStatus: string;
 }
 interface PendingReservation { id: number; bookTitle: string; reservationDate: string; status: string; canCancel: boolean }
-interface Borrowings { pending?: PendingReservation[]; active: Loan[]; history: Loan[]; totalUnpaid: number; estimatedActiveFines: number }
+interface Borrowings { cancelled?: Omit<PendingReservation, 'canCancel'>[]; pending?: PendingReservation[]; active: Loan[]; history: Loan[]; totalUnpaid: number; estimatedActiveFines: number }
 const date = (value: string) => new Intl.DateTimeFormat('en-LK', {
     year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Colombo',
 }).format(new Date(value));
@@ -26,6 +26,11 @@ export default function MyBorrowingsPage() {
     const [cancellingId, setCancellingId] = useState<number | null>(null);
     const [actionMessage, setActionMessage] = useState('');
     const [actionError, setActionError] = useState('');
+    useEffect(() => {
+        if (!actionMessage) return;
+        const timeout = window.setTimeout(() => setActionMessage(''), 5000);
+        return () => window.clearTimeout(timeout);
+    }, [actionMessage]);
     const cancelReservation = async (reservation: PendingReservation) => {
         if (cancellingId !== null || !reservation.canCancel) return;
         if (!window.confirm(`Cancel your reservation for "${reservation.bookTitle}"?`)) return;
@@ -95,7 +100,7 @@ export default function MyBorrowingsPage() {
         {loading && <div className="my-loans-panel my-loans-empty" role="status"><BookOpen size={28} aria-hidden="true" /><p>Loading your borrowing records…</p></div>}
         {error && <div role="alert" className="my-loans-error">{error}</div>}
         {actionError && <div role="alert" className="my-loans-error">{actionError}</div>}
-        {actionMessage && <div role="status" className="my-loans-note">{actionMessage}</div>}
+        {actionMessage && <div role="status" className="my-loans-note my-loans-success">{actionMessage}</div>}
         {data && <>
             <section className="my-loans-panel"><div className="my-loans-panel-heading"><div><p className="discover-eyebrow">Awaiting pickup</p><h2>Pending reservations</h2></div><Clock3 size={22} aria-hidden="true" /></div>
                 <p>You can cancel until an admin starts accepting your reservation.</p>
@@ -120,7 +125,16 @@ export default function MyBorrowingsPage() {
             <section className="my-loans-panel"><div className="my-loans-panel-heading"><div><p className="discover-eyebrow">On your bookshelf</p><h2>Current loans</h2></div><span className="profile-account-label">{data.active.length} active</span></div>
                 {data.active.length ? table(data.active, false) : <div className="my-loans-empty"><BookOpen size={28} aria-hidden="true" /><h3>No current loans</h3><p>Your next chapter is waiting in the library.</p><Link to="/home" className="my-loans-link">Explore books →</Link></div>}</section>
             <section className="my-loans-panel"><div className="my-loans-panel-heading"><div><p className="discover-eyebrow">Your past reads</p><h2>Borrowing history</h2></div><History size={22} aria-hidden="true" /></div>
-                {data.history.length ? table(data.history, true) : <div className="my-loans-empty"><History size={28} aria-hidden="true" /><h3>No returned books yet</h3><p>Your completed loans and recorded fines will appear here.</p></div>}</section>
+                {data.history.length ? table(data.history, true) : <div className="my-loans-empty"><History size={28} aria-hidden="true" /><h3>No returned books yet</h3><p>Your completed loans and recorded fines will appear here.</p></div>}
+                <h3 className="my-loans-cancelled-heading">Cancelled reservations</h3>
+                <p className="my-loans-history-note">Includes reservations cancelled by you or declined by an admin. Sorted by reservation date, newest first; cancellation dates were not recorded.</p>
+                {data.cancelled === undefined ? <p>Cancelled history is unavailable. Restart Lending with the latest changes and refresh.</p> : data.cancelled.length === 0 ? <p className="my-loans-empty">No cancelled reservations.</p> :
+                    <div className="my-loans-table-wrap" tabIndex={0} role="region" aria-label="Cancelled reservation history"><table>
+                        <thead><tr><th scope="col">Book</th><th scope="col">Reserved</th><th scope="col">Status</th></tr></thead>
+                        <tbody>{data.cancelled.map(record => <tr key={record.id}><td className="my-loans-title">{record.bookTitle}</td>
+                            <td>{date(record.reservationDate)}</td><td><span className="my-loans-badge my-loans-badge-warning">Cancelled</span></td></tr>)}</tbody>
+                    </table></div>}
+            </section>
         </>}
     </main></div>;
 }
