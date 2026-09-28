@@ -12,6 +12,9 @@ A library/book rental management system for user registration, book inventory ma
 - Book inventory CRUD with ISBN duplicate checks, cover image URLs, copy counts, and availability status
 - Genre management for creating, updating, listing, and deleting book categories
 - Kafka event publishing for book created, updated, and deleted events
+- Book reservations, admin acceptance/rejection, user cancellation, and retry-safe Inventory checkout/return calls
+- Borrowing history for users and admins, with unpaid return fines of LKR 10 per overdue calendar day
+- Lending outbox publishing for reservation-accepted, reservation-cancelled, and book-returned events
 - Docker Compose support for local service/database orchestration
 - Unit, integration, and Selenium test coverage for user and inventory workflows
 
@@ -28,7 +31,7 @@ A library/book rental management system for user registration, book inventory ma
 
 - `user-service` - Implemented. Handles registration, login/JWT authentication, profile management, admin-only pending/active user lists, user acceptance, rejection, and access revocation.
 - `inventory-service` - Implemented. Handles books, genres, inventory copy counts, availability changes, JWT-protected admin operations, MySQL migrations, and Kafka publication for book events.
-- `lending-service` - Planned. Will handle reservations, checkout/check-in, borrowing history, renewals, cancellations, overdue detection, and fine display.
+- `lending-service` - Implemented. Handles reservations, admin acceptance/rejection, user cancellation, checkout/return coordination, borrowing history, overdue calculation, unpaid fines, and Kafka outbox publication. Renewals and fine payment are not implemented.
 - `notification-service` - Planned. Will handle due-soon, overdue, reservation, and user/admin notification logs.
 
 ## Branching Strategy
@@ -80,6 +83,15 @@ ReadingPal/
 |   |   |-- Models/
 |   |   |-- Dockerfile
 |   |   `-- InventoryService.csproj
+|   `-- lending-service/
+|       |-- Controllers/
+|       |-- Data/
+|       |-- DTOs/
+|       |-- Kafka/
+|       |-- Migrations/
+|       |-- Models/
+|       |-- Dockerfile
+|       `-- LendingService.csproj
 |-- frontend/
 |   |-- src/
 |   |   |-- components/
@@ -117,4 +129,8 @@ ReadingPal currently has the core user and inventory foundations in place. The R
 
 Inventory work has progressed beyond the original placeholder state: admins can create, update, remove, and toggle availability for books; manage genres; store cover image URLs; and actively publish Kafka events to an Azure Container Instance when books change. The repository also includes unit/integration tests and Selenium tests for major user and inventory flows.
 
-Still pending: the lending and notification services are not implemented yet, so reservations, checkout/check-in, borrowing history, overdue fine calculation, and in-app notification delivery are not complete end to end.
+Lending implements reservation, borrowing, return, cancellation, history, and fine workflows. Inventory copy updates use HTTP; Inventory does not consume Lending's Kafka events. Notification Service remains planned, so published events do not yet generate notifications.
+
+## Lending documentation
+
+See the [Lending Service developer guide](docs/lending-service.md) for features, APIs, data models, events, and frontend behaviour.
