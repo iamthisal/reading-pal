@@ -10,7 +10,8 @@ interface Loan {
     id: number; bookTitle: string; checkoutDate: string; dueDate: string; returnDate: string | null;
     status: string; daysOverdue: number; fineAmount: number; fineStatus: string;
 }
-interface Borrowings { active: Loan[]; history: Loan[]; totalUnpaid: number; estimatedActiveFines: number }
+interface PendingReservation { id: number; bookTitle: string; reservationDate: string; status: string; canCancel: boolean }
+interface Borrowings { pending?: PendingReservation[]; active: Loan[]; history: Loan[]; totalUnpaid: number; estimatedActiveFines: number }
 const date = (value: string) => new Intl.DateTimeFormat('en-LK', {
     year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Colombo',
 }).format(new Date(value));
@@ -22,6 +23,25 @@ export default function MyBorrowingsPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [refresh, setRefresh] = useState(0);
+    const [cancellingId, setCancellingId] = useState<number | null>(null);
+    const [actionMessage, setActionMessage] = useState('');
+    const [actionError, setActionError] = useState('');
+    const cancelReservation = async (reservation: PendingReservation) => {
+        if (cancellingId !== null || !reservation.canCancel) return;
+        if (!window.confirm(`Cancel your reservation for "${reservation.bookTitle}"?`)) return;
+        setCancellingId(reservation.id);
+        setActionMessage('');
+        setActionError('');
+        try {
+            await axios.post(`${LENDING_API_BASE_URL}/api/my-borrowings/reservations/${reservation.id}/cancel`, {},
+                { headers: { Authorization: `Bearer ${token}` } });
+            setActionMessage(`Your reservation for "${reservation.bookTitle}" has been cancelled.`);
+            setRefresh(value => value + 1);
+        } catch (err) {
+            setActionError(axios.isAxiosError(err) ? err.response?.data?.message || 'Cancellation could not be confirmed. Refresh and try again.' : 'Unable to cancel this reservation.');
+            setRefresh(value => value + 1);
+        } finally { setCancellingId(null); }
+    };
     useEffect(() => {
         const controller = new AbortController();
         setLoading(true);
@@ -74,7 +94,24 @@ export default function MyBorrowingsPage() {
         <div className="my-loans-note"><strong>Late returns: Rs. 10 per day after the due date.</strong> Current fines are estimates until your return is processed.</div>
         {loading && <div className="my-loans-panel my-loans-empty" role="status"><BookOpen size={28} aria-hidden="true" /><p>Loading your borrowing records…</p></div>}
         {error && <div role="alert" className="my-loans-error">{error}</div>}
+        {actionError && <div role="alert" className="my-loans-error">{actionError}</div>}
+        {actionMessage && <div role="status" className="my-loans-note">{actionMessage}</div>}
         {data && <>
+            <section className="my-loans-panel"><div className="my-loans-panel-heading"><div><p className="discover-eyebrow">Awaiting pickup</p><h2>Pending reservations</h2></div><Clock3 size={22} aria-hidden="true" /></div>
+                <p>You can cancel until an admin starts accepting your reservation.</p>
+                {!data.pending ? <p role="status">Restart Lending with the latest changes to load your reservations.</p> : data.pending.length === 0 ? <div className="my-loans-empty"><p>You have no pending reservations.</p></div> :
+                    <div className="my-loans-table-wrap" tabIndex={0} role="region" aria-label="Pending reservations"><table>
+                        <caption>Your reservations, oldest first</caption>
+                        <thead><tr><th scope="col">Book</th><th scope="col">Reserved</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
+                        <tbody>{data.pending.map(reservation => <tr key={reservation.id}>
+                            <td className="my-loans-title">{reservation.bookTitle}</td><td>{date(reservation.reservationDate)}</td>
+                            <td><span className="my-loans-badge">{reservation.status === 'Accepting' ? 'Being accepted' : 'Pending'}</span></td>
+                            <td>{reservation.canCancel ? <button type="button" className="my-loans-cancel" disabled={cancellingId !== null}
+                                aria-label={`Cancel reservation for ${reservation.bookTitle}`} onClick={() => void cancelReservation(reservation)}>
+                                {cancellingId === reservation.id ? 'Cancelling…' : 'Cancel reservation'}</button> : 'Cancellation unavailable'}</td>
+                        </tr>)}</tbody>
+                    </table></div>}
+            </section>
             <div className="my-loans-summary">
                 <section><BookOpen size={22} aria-hidden="true" /><h2>Current loans</h2><strong>{data.active.length}</strong><p>Books awaiting return</p></section>
                 <section><Wallet size={22} aria-hidden="true" /><h2>Unpaid fines</h2><strong>{money(data.totalUnpaid)}</strong><p>Recorded on returned books</p></section>

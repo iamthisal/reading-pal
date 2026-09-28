@@ -1,4 +1,7 @@
 .my-loans-page { min-width: 0; }
+.my-loans-cancel { padding: .55rem .8rem; border: 1px solid #a33425; border-radius: 8px; background: #fff; color: #a33425; font: inherit; font-weight: 700; cursor: pointer; }
+.my-loans-cancel:hover:not(:disabled) { background: #ffede7; }
+.my-loans-cancel:disabled { opacity: .55; cursor: wait; }
 .my-loans-shell .discover-brand { text-decoration: none; }
 .my-loans-shell .discover-nav-item svg, .my-loans-shell .discover-brand svg { flex-shrink: 0; }
 .my-loans-hero > div:first-child { position: relative; z-index: 1; }
