@@ -96,6 +96,7 @@ export default function AdminReservationsPage() {
                     <Link to="/admin/books" className="admin-nav-item"><BookPlus size={16} />Book inventory</Link>
                     <Link to="/admin/reservations/pending" className="admin-nav-item admin-nav-item-active" aria-current="page"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
+                    <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
                     <Link to="/home" className="admin-nav-item"><BookOpen size={16} />Public catalogue</Link>
                 </nav>
                 <div className="admin-sidebar-bottom">
