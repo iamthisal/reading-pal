@@ -1,3 +1,4 @@
+import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -57,8 +58,8 @@ export default function AdminBorrowedBooksPage() {
     };
     useEffect(() => {
         const controller = new AbortController();
-        const fetchReservations = async () => {
-            setIsLoading(true);
+        const fetchReservations = async (background = false) => {
+            if (!background) setIsLoading(true);
             setError('');
             try {
                 const response = await axios.get<BorrowRecord[]>(`${LENDING_API_BASE_URL}/api/reservations/borrowed`, {
@@ -74,11 +75,12 @@ export default function AdminBorrowedBooksPage() {
                         : 'Unable to load borrowed books. Please try refreshing.');
                 }
             } finally {
-                if (!controller.signal.aborted) setIsLoading(false);
+                if (!controller.signal.aborted && !background) setIsLoading(false);
             }
         };
         if (token) void fetchReservations();
-        return () => controller.abort();
+        const stopRefresh = refreshWhileVisible(() => token ? fetchReservations(true) : Promise.resolve());
+        return () => { stopRefresh(); controller.abort(); };
     }, [token, refresh]);
 
     return (
@@ -93,6 +95,7 @@ export default function AdminBorrowedBooksPage() {
                     <Link to="/admin/books" className="admin-nav-item"><BookPlus size={16} />Book inventory</Link>
                     <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/admin/borrowed" className="admin-nav-item admin-nav-item-active" aria-current="page"><BookOpen size={16} />Borrowed books</Link>
+                    <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
                     <Link to="/home" className="admin-nav-item"><BookOpen size={16} />Public catalogue</Link>
                 </nav>
                 <div className="admin-sidebar-bottom">

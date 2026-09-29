@@ -132,6 +132,41 @@ namespace LendingService.Controllers
             }).ToList());
         }
 
+        [HttpGet("history")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<ReservationHistoryResponse>>> GetHistory(CancellationToken cancellationToken)
+        {
+            var reservations = await _context.Reservations.AsNoTracking()
+                .Where(r => r.Status == "Cancelled" || r.Status == "Returned")
+                .OrderByDescending(r => r.ReservationDate).ThenByDescending(r => r.Id)
+                .ToListAsync(cancellationToken);
+            if (reservations.Count == 0) return Ok(Array.Empty<ReservationHistoryResponse>());
+            var ids = reservations.Select(r => r.Id).ToList();
+            var loans = await _context.BorrowRecords.AsNoTracking().Where(b => ids.Contains(b.ReservationId))
+                .ToDictionaryAsync(b => b.ReservationId, cancellationToken);
+            var loanIds = loans.Values.Select(b => b.Id).ToList();
+            var fines = await _context.Fines.AsNoTracking().Where(f => loanIds.Contains(f.BorrowRecordId))
+                .ToDictionaryAsync(f => f.BorrowRecordId, cancellationToken);
+            var (names, titles, lookupError) = await LookupDetails(reservations.Select(r => r.BookId), cancellationToken);
+            if (lookupError != null) return lookupError;
+            static DateTime? Utc(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
+            return Ok(reservations.Select(r => {
+                loans.TryGetValue(r.Id, out var loan);
+                var fine = loan != null ? fines.GetValueOrDefault(loan.Id) : null;
+                return new ReservationHistoryResponse {
+                    Id = r.Id, UserId = r.UserId, BookId = r.BookId, Status = r.Status,
+                    UserName = names.GetValueOrDefault(r.UserId, $"User unavailable (#{r.UserId})"),
+                    BookTitle = titles[r.BookId], ReservationDate = Utc(r.ReservationDate)!.Value,
+                    CheckoutDate = Utc(loan?.CheckoutDate ?? r.CheckoutDate), DueDate = Utc(loan?.DueDate ?? r.DueDate),
+                    ReturnDate = Utc(loan?.ReturnDate ?? r.ReturnDate),
+                    DaysOverdue = r.Status == "Cancelled" ? null : fine?.DaysOverdue ??
+                        (loan?.ReturnDate != null ? ReturnFineCalculator.DaysOverdue(loan.DueDate, loan.ReturnDate.Value) : 0),
+                    FineAmount = r.Status == "Cancelled" ? null : fine?.Amount ?? 0m,
+                    FineStatus = r.Status == "Cancelled" ? null : fine?.Status ?? "No fine"
+                };
+            }).ToList());
+        }
+
         private sealed class UserNameResponse
         {
             public int Id { get; set; }
