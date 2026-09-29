@@ -9,4 +9,5 @@ public class BorrowRecord
     public DateTime CheckoutDate { get; set; }
     public DateTime DueDate { get; set; }
     public DateTime? ReturnDate { get; set; }
+    public DateTime? ReturnRequestedAtUtc { get; set; }
 }

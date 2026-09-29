@@ -9,6 +9,7 @@ public sealed class KafkaOptions
 
 public sealed class KafkaTopicOptions
 {
+    public string BookReturned { get; set; } = "book-returned";
     public string ReservationAccepted { get; set; } = "reservation-accepted";
     public string ReservationCancelled { get; set; } = "reservation-cancelled";
 }

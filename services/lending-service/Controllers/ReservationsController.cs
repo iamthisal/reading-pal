@@ -125,7 +125,10 @@ namespace LendingService.Controllers
                 BookTitle = titles[b.BookId],
                 CheckoutDate = DateTime.SpecifyKind(b.CheckoutDate, DateTimeKind.Utc),
                 DueDate = DateTime.SpecifyKind(b.DueDate, DateTimeKind.Utc),
-                IsOverdue = b.DueDate < now
+                IsOverdue = ReturnFineCalculator.DaysOverdue(b.DueDate, b.ReturnRequestedAtUtc ?? now) > 0,
+                DaysOverdue = ReturnFineCalculator.DaysOverdue(b.DueDate, b.ReturnRequestedAtUtc ?? now),
+                FineAmount = ReturnFineCalculator.DaysOverdue(b.DueDate, b.ReturnRequestedAtUtc ?? now) * ReturnFineCalculator.DailyRate,
+                IsReturning = b.ReturnRequestedAtUtc != null
             }).ToList());
         }
 
@@ -272,6 +275,7 @@ namespace LendingService.Controllers
             _context.ReservationEvents.Add(new ReservationEventOutbox
             {
                 Id = cancelledEvent.EventId,
+                EventType = cancelledEvent.EventType,
                 ReservationId = reservation.Id,
                 CreatedAtUtc = cancelledEvent.TimestampUtc,
                 Payload = JsonSerializer.Serialize(cancelledEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web))
