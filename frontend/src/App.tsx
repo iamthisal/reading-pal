@@ -7,8 +7,12 @@ import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import ProfilePage from './pages/ProfilePage';
+import MyBorrowingsPage from './pages/MyBorrowingsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminBooksPage from './pages/AdminBooksPage';
+import AdminReservationsPage from './pages/AdminReservationsPage';
+import AdminBorrowedBooksPage from './pages/AdminBorrowedBooksPage';
+import AdminReservationHistoryPage from './pages/AdminReservationHistoryPage';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -31,6 +35,7 @@ function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-borrowings" element={<MyBorrowingsPage />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
@@ -38,6 +43,9 @@ function App() {
             <Route path="/admin/users/pending" element={<AdminUsersPage />} />
             <Route path="/admin/users/active" element={<AdminUsersPage />} />
             <Route path="/admin/books" element={<AdminBooksPage />} />
+            <Route path="/admin/reservations/pending" element={<AdminReservationsPage />} />
+            <Route path="/admin/borrowed" element={<AdminBorrowedBooksPage />} />
+            <Route path="/admin/reservations/history" element={<AdminReservationHistoryPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

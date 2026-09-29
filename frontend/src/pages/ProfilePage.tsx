@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { BookMarked, BookOpen, Heart, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
+import { BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 
@@ -86,14 +86,15 @@ const ProfilePage = () => {
                         <BookOpen size={16} />
                         Discover
                     </Link>
-                    <a href="/home#recommendations" className="discover-nav-item">
+                    <Link to="/home#recommendations" className="discover-nav-item">
                         <Library size={16} />
                         My Library
-                    </a>
-                    <a href="/home#recommendations" className="discover-nav-item">
+                    </Link>
+                    <Link to="/home#recommendations" className="discover-nav-item">
                         <Heart size={16} />
                         Favorite
-                    </a>
+                    </Link>
+                    <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>
                 </nav>
 
                 <div className="discover-sidebar-bottom">

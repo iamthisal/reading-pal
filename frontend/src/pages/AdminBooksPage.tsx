@@ -65,8 +65,8 @@ const AdminBooksPage = () => {
     const [genreErrorMessage, setGenreErrorMessage] = useState('');
     const [isGenreSubmitting, setIsGenreSubmitting] = useState(false);
 
-    const fetchBooks = useCallback(async () => {
-        setIsLoading(true);
+    const fetchBooks = useCallback(async (background = false) => {
+        if (!background) setIsLoading(true);
         try {
             const response = await axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -77,10 +77,16 @@ const AdminBooksPage = () => {
             console.error('Failed to fetch books:', err);
             setErrorMessage('Unable to connect to the Inventory Service. Please ensure it is running on port 5001.');
         } finally {
-            setIsLoading(false);
+            if (!background) setIsLoading(false);
         }
     }, [token]);
 
+    useEffect(() => {
+        const refresh = () => { if (!document.hidden) void fetchBooks(true); };
+        const timer = window.setInterval(refresh, 10000);
+        window.addEventListener('focus', refresh);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+    }, [fetchBooks]);
     useEffect(() => {
         let isMounted = true;
         const load = async () => {
@@ -127,7 +133,20 @@ const AdminBooksPage = () => {
             setNewGenreName('');
             setGenreErrorMessage('');
         } catch (err: unknown) {
-            setGenreErrorMessage(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to add genre.' : 'Failed to add genre.');
+            if (axios.isAxiosError(err)) {
+                const status = err.response?.status;
+                const msg = err.response?.data?.message || err.response?.data?.title;
+                if (status === 401 || status === 403) {
+                    setGenreErrorMessage(`Unauthorized (${status}): Only admins can add genres. Your token may not have the Admin role.`);
+                } else if (msg) {
+                    setGenreErrorMessage(msg);
+                } else {
+                    setGenreErrorMessage(`Failed to add genre (HTTP ${status}). ${err.message}`);
+                }
+                console.error('Genre create error:', status, err.response?.data);
+            } else {
+                setGenreErrorMessage('Failed to add genre.');
+            }
         } finally {
             setIsGenreSubmitting(false);
         }
@@ -451,6 +470,9 @@ const AdminBooksPage = () => {
                         <BookPlus size={16} />
                         Book inventory
                     </Link>
+                    <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
+                    <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
+                    <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue
@@ -771,7 +793,7 @@ const AdminBooksPage = () => {
                             />
                         </div>
                         <button
-                            onClick={fetchBooks}
+                            onClick={() => void fetchBooks()}
                             className="btn-outline admin-refresh-button"
                             title="Refresh List"
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem' }}

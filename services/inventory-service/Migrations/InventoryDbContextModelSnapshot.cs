@@ -36,6 +36,7 @@ namespace InventoryService.Migrations
                         .HasColumnType("varchar(150)");
 
                     b.Property<int>("AvailableCopies")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<string>("CoverImageUrl")
@@ -72,6 +73,25 @@ namespace InventoryService.Migrations
                         .IsUnique();
 
                     b.ToTable("Books");
+                });
+
+            modelBuilder.Entity("InventoryService.Models.BookCheckout", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CheckoutDateUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ReturnDateUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BookCheckouts");
                 });
 
             modelBuilder.Entity("InventoryService.Models.Genre", b =>

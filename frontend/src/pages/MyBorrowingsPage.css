@@ -1,0 +1,55 @@
+.my-loans-page { min-width: 0; }
+.my-loans-success { margin-top: 16px; }
+.my-loans-cancelled-heading { margin-top: 1.75rem; color: #2e2b28; font-size: 1.1rem; }
+.my-loans-history-note { margin: .65rem 0 1rem; color: #605d55; font-size: .82rem; line-height: 1.6; }
+.my-loans-cancel { padding: .55rem .8rem; border: 1px solid #a33425; border-radius: 8px; background: #fff; color: #a33425; font: inherit; font-weight: 700; cursor: pointer; }
+.my-loans-cancel:hover:not(:disabled) { background: #ffede7; }
+.my-loans-cancel:disabled { opacity: .55; cursor: wait; }
+.my-loans-shell .discover-brand { text-decoration: none; }
+.my-loans-shell .discover-nav-item svg, .my-loans-shell .discover-brand svg { flex-shrink: 0; }
+.my-loans-hero > div:first-child { position: relative; z-index: 1; }
+.my-loans-hero .profile-hero-mark { flex-shrink: 0; }
+.my-loans-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin: 1.75rem 0 1rem; }
+.my-loans-toolbar p { display: flex; align-items: center; gap: .5rem; color: #605d55; font-size: .82rem; }
+.my-loans-toolbar svg { flex-shrink: 0; }
+.my-loans-refresh { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-width: 125px; }
+.my-loans-refresh:disabled { background: #d9dfd9; color: #4e5e56; cursor: wait; }
+.my-loans-note { border: 1px solid #e6e0cf; border-left: 3px solid #fb6d55; border-radius: 8px; background: #fffcf4; color: #605d55; padding: 1rem 1.2rem; font-size: .85rem; line-height: 1.6; }
+.my-loans-note strong { color: #3b3932; }
+.my-loans-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.my-loans-summary section { padding: 1.5rem; border: 1px solid #e6e0cf; border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgba(43,40,31,.04); }
+.my-loans-summary svg { color: #123f38; margin-bottom: .85rem; }
+.my-loans-summary h2 { font-size: .8rem; color: #605d55; margin: 0 0 .65rem; font-weight: 650; }
+.my-loans-summary strong { display: block; color: #123f38; font-size: clamp(1.35rem, 2.5vw, 2rem); font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.my-loans-summary p { font-size: .75rem; color: #706b60; margin-top: .5rem; }
+.my-loans-panel { margin: 1.5rem 0; padding: clamp(1rem, 2.5vw, 1.75rem); border: 1px solid #e6e0cf; border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: 0 14px 32px rgba(43,40,31,.05); }
+.my-loans-panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-bottom: 1rem; margin-bottom: .5rem; border-bottom: 1px solid #ece8dc; color: #123f38; }
+.my-loans-panel-heading h2 { margin-top: .35rem; font-size: 1.25rem; color: #2e2b28; }
+.my-loans-table-wrap { overflow-x: auto; }
+.my-loans-page table { width: 100%; border-collapse: collapse; text-align: left; font-size: .82rem; color: #605d55; }
+.my-loans-page caption { text-align: left; padding: .75rem 0; font-size: .75rem; color: #706b60; }
+.my-loans-page th { background: #f6f4ed; color: #605d55; font-size: .7rem; letter-spacing: .035em; text-transform: uppercase; }
+.my-loans-page th, .my-loans-page td { padding: 1rem .8rem; border-bottom: 1px solid #ece8dc; }
+.my-loans-page th, .my-loans-page td:not(:first-child) { white-space: nowrap; }
+.my-loans-page tbody tr:last-child td { border-bottom: 0; }
+.my-loans-page tbody tr:hover { background: #faf9f4; }
+.my-loans-page .my-loans-title { min-width: 155px; max-width: 260px; font-weight: 750; color: #292720; overflow-wrap: anywhere; }
+.my-loans-money { color: #123f38; font-weight: 750; font-variant-numeric: tabular-nums; }
+.my-loans-badge { display: inline-block; padding: .4rem .65rem; border-radius: 999px; color: #175740; background: #e9f2eb; font-size: .7rem; font-weight: 750; }
+.my-loans-badge-warning { background: #ffede7; color: #a33425; }
+.my-loans-empty { display: flex; flex-direction: column; align-items: center; gap: .65rem; padding: 2.5rem 1rem; text-align: center; color: #706b60; }
+.my-loans-empty svg { color: #8b987e; }
+.my-loans-empty h3 { color: #3b3932; font-size: 1rem; }
+.my-loans-empty p { font-size: .85rem; }
+.my-loans-link { color: #123f38; font-weight: 750; margin-top: .5rem; }
+.my-loans-link:hover { text-decoration: underline; }
+.my-loans-error { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; background: #fff1f1; color: #9f1d1d; border-left: 3px solid #e4a6a6; }
+.my-loans-shell :is(a, button, [tabindex]):focus-visible { outline: 3px solid #123f38; outline-offset: 3px; }
+.my-loans-page .profile-user-chip { max-width: 100%; overflow-wrap: anywhere; }
+@media (max-width: 650px) {
+  .my-loans-summary { grid-template-columns: 1fr; }
+  .my-loans-summary section { padding: 1.2rem; }
+  .my-loans-toolbar { align-items: flex-start; flex-direction: column; }
+  .my-loans-shell .discover-nav { flex-wrap: wrap; }
+  .my-loans-hero .profile-hero-mark { display: none; }
+}

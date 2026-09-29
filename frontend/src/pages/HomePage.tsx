@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
     Bell,
@@ -9,6 +9,7 @@ import {
     Check,
     Filter,
     Heart,
+    History,
     LayoutDashboard,
     Library,
     LogOut,
@@ -16,8 +17,8 @@ import {
     Search,
     User,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { INVENTORY_API_BASE_URL } from '../config/api';
+import { Link, useLocation } from 'react-router-dom';
+import { INVENTORY_API_BASE_URL, LENDING_API_BASE_URL } from '../config/api';
 
 interface Book {
     id: number;
@@ -96,18 +97,34 @@ const mockBooks: Book[] = [
 ];
 
 const HomePage = () => {
-    const { logout, user } = useAuth();
+    const location = useLocation();
+    useEffect(() => {
+        const target = location.hash.slice(1);
+        if (target === 'recommendations' || target === 'discover') {
+            document.getElementById(target)?.scrollIntoView({ block: 'start' });
+        }
+    }, [location.hash, location.key]);
+    const { logout, user, token } = useAuth();
     const [books, setBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
+    const [reservationSuccess, setReservationSuccess] = useState('');
+    const [reservationError, setReservationError] = useState('');
+    const [isReserving, setIsReserving] = useState<Record<number, boolean>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [selectedAuthor, setSelectedAuthor] = useState('All Authors');
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
 
-    const fetchBooks = async () => {
-        setIsLoading(true);
+    useEffect(() => {
+        if (!reservationSuccess) return;
+        const timeout = window.setTimeout(() => setReservationSuccess(''), 5000);
+        return () => window.clearTimeout(timeout);
+    }, [reservationSuccess]);
+
+    const fetchBooks = useCallback(async (background = false) => {
+        if (!background) setIsLoading(true);
         try {
             const response = await axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/books`);
             setBooks(response.data);
@@ -116,13 +133,44 @@ const HomePage = () => {
             console.error('Failed to fetch catalogue:', err);
             setErrorMessage('Unable to load the book catalogue. Please ensure the Inventory Service is running.');
         } finally {
-            setIsLoading(false);
+            if (!background) setIsLoading(false);
+        }
+    }, []);
+
+    const handleReserve = async (bookId: number) => {
+        if (!user || !token) return;
+        setIsReserving(prev => ({ ...prev, [bookId]: true }));
+        setReservationError('');
+        setReservationSuccess('');
+
+        try {
+            await axios.post(`${LENDING_API_BASE_URL}/api/Reservations`, { bookId }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setReservationSuccess('Book reserved successfully! It is now pending admin approval.');
+            // Refresh catalogue to reflect any changes if needed
+            fetchBooks();
+        } catch (err: any) {
+            console.error('Failed to reserve book:', err);
+            setReservationError(
+                err.response?.data?.message ||
+                err.response?.data?.title ||
+                (typeof err.response?.data === 'string' ? err.response.data : 'Failed to reserve book. Please try again.')
+            );
+        } finally {
+            setIsReserving(prev => ({ ...prev, [bookId]: false }));
         }
     };
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        void fetchBooks();
+        const refresh = () => { if (!document.hidden) void fetchBooks(true); };
+        const timer = window.setInterval(refresh, 10000);
+        window.addEventListener('focus', refresh);
+        return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+    }, [fetchBooks]);
 
     const displayBooks = useMemo(() => {
         const titles = new Set(books.map(book => book.title.trim().toLowerCase()));
@@ -227,6 +275,7 @@ const HomePage = () => {
                         <Heart size={16} />
                         Favorite
                     </a>
+                    {user?.role === 'User' && <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>}
                 </nav>
 
                 <aside className="discover-filter-rail" aria-label="Book filters">
@@ -299,7 +348,7 @@ const HomePage = () => {
                             <span>{user?.email || 'Reader'}</span>
                             <ChevronDown size={14} />
                         </div>
-                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={fetchBooks} disabled={isLoading}>
+                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
                             <RefreshCw size={17} />
                         </button>
                         <button type="button" className="discover-icon-button" title="Notifications">
@@ -376,6 +425,12 @@ const HomePage = () => {
                     </div>
 
                     {errorMessage && <div className="discover-error">{errorMessage}</div>}
+                    {reservationError && <div className="discover-error" style={{ marginTop: '10px' }}>{reservationError}</div>}
+                    {reservationSuccess && (
+                        <div role="status" style={{ marginTop: '6px', marginBottom: '20px', padding: '12px', background: '#e6f4ea', color: '#137333', borderRadius: '8px', fontSize: '0.875rem', border: '1px solid #ceead6' }}>
+                            {reservationSuccess}
+                        </div>
+                    )}
 
                     {isLoading && (
                         <div className="discover-empty">Loading books...</div>
@@ -401,6 +456,27 @@ const HomePage = () => {
                                             <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
                                                 {statusText}
                                             </span>
+                                            {user?.isValidated && isAvailable && (
+                                                <button
+                                                    onClick={() => handleReserve(book.id)}
+                                                    disabled={isReserving[book.id]}
+                                                    style={{
+                                                        marginTop: '12px',
+                                                        padding: '8px 12px',
+                                                        background: 'var(--primary-color, #2563eb)',
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '6px',
+                                                        cursor: isReserving[book.id] ? 'not-allowed' : 'pointer',
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: '500',
+                                                        opacity: isReserving[book.id] ? 0.7 : 1,
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    {isReserving[book.id] ? 'Reserving...' : 'Reserve Book'}
+                                                </button>
+                                            )}
                                         </div>
                                     </article>
                                 );
