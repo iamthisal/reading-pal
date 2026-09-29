@@ -96,4 +96,37 @@ public class ReservationsControllerGetBorrowedTests
         Assert.True(records.Single(r => r.Id == 1).IsOverdue);
         Assert.False(records.Single(r => r.Id == 2).IsOverdue);
     }
+
+    [Fact]
+    public async Task GetBorrowed_WhenReturnIsPending_FreezesFineAtOriginalRequestDate()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var dueDate = new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc);
+        context.Reservations.Add(new Reservation { Id = 1, BookId = 10, UserId = 20, Status = "Returning" });
+        context.BorrowRecords.Add(new BorrowRecord
+        {
+            Id = 1,
+            ReservationId = 1,
+            BookId = 10,
+            UserId = 20,
+            CheckoutDate = dueDate.AddDays(-14),
+            DueDate = dueDate,
+            ReturnRequestedAtUtc = dueDate.AddDays(2)
+        });
+        await context.SaveChangesAsync();
+        var handler = new FakeHttpMessageHandler(request => request.RequestUri!.AbsolutePath.Contains("/api/admin/users/")
+            ? JsonResponse.Ok(Array.Empty<object>())
+            : JsonResponse.NotFound());
+        var controller = new ReservationsController(context, new FakeHttpClientFactory(handler), ControllerTestFactory.CreateConfiguration());
+        ControllerTestFactory.AttachHttpContext(controller);
+
+        var result = await controller.GetBorrowed(CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var record = Assert.Single(Assert.IsAssignableFrom<IEnumerable<BorrowRecordResponse>>(ok.Value));
+        Assert.True(record.IsReturning);
+        Assert.True(record.IsOverdue);
+        Assert.Equal(2, record.DaysOverdue);
+        Assert.Equal(20m, record.FineAmount);
+    }
 }
