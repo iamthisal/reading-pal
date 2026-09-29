@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
 
 namespace LendingService.Tests.TestSupport;
 
@@ -18,6 +19,16 @@ public static class ControllerTestFactory
         {
             HttpContext = new DefaultHttpContext()
         };
+    }
+
+    public static void AttachUser(ControllerBase controller, int userId, string role = "User")
+    {
+        AttachHttpContext(controller);
+        controller.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Role, role)
+        }, "Test"));
     }
 
     public static LendingDbContext CreateDbContext()
