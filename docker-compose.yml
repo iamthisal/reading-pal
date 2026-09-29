@@ -25,8 +25,8 @@ services:
     container_name: readingpal-inventory-service
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ASPNETCORE_URLS: http://+:8080
@@ -53,7 +53,7 @@ services:
     container_name: readingpal-lending-service
     restart: unless-stopped
     depends_on:
-      lending-db-init:
+      db-init:
         condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
@@ -76,18 +76,19 @@ services:
       - default
       - events
 
-  lending-db-init:
+  # Creates the per-service databases and grants MYSQL_USER access before the services migrate.
+  db-init:
     image: mysql:8.4
     depends_on:
       mysql:
         condition: service_healthy
     environment:
       MYSQL_PWD: ${MYSQL_ROOT_PASSWORD}
-      LENDING_DB_NAME: ${LENDING_DB_NAME:-ReadingPal_lending}
       MYSQL_USER: ${MYSQL_USER}
+      SERVICE_DB_NAMES: ${INVENTORY_DB_NAME:-ReadingPal_inventory} ${LENDING_DB_NAME:-ReadingPal_lending}
     volumes:
-      - ./infrastructure/mysql/init-lending.sh:/init-lending.sh:ro
-    entrypoint: ["sh", "/init-lending.sh"]
+      - ./infrastructure/mysql/init-databases.sh:/init-databases.sh:ro
+    entrypoint: ["sh", "/init-databases.sh"]
 
   mysql:
     image: mysql:8.4

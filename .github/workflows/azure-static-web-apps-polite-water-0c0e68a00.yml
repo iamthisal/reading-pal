@@ -25,6 +25,8 @@ jobs:
 
         env:
           VITE_INVENTORY_API_BASE_URL: "https://reading-pal-inventoryservice-dnamc3bufybsa8ah.uaenorth-01.azurewebsites.net"
+          # Set the LENDING_SERVICE_URL repository variable once the Lending App Service exists (no trailing slash).
+          VITE_LENDING_API_BASE_URL: ${{ vars.LENDING_SERVICE_URL }}
 
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_WATER_0C0E68A00 }}
