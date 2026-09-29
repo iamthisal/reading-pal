@@ -92,6 +92,7 @@ ReadingPal/
 |   |-- UserService.Tests/
 |   |-- UserService.Selenium/
 |   |-- InventoryService.Tests/
+|   |-- LendingService.Tests/
 |   `-- InventoryService.Selenium/
 |-- deploy/
 |   |-- README.md
