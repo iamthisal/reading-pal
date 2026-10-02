@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LendingService.Controllers;
 using LendingService.Models;
 using LendingService.Tests.TestSupport;
@@ -60,7 +61,9 @@ public class ReservationsControllerRejectTests
 
         var reservation = await context.Reservations.SingleAsync(r => r.Id == 1);
         Assert.Equal("Cancelled", reservation.Status);
-        Assert.Single(context.ReservationEvents);
+        var message = Assert.Single(context.ReservationEvents);
+        using var payload = JsonDocument.Parse(message.Payload);
+        Assert.Equal("Admin", payload.RootElement.GetProperty("cancelledBy").GetString());
         Assert.Empty(context.BorrowRecords);
     }
 }

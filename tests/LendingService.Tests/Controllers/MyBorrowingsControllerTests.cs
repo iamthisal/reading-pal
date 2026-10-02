@@ -106,6 +106,8 @@ public class MyBorrowingsControllerTests
         Assert.Equal("Cancelled", (await context.Reservations.FindAsync(1))!.Status);
         var message = Assert.Single(context.ReservationEvents);
         Assert.Equal("reservation-cancelled", message.EventType);
+        using var payload = JsonDocument.Parse(message.Payload);
+        Assert.Equal("User", payload.RootElement.GetProperty("cancelledBy").GetString());
     }
 
     [Fact]

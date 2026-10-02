@@ -244,7 +244,9 @@ namespace LendingService.Controllers
                 ReservationId = reservation.Id,
                 UserId = reservation.UserId,
                 BookId = reservation.BookId,
-                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc),
+                CheckoutDate = checkoutDate,
+                DueDate = dueDate
             };
             reservation.Status = "Borrowed";
             reservation.CheckoutDate = checkoutDate;
@@ -305,7 +307,8 @@ namespace LendingService.Controllers
                 ReservationId = reservation.Id,
                 UserId = reservation.UserId,
                 BookId = reservation.BookId,
-                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc),
+                CancelledBy = "Admin"
             };
             _context.ReservationEvents.Add(new ReservationEventOutbox
             {
