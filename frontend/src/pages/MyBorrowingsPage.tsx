@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BookMarked, BookOpen, Clock3, Heart, History, Library, LogOut, RefreshCw, User, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 import './MyBorrowingsPage.css';
 
 interface Loan {
@@ -89,7 +90,7 @@ export default function MyBorrowingsPage() {
             </div>
         </aside>
         <main className="discover-main profile-main my-loans-page">
-        <header className="profile-topbar"><div className="profile-user-chip"><span className="discover-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'R'}</span><span>{user?.email || 'Reader'}</span></div></header>
+        <header className="profile-topbar"><div className="profile-user-chip"><span className="discover-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'R'}</span><span>{user?.email || 'Reader'}</span></div><NotificationBell /></header>
         <section className="profile-hero my-loans-hero">
             <div><p className="discover-eyebrow">Your reading journey</p><h1>My borrowings<br />&amp; fines</h1><p>Keep track of your next return and look back at the books you’ve borrowed.</p></div>
             <div className="profile-hero-mark" aria-hidden="true"><BookOpen size={38} /></div>

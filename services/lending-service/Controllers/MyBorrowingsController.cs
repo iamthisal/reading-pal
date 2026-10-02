@@ -96,7 +96,8 @@ public sealed class MyBorrowingsController(LendingDbContext db, IHttpClientFacto
             return Conflict(new { message = "This reservation is already being processed or has been accepted and cannot be cancelled. Refresh your list." });
         reservation.Status = "Cancelled";
         var evt = new ReservationCancelledEvent { ReservationId = reservation.Id, BookId = reservation.BookId,
-            UserId = userId, ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc) };
+            UserId = userId, ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc),
+            CancelledBy = "User" };
         db.ReservationEvents.Add(new ReservationEventOutbox { Id = evt.EventId, ReservationId = reservation.Id,
             EventType = evt.EventType, CreatedAtUtc = evt.TimestampUtc,
             Payload = JsonSerializer.Serialize(evt, new JsonSerializerOptions(JsonSerializerDefaults.Web)) });

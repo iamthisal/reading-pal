@@ -15,3 +15,7 @@ export const INVENTORY_API_BASE_URL = (
 export const LENDING_API_BASE_URL = (
     import.meta.env.VITE_LENDING_API_BASE_URL || 'http://localhost:5148'
 ).replace(/\/$/, '');
+
+export const NOTIFICATION_API_BASE_URL = (
+    import.meta.env.VITE_NOTIFICATION_API_BASE_URL || 'http://localhost:5003'
+).replace(/\/$/, '');
