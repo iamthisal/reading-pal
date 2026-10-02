@@ -2,7 +2,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
-    Bell,
     BookMarked,
     BookOpen,
     ChevronDown,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { INVENTORY_API_BASE_URL, LENDING_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 interface Book {
     id: number;
@@ -351,9 +351,7 @@ const HomePage = () => {
                         <button type="button" className="discover-icon-button" title="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
                             <RefreshCw size={17} />
                         </button>
-                        <button type="button" className="discover-icon-button" title="Notifications">
-                            <Bell size={17} />
-                        </button>
+                        <NotificationBell />
                     </div>
 
                     <div className="discover-copy">

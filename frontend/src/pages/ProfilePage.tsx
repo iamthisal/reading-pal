@@ -5,6 +5,7 @@ import axios from 'axios';
 import { BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 const ProfilePage = () => {
     const { logout, token, user } = useAuth();
@@ -122,6 +123,7 @@ const ProfilePage = () => {
                         <span className="discover-avatar">{email?.slice(0, 1).toUpperCase() || 'R'}</span>
                         <span>{email || 'Reader'}</span>
                     </div>
+                    <NotificationBell />
                 </header>
 
                 <section className="profile-hero">
