@@ -121,6 +121,28 @@ book-updated
 
 Each topic has one partition and replication factor one. Repeat the creation command if topics are missing after a new testing session; `--if-not-exists` avoids errors for existing topics.
 
+### Lending and Notification topics
+
+Lending publishes reservation events that the Notification Service consumes:
+
+| Topic | Producer | Consumer |
+| --- | --- | --- |
+| `reservation-created` | Lending (customer reserves) | Notification Service (admin notification) |
+| `reservation-accepted` | Lending (admin accepts) | Notification Service (customer notification) |
+| `reservation-cancelled` | Lending (admin rejects or customer cancels) | Notification Service (customer, and admins when the customer cancelled) |
+| `book-returned` | Lending (admin records a return) | Notification Service (customer notification) |
+
+The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
+
+```bash
+for topic in reservation-created reservation-accepted reservation-cancelled book-returned book-created book-updated book-deleted; do
+  kafka-topics --bootstrap-server readingpal-kafka-grp13.uaenorth.azurecontainer.io:9092 \
+    --create --if-not-exists --topic "$topic" --partitions 1 --replication-factor 1
+done
+```
+
+Until a topic exists, Lending keeps its events in the database outbox and retries every few seconds, so creating a missing topic later loses nothing.
+
 ## Next check: public endpoint
 
 Run this in local PowerShell with Docker Desktop running. It launches a temporary client, not another broker, and does not publish a local port.
