@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { BookMarked, BookOpen, BookPlus, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff, Tags, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 export interface Book {
     id: number;
@@ -494,13 +495,16 @@ const AdminBooksPage = () => {
                         <h1>Book inventory</h1>
                         <p className="admin-inventory-subtitle">Keep the catalogue current, useful, and ready for its next reader.</p>
                     </div>
-                    <button
-                        onClick={() => setIsFormOpen(prev => !prev)}
-                        className="admin-primary-action"
-                    >
-                        <BookPlus size={17} />
-                        {isFormOpen ? 'Hide add form' : 'Add new book'}
-                    </button>
+                    <div className="admin-topbar-actions">
+                        <button
+                            onClick={() => setIsFormOpen(prev => !prev)}
+                            className="admin-primary-action"
+                        >
+                            <BookPlus size={17} />
+                            {isFormOpen ? 'Hide add form' : 'Add new book'}
+                        </button>
+                        <NotificationBell />
+                    </div>
                 </header>
 
             {/* Notification Alerts */}

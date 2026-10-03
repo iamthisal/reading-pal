@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 interface UserSummary {
     id: number;
@@ -224,9 +225,12 @@ const AdminUsersPage = () => {
                         <h1>{pageTitle}</h1>
                         <p className="admin-users-subtitle">{pageDescription}</p>
                     </div>
-                    <div className={`admin-users-mode ${isPending ? 'admin-users-mode-pending' : 'admin-users-mode-active'}`}>
-                        <Users size={17} />
-                        {isPending ? 'Approval queue' : 'Member directory'}
+                    <div className="admin-topbar-actions">
+                        <div className={`admin-users-mode ${isPending ? 'admin-users-mode-pending' : 'admin-users-mode-active'}`}>
+                            <Users size={17} />
+                            {isPending ? 'Approval queue' : 'Member directory'}
+                        </div>
+                        <NotificationBell />
                     </div>
                 </header>
 

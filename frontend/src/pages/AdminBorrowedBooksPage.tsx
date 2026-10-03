@@ -5,6 +5,7 @@ import axios from 'axios';
 import { BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 interface BorrowRecord {
     id: number;
@@ -109,9 +110,12 @@ export default function AdminBorrowedBooksPage() {
                         <h1>Borrowed books</h1>
                         <p className="admin-users-subtitle">Current loans, earliest due date first. Times are shown in your local timezone. Late returns cost Rs. 10 per calendar day after the due date in Sri Lanka.</p>
                     </div>
-                    <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
-                        {isLoading ? 'Loading…' : 'Refresh'}
-                    </button>
+                    <div className="admin-topbar-actions">
+                        <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
+                            {isLoading ? 'Loading…' : 'Refresh'}
+                        </button>
+                        <NotificationBell />
+                    </div>
                 </header>
                 <section className="admin-users-panel glass-panel" aria-label="Current borrowed books" aria-busy={isLoading}>
                     <div className="admin-users-panel-heading">

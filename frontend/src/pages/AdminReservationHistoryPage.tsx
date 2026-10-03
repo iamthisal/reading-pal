@@ -5,6 +5,7 @@ import axios from 'axios';
 import { BookMarked, BookOpen, BookPlus, History, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 interface HistoryRecord {
     id: number; userName: string; bookTitle: string; status: string; reservationDate: string;
@@ -60,7 +61,7 @@ export default function AdminReservationHistoryPage() {
         <main className="admin-main admin-users-main">
             <header className="admin-topbar admin-users-topbar"><div><p className="admin-eyebrow">Counter operations</p><h1>Reservation history</h1>
                 <p className="admin-users-subtitle">Returned books and cancelled reservations, newest reservation first. Times are shown in your local timezone.</p></div>
-                <button type="button" className="btn-outline" disabled={loading} onClick={() => setRefresh(value => value + 1)}>{loading ? 'Loading…' : 'Refresh'}</button></header>
+                <div className="admin-topbar-actions"><button type="button" className="btn-outline" disabled={loading} onClick={() => setRefresh(value => value + 1)}>{loading ? 'Loading…' : 'Refresh'}</button><NotificationBell /></div></header>
             <section className="admin-users-panel glass-panel" aria-label="Reservation history" aria-busy={loading}>
                 <div className="admin-users-panel-heading"><h2>Past records</h2><label>Status <select value={filter} onChange={event => setFilter(event.target.value)}>
                     <option value="All">All</option><option value="Returned">Returned</option><option value="Cancelled">Cancelled</option></select></label></div>
