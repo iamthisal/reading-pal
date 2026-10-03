@@ -25,7 +25,7 @@ public sealed class NotificationsController(NotificationDbContext db) : Controll
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
 
-        var query = db.Notifications.AsNoTracking().Where(n => n.UserId == userId);
+        var query = db.Notifications.AsNoTracking().Where(n => n.Audience == NotificationAudiences.User && n.UserId == userId);
         if (unreadOnly) query = query.Where(n => !n.IsRead);
         var items = await query
             .OrderByDescending(n => n.CreatedAtUtc).ThenByDescending(n => n.Id)
@@ -39,7 +39,7 @@ public sealed class NotificationsController(NotificationDbContext db) : Controll
     {
         if (!TryGetUserId(out var userId))
             return Unauthorized(new { message = "Invalid user identity. Please log in again." });
-        var count = await db.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead, cancellationToken);
+        var count = await db.Notifications.CountAsync(n => n.Audience == NotificationAudiences.User && n.UserId == userId && !n.IsRead, cancellationToken);
         return Ok(new UnreadCountResponse { Count = count });
     }
 
@@ -49,7 +49,7 @@ public sealed class NotificationsController(NotificationDbContext db) : Controll
         if (!TryGetUserId(out var userId))
             return Unauthorized(new { message = "Invalid user identity. Please log in again." });
         // Another user's notification is reported as missing so IDs cannot be probed.
-        var notification = await db.Notifications.SingleOrDefaultAsync(n => n.Id == id && n.UserId == userId, cancellationToken);
+        var notification = await db.Notifications.SingleOrDefaultAsync(n => n.Id == id && n.Audience == NotificationAudiences.User && n.UserId == userId, cancellationToken);
         if (notification == null) return NotFound(new { message = "Notification not found." });
         if (!notification.IsRead)
         {
@@ -65,7 +65,7 @@ public sealed class NotificationsController(NotificationDbContext db) : Controll
     {
         if (!TryGetUserId(out var userId))
             return Unauthorized(new { message = "Invalid user identity. Please log in again." });
-        var unread = await db.Notifications.Where(n => n.UserId == userId && !n.IsRead).ToListAsync(cancellationToken);
+        var unread = await db.Notifications.Where(n => n.Audience == NotificationAudiences.User && n.UserId == userId && !n.IsRead).ToListAsync(cancellationToken);
         var now = DateTime.UtcNow;
         foreach (var notification in unread)
         {

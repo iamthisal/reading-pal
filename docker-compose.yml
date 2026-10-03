@@ -94,9 +94,11 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__Key: ${JWT_SECRET}
       InventoryService__BaseUrl: http://inventory-service:8080
+      UserService__BaseUrl: http://user-service:8080
       Kafka__BootstrapServers: kafka:19092
       Kafka__SecurityProtocol: Plaintext
       Kafka__GroupId: notification-service
+      Kafka__Topics__ReservationCreated: reservation-created
       Kafka__Topics__ReservationAccepted: reservation-accepted
       Kafka__Topics__ReservationCancelled: reservation-cancelled
       Kafka__Topics__BookReturned: book-returned

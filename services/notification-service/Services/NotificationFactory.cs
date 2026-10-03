@@ -9,12 +9,19 @@ public static class NotificationFactory
     // Dates are shown as Sri Lankan calendar days, matching how Lending calculates due dates and fines.
     private static readonly TimeZoneInfo LibraryTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Colombo");
 
-    public static string FallbackTitle(int bookId) => $"Book #{bookId}";
+    /// <summary>
+    /// Placeholder in admin messages, replaced with the customer's name when an admin reads the list:
+    /// names come from the User Service, which only answers requests carrying an admin's token.
+    /// </summary>
+    public const string CustomerPlaceholder = "{customer}";
 
-    /// <summary>Builds the notification for a Lending event, or returns null for event types users are not notified about.</summary>
-    public static Notification? Create(LendingEvent evt, string? bookTitle)
+    public static string FallbackTitle(int bookId) => $"Book #{bookId}";
+    public static string FallbackCustomerName(int userId) => $"Customer #{userId}";
+
+    /// <summary>Builds the customer's notification for a Lending event, or null when the customer is not notified.</summary>
+    public static Notification? CreateForUser(LendingEvent evt, string? bookTitle)
     {
-        var title = string.IsNullOrWhiteSpace(bookTitle) ? FallbackTitle(evt.BookId) : bookTitle.Trim();
+        var title = Title(evt, bookTitle);
         var (type, message) = evt.EventType switch
         {
             LendingEventTypes.ReservationAccepted => (NotificationTypes.ReservationAccepted,
@@ -22,7 +29,7 @@ public static class NotificationFactory
                     ? $"Your reservation for '{title}' was accepted. Please return it by {FormatDate(due)}."
                     : $"Your reservation for '{title}' was accepted."),
             LendingEventTypes.ReservationCancelled => (NotificationTypes.ReservationCancelled,
-                string.Equals(evt.CancelledBy, "User", StringComparison.OrdinalIgnoreCase)
+                IsCancelledByCustomer(evt)
                     ? $"You cancelled your reservation for '{title}'."
                     : $"Your reservation for '{title}' was rejected by the library."),
             LendingEventTypes.BookReturned => (NotificationTypes.BookReturned,
@@ -31,25 +38,59 @@ public static class NotificationFactory
                     : $"'{title}' was returned. Thank you!"),
             _ => (null, null)
         };
-        if (type == null) return null;
+        return type == null ? null : Build(evt, NotificationAudiences.User, type, title, message!);
+    }
 
-        return new Notification
+    /// <summary>
+    /// Builds the admins' notification, or null. Admins hear only about customer actions that change the
+    /// pending queue: a new reservation or a customer's own cancellation. Their own accepts and rejects
+    /// produce nothing, so an admin action is never echoed back as a notification.
+    /// </summary>
+    public static Notification? CreateForAdmin(LendingEvent evt, string? bookTitle)
+    {
+        var title = Title(evt, bookTitle);
+        var (type, message) = evt.EventType switch
         {
-            EventId = evt.EventId,
-            UserId = evt.UserId,
-            Type = type,
-            ReservationId = evt.ReservationId,
-            BookId = evt.BookId,
-            BookTitle = title,
-            Message = message!,
-            DueDate = evt.DueDate is { } d ? AsUtc(d) : null,
-            ReturnDate = evt.ReturnDate is { } r ? AsUtc(r) : null,
-            CreatedAtUtc = DateTime.UtcNow
+            LendingEventTypes.ReservationCreated => (NotificationTypes.NewReservation,
+                evt.ReservationDate is { } reserved
+                    ? $"{CustomerPlaceholder} reserved '{title}' on {FormatDateTime(reserved)}."
+                    : $"{CustomerPlaceholder} reserved '{title}'."),
+            LendingEventTypes.ReservationCancelled when IsCancelledByCustomer(evt) => (NotificationTypes.CustomerCancelledReservation,
+                $"{CustomerPlaceholder} cancelled their pending reservation for '{title}'."),
+            _ => (null, null)
         };
+        return type == null ? null : Build(evt, NotificationAudiences.Admin, type, title, message!);
     }
 
     public static string FormatDate(DateTime utc) =>
-        TimeZoneInfo.ConvertTimeFromUtc(AsUtc(utc), LibraryTimeZone).ToString("d MMM yyyy", CultureInfo.InvariantCulture);
+        ToLibraryTime(utc).ToString("d MMM yyyy", CultureInfo.InvariantCulture);
+
+    public static string FormatDateTime(DateTime utc) =>
+        ToLibraryTime(utc).ToString("d MMM yyyy 'at' h:mm tt", CultureInfo.InvariantCulture);
+
+    private static bool IsCancelledByCustomer(LendingEvent evt) =>
+        string.Equals(evt.CancelledBy, "User", StringComparison.OrdinalIgnoreCase);
+
+    private static string Title(LendingEvent evt, string? bookTitle) =>
+        string.IsNullOrWhiteSpace(bookTitle) ? FallbackTitle(evt.BookId) : bookTitle.Trim();
+
+    private static Notification Build(LendingEvent evt, string audience, string type, string title, string message) => new()
+    {
+        EventId = evt.EventId,
+        Audience = audience,
+        UserId = evt.UserId,
+        Type = type,
+        ReservationId = evt.ReservationId,
+        BookId = evt.BookId,
+        BookTitle = title,
+        Message = message,
+        ReservationDate = evt.ReservationDate is { } reserved ? AsUtc(reserved) : null,
+        DueDate = evt.DueDate is { } d ? AsUtc(d) : null,
+        ReturnDate = evt.ReturnDate is { } r ? AsUtc(r) : null,
+        CreatedAtUtc = DateTime.UtcNow
+    };
+
+    private static DateTime ToLibraryTime(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(AsUtc(utc), LibraryTimeZone);
 
     private static DateTime AsUtc(DateTime value) =>
         value.Kind == DateTimeKind.Utc ? value : value.Kind == DateTimeKind.Local ? value.ToUniversalTime() : DateTime.SpecifyKind(value, DateTimeKind.Utc);

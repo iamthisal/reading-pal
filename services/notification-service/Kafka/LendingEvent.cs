@@ -1,8 +1,8 @@
 namespace NotificationService.Kafka;
 
 /// <summary>
-/// Shape of the events Lending publishes (reservation-accepted, reservation-cancelled, book-returned).
-/// One class covers all three; fields an event type does not carry stay null. Schema version 1 events
+/// Shape of the events Lending publishes (reservation-created, reservation-accepted, reservation-cancelled, book-returned).
+/// One class covers all four; fields an event type does not carry stay null. Schema version 1 events
 /// (published before due dates and CancelledBy were added) are still accepted.
 /// </summary>
 public sealed class LendingEvent
@@ -14,6 +14,7 @@ public sealed class LendingEvent
     public int ReservationId { get; init; }
     public int UserId { get; init; }
     public int BookId { get; init; }
+    public DateTime? ReservationDate { get; init; }
     public DateTime? DueDate { get; init; }
     public DateTime? ReturnDate { get; init; }
     public string? CancelledBy { get; init; }
@@ -24,4 +25,5 @@ public static class LendingEventTypes
     public const string ReservationAccepted = "reservation-accepted";
     public const string ReservationCancelled = "reservation-cancelled";
     public const string BookReturned = "book-returned";
+    public const string ReservationCreated = "reservation-created";
 }

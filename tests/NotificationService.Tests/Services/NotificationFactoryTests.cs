@@ -25,7 +25,7 @@ public class NotificationFactoryTests
         // 18:30 UTC is already the next calendar day in Sri Lanka (UTC+5:30).
         var due = new DateTime(2026, 10, 13, 18, 30, 0, DateTimeKind.Utc);
 
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.ReservationAccepted, dueDate: due), "Clean Code")!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.ReservationAccepted, dueDate: due), "Clean Code")!;
 
         Assert.Equal(NotificationTypes.ReservationAccepted, notification.Type);
         Assert.Contains("'Clean Code'", notification.Message);
@@ -38,7 +38,7 @@ public class NotificationFactoryTests
     [Fact]
     public void Create_ReservationRejectedByAdmin_SaysRejected()
     {
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "Admin"), "Clean Code")!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "Admin"), "Clean Code")!;
 
         Assert.Equal(NotificationTypes.ReservationCancelled, notification.Type);
         Assert.Equal("Your reservation for 'Clean Code' was rejected by the library.", notification.Message);
@@ -47,7 +47,7 @@ public class NotificationFactoryTests
     [Fact]
     public void Create_ReservationCancelledByUser_ConfirmsTheirCancellation()
     {
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "User"), "Clean Code")!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "User"), "Clean Code")!;
 
         Assert.Equal("You cancelled your reservation for 'Clean Code'.", notification.Message);
     }
@@ -57,7 +57,7 @@ public class NotificationFactoryTests
     {
         var returned = new DateTime(2026, 9, 30, 4, 0, 0, DateTimeKind.Utc);
 
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.BookReturned, returnDate: returned), "Clean Code")!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.BookReturned, returnDate: returned), "Clean Code")!;
 
         Assert.Equal(NotificationTypes.BookReturned, notification.Type);
         Assert.Equal("'Clean Code' was returned on 30 Sep 2026. Thank you!", notification.Message);
@@ -67,7 +67,7 @@ public class NotificationFactoryTests
     [Fact]
     public void Create_WithoutTitle_FallsBackToBookId()
     {
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "Admin"), null)!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.ReservationCancelled, cancelledBy: "Admin"), null)!;
 
         Assert.Equal("Book #12", notification.BookTitle);
         Assert.Contains("'Book #12'", notification.Message);
@@ -76,7 +76,7 @@ public class NotificationFactoryTests
     [Fact]
     public void Create_SchemaVersion1AcceptedEventWithoutDueDate_StillNotifies()
     {
-        var notification = NotificationFactory.Create(Event(LendingEventTypes.ReservationAccepted), "Clean Code")!;
+        var notification = NotificationFactory.CreateForUser(Event(LendingEventTypes.ReservationAccepted), "Clean Code")!;
 
         Assert.Equal("Your reservation for 'Clean Code' was accepted.", notification.Message);
         Assert.Null(notification.DueDate);
@@ -85,6 +85,6 @@ public class NotificationFactoryTests
     [Fact]
     public void Create_UnknownEventType_ReturnsNull()
     {
-        Assert.Null(NotificationFactory.Create(Event("book-created"), "Clean Code"));
+        Assert.Null(NotificationFactory.CreateForUser(Event("book-created"), "Clean Code"));
     }
 }

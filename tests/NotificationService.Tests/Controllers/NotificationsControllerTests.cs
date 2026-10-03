@@ -107,4 +107,21 @@ public class NotificationsControllerTests
         Assert.IsType<UnauthorizedObjectResult>((await controller.Get(cancellationToken: CancellationToken.None)).Result);
         Assert.IsType<UnauthorizedObjectResult>((await controller.GetUnreadCount(CancellationToken.None)).Result);
     }
+
+    [Fact]
+    public async Task UserEndpoints_NeverExposeAdminNotificationsAboutTheUser()
+    {
+        using var db = TestFactory.CreateDbContext();
+        db.Notifications.Add(new Notification { Id = 10, EventId = Guid.NewGuid(), Audience = NotificationAudiences.Admin, UserId = 7,
+            Type = NotificationTypes.NewReservation, Message = "{customer} reserved 'Dune'.", CreatedAtUtc = DateTime.UtcNow });
+        await db.SaveChangesAsync();
+        var controller = CreateController(db);
+
+        var items = Assert.IsAssignableFrom<IEnumerable<NotificationResponse>>(Assert.IsType<OkObjectResult>(
+            (await controller.Get(cancellationToken: CancellationToken.None)).Result).Value);
+        Assert.Empty(items);
+        Assert.Equal(0, Assert.IsType<UnreadCountResponse>(Assert.IsType<OkObjectResult>(
+            (await controller.GetUnreadCount(CancellationToken.None)).Result).Value).Count);
+        Assert.IsType<NotFoundObjectResult>(await controller.MarkRead(10, CancellationToken.None));
+    }
 }
