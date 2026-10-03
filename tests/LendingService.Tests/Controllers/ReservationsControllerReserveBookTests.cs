@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Security.Claims;
 using LendingService.Controllers;
 using LendingService.DTOs;
@@ -12,9 +13,10 @@ public class ReservationsControllerReserveBookTests
     private static ReservationsController CreateController(
         FakeHttpMessageHandler handler,
         string? userId = "20",
-        string? inventoryBaseUrl = "http://inventory-service.test")
+        string? inventoryBaseUrl = "http://inventory-service.test",
+        LendingService.Data.LendingDbContext? context = null)
     {
-        var context = ControllerTestFactory.CreateDbContext();
+        context ??= ControllerTestFactory.CreateDbContext();
         var config = ControllerTestFactory.CreateConfiguration(inventoryServiceBaseUrl: inventoryBaseUrl);
         var controller = new ReservationsController(context, new FakeHttpClientFactory(handler), config);
 
@@ -111,5 +113,41 @@ public class ReservationsControllerReserveBookTests
 
         var statusResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task ReserveBook_WhenCopiesAreAvailable_QueuesReservationCreatedEvent()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(new FakeHttpMessageHandler(_ =>
+            JsonResponse.Ok(new { AvailableCopies = 3 })), context: context);
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        var response = Assert.IsType<ReservationResponse>(Assert.IsType<CreatedAtActionResult>(result.Result).Value);
+        var message = Assert.Single(context.ReservationEvents);
+        Assert.Equal("reservation-created", message.EventType);
+        Assert.Equal(response.Id, message.ReservationId);
+        using var payload = JsonDocument.Parse(message.Payload);
+        Assert.Equal(response.Id, payload.RootElement.GetProperty("reservationId").GetInt32());
+        Assert.Equal(20, payload.RootElement.GetProperty("userId").GetInt32());
+        Assert.Equal(42, payload.RootElement.GetProperty("bookId").GetInt32());
+        Assert.Equal(message.Id, payload.RootElement.GetProperty("eventId").GetGuid());
+    }
+
+    [Fact]
+    public async Task ReserveBook_WhenReservationIsNotCreated_QueuesNoEvent()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var noCopies = CreateController(new FakeHttpMessageHandler(_ => JsonResponse.Ok(new { AvailableCopies = 0 })), context: context);
+        var missingBook = CreateController(new FakeHttpMessageHandler(_ => JsonResponse.NotFound()), context: context);
+        var admin = CreateController(new FakeHttpMessageHandler(_ => JsonResponse.Ok(new { AvailableCopies = 3 })), userId: "admin-id", context: context);
+
+        await noCopies.ReserveBook(new ReserveBookRequest { BookId = 42 });
+        await missingBook.ReserveBook(new ReserveBookRequest { BookId = 42 });
+        await admin.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.Empty(context.Reservations);
+        Assert.Empty(context.ReservationEvents);
     }
 }
