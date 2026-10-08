@@ -105,6 +105,7 @@ services:
       Kafka__Topics__ReservationCancelled: reservation-cancelled
       Kafka__Topics__BookReturned: book-returned
       Kafka__Topics__FineRecorded: fine-recorded
+      Kafka__Topics__BookDueSoon: book-due-soon
       Frontend__Url: http://localhost:5173
     ports:
       - "${NOTIFICATION_SERVICE_PORT:-5003}:8080"

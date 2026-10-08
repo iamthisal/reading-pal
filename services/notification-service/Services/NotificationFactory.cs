@@ -39,6 +39,8 @@ public static class NotificationFactory
             // Only an actual, positive fine is announced; estimated fines never produce this event.
             LendingEventTypes.FineRecorded when evt.Amount > 0 && evt.DaysOverdue > 0 => (NotificationTypes.FineRecorded,
                 $"A fine of {FormatRupees(evt.Amount!.Value)} was recorded for '{title}': returned {evt.DaysOverdue} {(evt.DaysOverdue == 1 ? "day" : "days")} late."),
+            LendingEventTypes.BookDueSoon when evt.DueDate is { } dueSoon => (NotificationTypes.DueDateReminder,
+                $"Reminder: '{title}' is due {DueWhen(dueSoon, evt.DaysUntilDue)}. Please return it on time to avoid a fine."),
             _ => (null, null)
         };
         return type == null ? null : Build(evt, NotificationAudiences.User, type, title, message!);
@@ -64,6 +66,14 @@ public static class NotificationFactory
         };
         return type == null ? null : Build(evt, NotificationAudiences.Admin, type, title, message!);
     }
+
+    // A reminder normally arrives two days ahead; one created late (after missed checks) says "today"/"tomorrow".
+    private static string DueWhen(DateTime dueUtc, int? daysUntilDue) => daysUntilDue switch
+    {
+        0 => $"today ({FormatDate(dueUtc)})",
+        1 => $"tomorrow ({FormatDate(dueUtc)})",
+        _ => $"on {FormatDate(dueUtc)}"
+    };
 
     public static string FormatRupees(decimal amount) => $"Rs. {amount.ToString("N2", CultureInfo.InvariantCulture)}";
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Bell, BookCheck, BookPlus, BookX, CalendarCheck, Wallet } from 'lucide-react';
+import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
@@ -25,7 +25,8 @@ const typeIcon: Record<string, ReactNode> = {
     BookReturned: <CalendarCheck size={16} />,
     NewReservation: <BookPlus size={16} />,
     CustomerCancelledReservation: <BookX size={16} />,
-    FineRecorded: <Wallet size={16} />
+    FineRecorded: <Wallet size={16} />,
+    DueDateReminder: <AlarmClock size={16} />
 };
 
 // Shown in the warning colour: something the reader should notice.
