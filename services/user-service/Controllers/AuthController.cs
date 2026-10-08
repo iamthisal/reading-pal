@@ -45,7 +45,8 @@ namespace UserService.Controllers
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            var userToken = GenerateJwtToken(user.Id.ToString(), user.Email, user.Role, user.IsValidated);
+            var activeSince = user.IsValidated ? user.ApprovedAtUtc ?? user.CreatedAt : (DateTime?)null;
+            var userToken = GenerateJwtToken(user.Id.ToString(), user.Email, user.Role, user.IsValidated, activeSince);
             return Ok(new AuthResponse { Token = userToken, Role = user.Role, IsValidated = user.IsValidated });
         }
 
@@ -73,18 +74,23 @@ namespace UserService.Controllers
             return Ok(new { message = "Registration successful" });
         }
 
-        private string GenerateJwtToken(string id, string email, string role, bool isValidated)
+        private string GenerateJwtToken(string id, string email, string role, bool isValidated, DateTime? activeSince = null)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, id),
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(ClaimTypes.Role, role),
                 new Claim("IsValidated", isValidated.ToString())
             };
+            // When the account became active (Unix seconds, UTC). The Notification Service shows a catalogue
+            // announcement only to customers who were already registered and active when it was made.
+            if (activeSince is { } since)
+                claims.Add(new Claim("active_since",
+                    new DateTimeOffset(DateTime.SpecifyKind(since, DateTimeKind.Utc)).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
