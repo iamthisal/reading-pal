@@ -13,6 +13,7 @@ public class KafkaReservationEventPublisherTests
     [InlineData("reservation-cancelled", "cancelled-topic")]
     [InlineData("book-returned", "returned-topic")]
     [InlineData("reservation-created", "created-topic")]
+    [InlineData("fine-recorded", "fine-topic")]
     public async Task PublishAsync_RoutesSupportedEventToConfiguredTopic(string eventType, string expectedTopic)
     {
         string? topic = null;
@@ -32,7 +33,8 @@ public class KafkaReservationEventPublisherTests
                 ReservationAccepted = "accepted-topic",
                 ReservationCancelled = "cancelled-topic",
                 BookReturned = "returned-topic",
-                ReservationCreated = "created-topic"
+                ReservationCreated = "created-topic",
+                FineRecorded = "fine-topic"
             }
         });
         var publisher = new KafkaReservationEventPublisher(producer.Object, options);
