@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Bell, BookCheck, BookPlus, BookX, CalendarCheck } from 'lucide-react';
+import { Bell, BookCheck, BookPlus, BookX, CalendarCheck, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
@@ -24,10 +24,12 @@ const typeIcon: Record<string, ReactNode> = {
     ReservationCancelled: <BookX size={16} />,
     BookReturned: <CalendarCheck size={16} />,
     NewReservation: <BookPlus size={16} />,
-    CustomerCancelledReservation: <BookX size={16} />
+    CustomerCancelledReservation: <BookX size={16} />,
+    FineRecorded: <Wallet size={16} />
 };
 
-const cancelledTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation']);
+// Shown in the warning colour: something the reader should notice.
+const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded']);
 
 const formatTime = (value: string) => new Date(value).toLocaleString('en-GB', {
     timeZone: 'Asia/Colombo', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
@@ -164,7 +166,7 @@ const NotificationBell = () => {
                             {items.map(item => (
                                 <li key={item.id}>
                                     <button type="button" className={`notification-item${item.isRead ? '' : ' notification-item-unread'}`} onClick={() => void select(item)}>
-                                        <span className={`notification-icon${cancelledTypes.has(item.type) ? ' notification-icon-cancelled' : ''}`}>{typeIcon[item.type] ?? <Bell size={16} />}</span>
+                                        <span className={`notification-icon${warningTypes.has(item.type) ? ' notification-icon-cancelled' : ''}`}>{typeIcon[item.type] ?? <Bell size={16} />}</span>
                                         <span className="notification-text">
                                             <span>{item.message}</span>
                                             <time dateTime={item.createdAtUtc}>{formatTime(item.createdAtUtc)}</time>

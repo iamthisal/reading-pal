@@ -131,11 +131,12 @@ Lending publishes reservation events that the Notification Service consumes:
 | `reservation-accepted` | Lending (admin accepts) | Notification Service (customer notification) |
 | `reservation-cancelled` | Lending (admin rejects or customer cancels) | Notification Service (customer, and admins when the customer cancelled) |
 | `book-returned` | Lending (admin records a return) | Notification Service (customer notification) |
+| `fine-recorded` | Lending (a late return saves an unpaid fine) | Notification Service (customer notification) |
 
 The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
 
 ```bash
-for topic in reservation-created reservation-accepted reservation-cancelled book-returned book-created book-updated book-deleted; do
+for topic in reservation-created reservation-accepted reservation-cancelled book-returned fine-recorded book-created book-updated book-deleted; do
   kafka-topics --bootstrap-server readingpal-kafka-grp13.uaenorth.azurecontainer.io:9092 \
     --create --if-not-exists --topic "$topic" --partitions 1 --replication-factor 1
 done
