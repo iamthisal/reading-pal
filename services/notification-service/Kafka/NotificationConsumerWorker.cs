@@ -5,7 +5,7 @@ using NotificationService.Services;
 namespace NotificationService.Kafka;
 
 /// <summary>
-/// Reads Lending's events and stores a notification for each one. Offsets are committed only after a
+/// Reads Lending's and Inventory's events and stores the resulting notifications. Offsets are committed only after a
 /// message is handled, so a crash or database outage causes a redelivery rather than a lost notification;
 /// <see cref="LendingEventHandler"/> makes those redeliveries harmless.
 /// </summary>
@@ -42,7 +42,8 @@ public sealed class NotificationConsumerWorker(
         .SetErrorHandler((_, error) => logger.LogWarning("Kafka consumer error: {Reason}", error.Reason))
         .Build();
 
-        consumer.Subscribe(new[] { settings.Topics.ReservationCreated, settings.Topics.ReservationAccepted, settings.Topics.ReservationCancelled, settings.Topics.BookReturned, settings.Topics.FineRecorded, settings.Topics.BookDueSoon });
+        consumer.Subscribe(new[] { settings.Topics.ReservationCreated, settings.Topics.ReservationAccepted, settings.Topics.ReservationCancelled, settings.Topics.BookReturned, settings.Topics.FineRecorded, settings.Topics.BookDueSoon,
+            settings.Topics.BookCreated, settings.Topics.BookDeleted });
         logger.LogInformation("Notification consumer subscribed as group {GroupId}.", settings.GroupId);
 
         try
@@ -56,8 +57,10 @@ public sealed class NotificationConsumerWorker(
                     if (result?.Message == null) continue;
 
                     using var scope = scopeFactory.CreateScope();
-                    var handler = scope.ServiceProvider.GetRequiredService<LendingEventHandler>();
-                    var outcome = await handler.HandleAsync(result.Message.Value, stoppingToken);
+                    // Inventory's catalogue topics have a different event shape from Lending's.
+                    var outcome = result.Topic == settings.Topics.BookCreated || result.Topic == settings.Topics.BookDeleted
+                        ? await scope.ServiceProvider.GetRequiredService<CatalogEventHandler>().HandleAsync(result.Message.Value, stoppingToken)
+                        : await scope.ServiceProvider.GetRequiredService<LendingEventHandler>().HandleAsync(result.Message.Value, stoppingToken);
                     consumer.Commit(result);
                     logger.LogInformation("Handled {Topic} message at offset {Offset}: {Outcome}.",
                         result.Topic, result.Offset.Value, outcome);

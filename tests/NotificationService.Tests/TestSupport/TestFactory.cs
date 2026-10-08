@@ -19,20 +19,23 @@ public static class TestFactory
     public static LendingEventHandler CreateHandler(NotificationDbContext db, string? title = "Clean Code") =>
         new(db, new FixedTitleLookup(title), NullLogger<LendingEventHandler>.Instance);
 
-    public static void AttachUser(ControllerBase controller, string userId, string role = "User")
+    public static void AttachUser(ControllerBase controller, string userId, string role = "User", DateTime? activeSince = null)
     {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId),
+            new(ClaimTypes.Role, role)
+        };
+        if (activeSince is { } since)
+            claims.Add(new Claim("active_since", new DateTimeOffset(since).ToUnixTimeSeconds().ToString()));
         controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext
-            {
-                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, userId),
-                    new Claim(ClaimTypes.Role, role)
-                }, "Test"))
-            }
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")) }
         };
     }
+
+    public static CatalogEventHandler CreateCatalogHandler(NotificationDbContext db) =>
+        new(db, NullLogger<CatalogEventHandler>.Instance);
 
     /// <summary>Serializes an event the way Lending does (camelCase web defaults).</summary>
     public static string EventJson(object evt) => JsonSerializer.Serialize(evt, new JsonSerializerOptions(JsonSerializerDefaults.Web));

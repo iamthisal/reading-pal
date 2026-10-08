@@ -123,7 +123,7 @@ Each topic has one partition and replication factor one. Repeat the creation com
 
 ### Lending and Notification topics
 
-Lending publishes reservation events that the Notification Service consumes:
+Lending and Inventory publish events that the Notification Service consumes:
 
 | Topic | Producer | Consumer |
 | --- | --- | --- |
@@ -133,6 +133,8 @@ Lending publishes reservation events that the Notification Service consumes:
 | `book-returned` | Lending (admin records a return) | Notification Service (customer notification) |
 | `fine-recorded` | Lending (a late return saves an unpaid fine) | Notification Service (customer notification) |
 | `book-due-soon` | Lending (hourly reminder check, two days before the due date) | Notification Service (customer reminder) |
+| `book-created` | Inventory (admin adds a book) | Notification Service (announcement for customers active at that time) |
+| `book-deleted` | Inventory (admin deletes a book) | Notification Service (customers with a pending reservation or active borrowing for it) |
 
 The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
 

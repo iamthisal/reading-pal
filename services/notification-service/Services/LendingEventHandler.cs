@@ -41,6 +41,8 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
             return HandleOutcome.Skipped;
         }
 
+        await TrackReservationStateAsync(evt, cancellationToken);
+
         // One event can notify the customer, the admins, or both. Work out which audiences it applies to
         // before asking Inventory for the title, so duplicates and irrelevant events cost no HTTP call.
         var audiences = new List<string>();
@@ -76,6 +78,49 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
             throw;
         }
         return HandleOutcome.Created;
+    }
+
+    /// <summary>
+    /// Keeps ReservationStates in step with Lending so a deleted book can be matched to the customers
+    /// who still have a pending reservation or active borrowing for it. Status only moves forward.
+    /// </summary>
+    private async Task TrackReservationStateAsync(LendingEvent evt, CancellationToken cancellationToken)
+    {
+        var status = evt.EventType switch
+        {
+            LendingEventTypes.ReservationCreated => ReservationStatuses.Pending,
+            LendingEventTypes.ReservationAccepted => ReservationStatuses.Borrowed,
+            LendingEventTypes.ReservationCancelled or LendingEventTypes.BookReturned => ReservationStatuses.Closed,
+            _ => null
+        };
+        if (status == null || evt.ReservationId <= 0) return;
+
+        var state = await db.ReservationStates.SingleOrDefaultAsync(s => s.ReservationId == evt.ReservationId, cancellationToken);
+        if (state == null)
+        {
+            db.ReservationStates.Add(new ReservationState
+            {
+                ReservationId = evt.ReservationId, UserId = evt.UserId, BookId = evt.BookId, Status = status
+            });
+        }
+        else if (ReservationStatuses.Rank(status) > ReservationStatuses.Rank(state.Status))
+        {
+            state.Status = status;
+            state.UpdatedAtUtc = DateTime.UtcNow;
+        }
+        else
+        {
+            return;
+        }
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A concurrent delivery inserted the same reservation first; the next event will move it forward.
+            db.ChangeTracker.Clear();
+        }
     }
 
     private Task<List<string>> StoredAudiencesAsync(Guid eventId, CancellationToken cancellationToken) =>
