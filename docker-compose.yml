@@ -70,6 +70,7 @@ services:
       Kafka__Topics__ReservationCancelled: reservation-cancelled
       Kafka__Topics__ReservationCreated: reservation-created
       Kafka__Topics__FineRecorded: fine-recorded
+      Kafka__Topics__BookDueSoon: book-due-soon
       Kafka__Topics__BookReturned: book-returned
       Frontend__Url: http://localhost:5173
     ports:
