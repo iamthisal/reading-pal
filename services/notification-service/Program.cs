@@ -57,6 +57,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection("Kafka"));
 builder.Services.AddScoped<IBookTitleLookup, InventoryBookTitleLookup>();
+builder.Services.AddScoped<ICustomerDirectory, UserServiceCustomerDirectory>();
 builder.Services.AddScoped<LendingEventHandler>();
 builder.Services.AddHostedService<NotificationConsumerWorker>();
 

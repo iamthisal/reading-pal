@@ -8,6 +8,8 @@ This directory contains the GitHub Actions workflows that handle Continuous Inte
 - `cd.yml` - CD Pipeline for the User Service. Deploys the built Docker image to Azure App Services upon successful CI run on `main`.
 - `ci_inventry.yml` - Dedicated CI Pipeline for the Inventory Service backend. Builds the .NET project and runs unit tests.
 - `cd_inventry.yml` - Dedicated CD Pipeline for the Inventory Service backend. Deploys the built Docker image to Azure App Services.
+- `ci_notification.yml` - Dedicated CI Pipeline for the Notification Service backend. Validates config, builds the .NET project, runs unit tests, and builds the Docker image.
+- `cd_notification.yml` - Dedicated CD Pipeline for the Notification Service backend. Deploys the built Docker image to Azure App Services after a successful CI run on `main`, with an optional post-deploy health check.
 - `azure-static-web-apps-polite-water-0c0e68a00.yml` - Auto-generated CD workflow for the React Frontend using Azure Static Web Apps.
 
 ## Deployment Environments
@@ -19,6 +21,8 @@ This directory contains the GitHub Actions workflows that handle Continuous Inte
 
 - `AZURE_WEBAPP_PUBLISH_PROFILE` (Used by User Service deployment)
 - `AZURE_INVENTORY_WEBAPP_PUBLISH_PROFILE` (Used by Inventory Service deployment)
+- `AZURE_NOTIFICATION_WEBAPP_PUBLISH_PROFILE` (Used by Notification Service deployment)
+- Optional repository variable `NOTIFICATION_SERVICE_URL` (enables the Notification Service post-deploy health check)
 - GitHub also manages an auto-generated token for Azure Static Web Apps deployment.
 
 ## Notes

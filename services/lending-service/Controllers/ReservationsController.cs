@@ -416,8 +416,32 @@ namespace LendingService.Controllers
                 ReservationDate = DateTime.UtcNow
             };
 
+            // The outbox row needs the generated reservation ID, so both saves share one transaction:
+            // a Pending reservation never exists without its reservation-created event.
+            // (The in-memory test provider has no transactions.)
+            await using var transaction = _context.Database.IsRelational()
+                ? await _context.Database.BeginTransactionAsync()
+                : null;
             _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
+
+            var createdEvent = new ReservationCreatedEvent
+            {
+                ReservationId = reservation.Id,
+                UserId = reservation.UserId,
+                BookId = reservation.BookId,
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+            };
+            _context.ReservationEvents.Add(new ReservationEventOutbox
+            {
+                Id = createdEvent.EventId,
+                EventType = createdEvent.EventType,
+                ReservationId = reservation.Id,
+                CreatedAtUtc = createdEvent.TimestampUtc,
+                Payload = JsonSerializer.Serialize(createdEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            });
+            await _context.SaveChangesAsync();
+            if (transaction != null) await transaction.CommitAsync();
 
             var result = new ReservationResponse
             {

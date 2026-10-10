@@ -48,3 +48,14 @@ public sealed class FixedTitleLookup(string? title) : IBookTitleLookup
         return Task.FromResult(title);
     }
 }
+
+public sealed class FakeCustomerDirectory(IReadOnlyDictionary<int, string> names) : ICustomerDirectory
+{
+    public string? LastAuthorizationHeader { get; private set; }
+
+    public Task<IReadOnlyDictionary<int, string>> GetNamesAsync(string adminAuthorizationHeader, CancellationToken cancellationToken)
+    {
+        LastAuthorizationHeader = adminAuthorizationHeader;
+        return Task.FromResult(names);
+    }
+}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 const AdminDashboard = () => {
     const { logout, token, user } = useAuth();
@@ -78,9 +79,12 @@ const AdminDashboard = () => {
                         <p className="admin-eyebrow">Library operations</p>
                         <h1>Admin dashboard</h1>
                     </div>
-                    <div className="admin-user-chip">
-                        <span className="admin-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'A'}</span>
-                        <span>{user?.email || 'Administrator'}</span>
+                    <div className="admin-topbar-actions">
+                        <div className="admin-user-chip">
+                            <span className="admin-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'A'}</span>
+                            <span>{user?.email || 'Administrator'}</span>
+                        </div>
+                        <NotificationBell />
                     </div>
                 </header>
 

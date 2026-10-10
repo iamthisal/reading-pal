@@ -1,10 +1,11 @@
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
+import NotificationBell from '../components/NotificationBell';
 
 interface PendingReservation {
     id: number;
@@ -25,6 +26,8 @@ export default function AdminReservationsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [refresh, setRefresh] = useState(0);
+    // A new location key (e.g. following a notification link to this page) reloads the current queue.
+    const location = useLocation();
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [processingAction, setProcessingAction] = useState<'accept' | 'reject' | null>(null);
     const [actionError, setActionError] = useState('');
@@ -84,7 +87,7 @@ export default function AdminReservationsPage() {
         if (token) void fetchReservations();
         const stopRefresh = refreshWhileVisible(() => token ? fetchReservations(true) : Promise.resolve());
         return () => { stopRefresh(); controller.abort(); };
-    }, [token, refresh]);
+    }, [token, refresh, location.key]);
 
     return (
         <div className="admin-shell">
@@ -112,9 +115,12 @@ export default function AdminReservationsPage() {
                         <h1>Pending reservations</h1>
                         <p className="admin-users-subtitle">Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</p>
                     </div>
-                    <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
-                        {isLoading ? 'Loading…' : 'Refresh'}
-                    </button>
+                    <div className="admin-topbar-actions">
+                        <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
+                            {isLoading ? 'Loading…' : 'Refresh'}
+                        </button>
+                        <NotificationBell />
+                    </div>
                 </header>
                 <section className="admin-users-panel glass-panel" aria-label="Pending reservation queue" aria-busy={isLoading}>
                     <div className="admin-users-panel-heading">
