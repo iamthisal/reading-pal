@@ -1,6 +1,6 @@
 namespace NotificationService.Kafka;
 
-/// <summary>Shape of the book events Inventory publishes (book-created, book-deleted).</summary>
+/// <summary>Shape of the book events Inventory publishes (book-created, book-updated, book-deleted).</summary>
 public sealed class CatalogEvent
 {
     public Guid EventId { get; init; }
@@ -8,6 +8,10 @@ public sealed class CatalogEvent
     public DateTime TimestampUtc { get; init; }
     public int BookId { get; init; }
     public CatalogBook? Book { get; init; }
+    // created, updated, marked-unavailable, marked-available or deleted (absent on older events).
+    public string? Action { get; init; }
+    public string? PerformedBy { get; init; }
+    public string? PerformedByEmail { get; init; }
 }
 
 public sealed class CatalogBook
@@ -19,5 +23,6 @@ public sealed class CatalogBook
 public static class CatalogEventTypes
 {
     public const string BookCreated = "book-created";
+    public const string BookUpdated = "book-updated";
     public const string BookDeleted = "book-deleted";
 }

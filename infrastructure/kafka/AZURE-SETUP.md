@@ -134,8 +134,9 @@ Lending and Inventory publish events that the Notification Service consumes:
 | `fine-recorded` | Lending (a late return saves an unpaid fine) | Notification Service (customer notification) |
 | `book-due-soon` | Lending (hourly reminder check, two days before the due date) | Notification Service (customer reminder) |
 | `reservation-snapshot` | Lending (once per active reservation, at startup) | Notification Service (backfills which customers are connected to a book) |
-| `book-created` | Inventory (admin adds a book) | Notification Service (announcement for customers active at that time) |
-| `book-deleted` | Inventory (admin deletes a book) | Notification Service (customers with a pending reservation or active borrowing for it) |
+| `book-created` | Inventory (admin adds a book) | Notification Service (announcement for customers active at that time; notice for the other admins) |
+| `book-updated` | Inventory (admin edits a book or changes its availability) | Notification Service (notice for the other admins) |
+| `book-deleted` | Inventory (admin deletes a book) | Notification Service (customers with a pending reservation or active borrowing for it; notice for the other admins) |
 
 The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
 

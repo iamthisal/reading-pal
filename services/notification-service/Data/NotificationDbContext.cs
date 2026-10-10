@@ -20,6 +20,7 @@ public sealed class NotificationDbContext(DbContextOptions<NotificationDbContext
         notification.Property(n => n.Type).HasMaxLength(32);
         notification.Property(n => n.BookTitle).HasMaxLength(200);
         notification.Property(n => n.Message).HasMaxLength(500);
+        notification.Property(n => n.PerformedBy).HasMaxLength(64);
 
         var read = modelBuilder.Entity<NotificationRead>();
         read.Property(r => r.RecipientKey).HasMaxLength(80);

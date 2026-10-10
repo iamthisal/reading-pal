@@ -29,7 +29,7 @@ const AdminNotificationsPage = () => {
                 <div>
                     <p className="admin-eyebrow">Library operations</p>
                     <h1>Notifications</h1>
-                    <p className="admin-users-subtitle">Customer reservation activity, newest first. Your read status is your own.</p>
+                    <p className="admin-users-subtitle">Customer reservation activity and other admins’ catalogue changes, newest first. Your read status is your own.</p>
                 </div>
                 <div className="admin-topbar-actions"><NotificationBell /></div>
             </header>

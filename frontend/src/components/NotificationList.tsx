@@ -4,7 +4,7 @@ import axios from 'axios';
 import { CheckCheck, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
-import { announceNotificationsChanged, isWarningType, notificationApiPath, notificationIcon, NOTIFICATIONS_CHANGED_EVENT } from './notificationTypes';
+import { announceNotificationsChanged, isWarningType, notificationApiPath, notificationIcon, notificationLinkLabel, NOTIFICATIONS_CHANGED_EVENT } from './notificationTypes';
 import type { NotificationItem } from './notificationTypes';
 import './NotificationBell.css';
 import './NotificationList.css';
@@ -133,7 +133,7 @@ const NotificationList = () => {
         {actionError && <p className="notification-list-error" role="alert">{actionError}</p>}
         {items.length === 0
             ? <p className="notification-list-state">You have no notifications yet. {isAdmin
-                ? 'New and cancelled customer reservations will appear here.'
+                ? 'New and cancelled customer reservations and other admins’ catalogue changes will appear here.'
                 : 'Updates about your reservations, returns, fines and new books will appear here.'}</p>
             : <ul className="notification-list-items">
                 {items.map(item => (
@@ -144,7 +144,7 @@ const NotificationList = () => {
                             <div className="notification-list-meta">
                                 <time dateTime={item.createdAtUtc}>{formatDateTime(item.createdAtUtc)}</time>
                                 <span className={`notification-list-status${item.isRead ? '' : ' notification-list-status-unread'}`}>{item.isRead ? 'Read' : 'Unread'}</span>
-                                {item.link && <Link to={item.link} className="notification-list-link">View pending reservations →</Link>}
+                                {item.link && <Link to={item.link} className="notification-list-link">{notificationLinkLabel(item.link)}</Link>}
                             </div>
                         </div>
                         {!item.isRead && <button type="button" className="notification-link" onClick={() => void markRead(item)}>Mark as read</button>}

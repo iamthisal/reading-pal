@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, Sparkles, Trash2, Wallet } from 'lucide-react';
+import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, PencilLine, Sparkles, Trash2, Wallet } from 'lucide-react';
 
 // Shared by the header bell and the My Notifications pages.
 export type NotificationItem = {
@@ -23,15 +23,23 @@ const typeIcon: Record<string, ReactNode> = {
     DueDateReminder: <AlarmClock size={16} />,
     NewBook: <Sparkles size={16} />,
     // No link: a deleted book has no page; the saved title in the message identifies it.
-    BookDeleted: <Trash2 size={16} />
+    BookDeleted: <Trash2 size={16} />,
+    // Catalogue changes made by another admin.
+    AdminBookCreated: <BookPlus size={16} />,
+    AdminBookUpdated: <PencilLine size={16} />,
+    AdminBookDeleted: <Trash2 size={16} />
 };
 
 // Shown in the warning colour: something the reader should notice.
-const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded', 'BookDeleted']);
+const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded', 'BookDeleted', 'AdminBookDeleted']);
 
 export const notificationIcon = (type: string) => typeIcon[type] ?? <Bell size={16} />;
 
 export const isWarningType = (type: string) => warningTypes.has(type);
+
+// Text for an admin notification's link, by where it leads.
+export const notificationLinkLabel = (link: string) =>
+    link === '/admin/books' ? 'View book inventory →' : 'View pending reservations →';
 
 export const notificationApiPath = (isAdmin: boolean) => `/api/${isAdmin ? 'admin/' : ''}notifications`;
 
