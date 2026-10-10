@@ -22,7 +22,8 @@ public sealed class NotificationDbContext(DbContextOptions<NotificationDbContext
         notification.Property(n => n.Message).HasMaxLength(500);
 
         var read = modelBuilder.Entity<NotificationRead>();
-        read.HasIndex(r => new { r.NotificationId, r.UserId }).IsUnique();
+        read.Property(r => r.RecipientKey).HasMaxLength(80);
+        read.HasIndex(r => new { r.NotificationId, r.RecipientKey }).IsUnique();
         read.HasOne<Notification>().WithMany().HasForeignKey(r => r.NotificationId).OnDelete(DeleteBehavior.Cascade);
 
         var state = modelBuilder.Entity<ReservationState>();

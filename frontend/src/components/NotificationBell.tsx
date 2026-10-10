@@ -1,39 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, Sparkles, Trash2, Wallet } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
+import { announceNotificationsChanged, isWarningType, notificationApiPath, notificationIcon, NOTIFICATIONS_CHANGED_EVENT } from './notificationTypes';
+import type { NotificationItem } from './notificationTypes';
 import './NotificationBell.css';
-
-type NotificationItem = {
-    id: number;
-    type: string;
-    bookTitle: string;
-    message: string;
-    isRead: boolean;
-    createdAtUtc: string;
-    // Admin notifications point to the page where the request is handled.
-    link?: string;
-};
-
-const typeIcon: Record<string, ReactNode> = {
-    ReservationAccepted: <BookCheck size={16} />,
-    ReservationCancelled: <BookX size={16} />,
-    BookReturned: <CalendarCheck size={16} />,
-    NewReservation: <BookPlus size={16} />,
-    CustomerCancelledReservation: <BookX size={16} />,
-    FineRecorded: <Wallet size={16} />,
-    DueDateReminder: <AlarmClock size={16} />,
-    NewBook: <Sparkles size={16} />,
-    // No link: a deleted book has no page; the saved title in the message identifies it.
-    BookDeleted: <Trash2 size={16} />
-};
-
-// Shown in the warning colour: something the reader should notice.
-const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded', 'BookDeleted']);
 
 const formatTime = (value: string) => new Date(value).toLocaleString('en-GB', {
     timeZone: 'Asia/Colombo', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
@@ -50,7 +24,7 @@ const NotificationBell = () => {
     const panelRef = useRef<HTMLDivElement>(null);
     const isAdmin = user?.role === 'Admin';
     const enabled = Boolean(token) && (user?.role === 'User' || isAdmin);
-    const baseUrl = `${NOTIFICATION_API_BASE_URL}/api/${isAdmin ? 'admin/' : ''}notifications`;
+    const baseUrl = `${NOTIFICATION_API_BASE_URL}${notificationApiPath(isAdmin)}`;
     const headers = { Authorization: `Bearer ${token}` };
 
     const loadCount = useCallback(async () => {
@@ -86,6 +60,14 @@ const NotificationBell = () => {
         });
     }, [enabled, loadCount, loadList]);
 
+    // Reads made on the My Notifications page update the badge immediately.
+    useEffect(() => {
+        if (!enabled) return;
+        const onChanged = () => { void loadCount(); if (openRef.current) void loadList(); };
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged);
+    }, [enabled, loadCount, loadList]);
+
     useEffect(() => {
         if (!open) return;
         const close = (event: MouseEvent) => {
@@ -115,6 +97,7 @@ const NotificationBell = () => {
         try {
             await axios.post(`${baseUrl}/${item.id}/read`, {}, { headers });
             void loadCount();
+            announceNotificationsChanged();
         } catch {
             void loadCount();
             void loadList();
@@ -140,6 +123,7 @@ const NotificationBell = () => {
         try {
             await axios.post(`${baseUrl}/read-all`, {}, { headers });
             void loadCount();
+            announceNotificationsChanged();
         } catch {
             void loadCount();
             void loadList();
@@ -170,7 +154,7 @@ const NotificationBell = () => {
                             {items.map(item => (
                                 <li key={item.id}>
                                     <button type="button" className={`notification-item${item.isRead ? '' : ' notification-item-unread'}`} onClick={() => void select(item)}>
-                                        <span className={`notification-icon${warningTypes.has(item.type) ? ' notification-icon-cancelled' : ''}`}>{typeIcon[item.type] ?? <Bell size={16} />}</span>
+                                        <span className={`notification-icon${isWarningType(item.type) ? ' notification-icon-cancelled' : ''}`}>{notificationIcon(item.type)}</span>
                                         <span className="notification-text">
                                             <span>{item.message}</span>
                                             <time dateTime={item.createdAtUtc}>{formatTime(item.createdAtUtc)}</time>
@@ -181,6 +165,9 @@ const NotificationBell = () => {
                                 </li>
                             ))}
                         </ul>}
+                    <Link to={isAdmin ? '/admin/notifications' : '/notifications'} className="notification-panel-footer" onClick={() => setOpen(false)}>
+                        View all notifications
+                    </Link>
                 </div>
             )}
         </div>
