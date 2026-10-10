@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowUpRight, BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, ShieldAlert, Users } from 'lucide-react';
+import { ArrowUpRight, Bell, BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, ShieldAlert, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -59,6 +59,7 @@ const AdminDashboard = () => {
                     <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
                     <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
+                    <Link to="/admin/notifications" className="admin-nav-item"><Bell size={16} />Notifications</Link>
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue

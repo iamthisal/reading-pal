@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
+import { Bell, BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 import NotificationBell from '../components/NotificationBell';
@@ -96,6 +96,7 @@ const ProfilePage = () => {
                         Favorite
                     </Link>
                     <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>
+                    <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>
                 </nav>
 
                 <div className="discover-sidebar-bottom">

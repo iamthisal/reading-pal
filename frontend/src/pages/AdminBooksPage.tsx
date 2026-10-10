@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { BookMarked, BookOpen, BookPlus, CheckCircle, AlertCircle, Search, Layers, RefreshCw, Pencil, X, Trash2, CircleOff, Tags, LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { AlertCircle, Bell, BookMarked, BookOpen, BookPlus, CheckCircle, CircleOff, Layers, LayoutDashboard, LogOut, Pencil, RefreshCw, Search, Tags, Trash2, Users, X } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
 import NotificationBell from '../components/NotificationBell';
 
@@ -474,6 +474,7 @@ const AdminBooksPage = () => {
                     <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
                     <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
                     <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
+                    <Link to="/admin/notifications" className="admin-nav-item"><Bell size={16} />Notifications</Link>
                     <Link to="/home" className="admin-nav-item">
                         <BookOpen size={16} />
                         Public catalogue
