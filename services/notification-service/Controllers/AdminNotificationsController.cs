@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,13 +10,14 @@ using NotificationService.Services;
 namespace NotificationService.Controllers;
 
 /// <summary>
-/// Notifications for library admins about customer actions on pending reservations. Admins share one
-/// set of notifications and read state (there is a single admin account).
+/// Notifications for library admins. Admins share the notification rows but each has their own read
+/// state (NotificationReads, keyed by the admin's token subject). Rows marked read with the older shared
+/// IsRead flag stay read for every admin.
 /// </summary>
 [ApiController]
 [Route("api/admin/notifications")]
 [Authorize(Roles = "Admin")]
-public sealed class AdminNotificationsController(NotificationDbContext db, ICustomerDirectory customers) : ControllerBase
+public sealed class AdminNotificationsController(NotificationDbContext db, ICustomerDirectory customers, NotificationReadStore reads) : ControllerBase
 {
     private const int MaxPageSize = 50;
 
@@ -27,55 +29,58 @@ public sealed class AdminNotificationsController(NotificationDbContext db, ICust
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
 
-        var query = db.Notifications.AsNoTracking().Where(n => n.Audience == NotificationAudiences.Admin);
-        if (unreadOnly) query = query.Where(n => !n.IsRead);
+        var recipientKey = RecipientKey();
+        var query = AdminNotifications();
+        if (unreadOnly) query = query.Where(n => !n.IsRead && !db.NotificationReads.Any(r => r.NotificationId == n.Id && r.RecipientKey == recipientKey));
         var items = await query
             .OrderByDescending(n => n.CreatedAtUtc).ThenByDescending(n => n.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(n => new { Notification = n, IsRead = n.IsRead || db.NotificationReads.Any(r => r.NotificationId == n.Id && r.RecipientKey == recipientKey) })
             .ToListAsync(cancellationToken);
         if (items.Count == 0) return Ok(Array.Empty<AdminNotificationResponse>());
 
         var names = await customers.GetNamesAsync(Request.Headers.Authorization.ToString(), cancellationToken);
-        return Ok(items.Select(n => ToResponse(n, names)).ToList());
+        return Ok(items.Select(i => ToResponse(i.Notification, i.IsRead, names)).ToList());
     }
 
     [HttpGet("unread-count")]
     public async Task<ActionResult<UnreadCountResponse>> GetUnreadCount(CancellationToken cancellationToken)
     {
-        var count = await db.Notifications.CountAsync(n => n.Audience == NotificationAudiences.Admin && !n.IsRead, cancellationToken);
+        var recipientKey = RecipientKey();
+        var count = await AdminNotifications()
+            .CountAsync(n => !n.IsRead && !db.NotificationReads.Any(r => r.NotificationId == n.Id && r.RecipientKey == recipientKey), cancellationToken);
         return Ok(new UnreadCountResponse { Count = count });
     }
 
     [HttpPost("{id:int}/read")]
     public async Task<IActionResult> MarkRead(int id, CancellationToken cancellationToken)
     {
-        var notification = await db.Notifications.SingleOrDefaultAsync(
-            n => n.Id == id && n.Audience == NotificationAudiences.Admin, cancellationToken);
-        if (notification == null) return NotFound(new { message = "Notification not found." });
-        if (!notification.IsRead)
-        {
-            notification.IsRead = true;
-            notification.ReadAtUtc = DateTime.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        return Ok(new { notification.Id, notification.IsRead });
+        var exists = await AdminNotifications().AnyAsync(n => n.Id == id, cancellationToken);
+        if (!exists) return NotFound(new { message = "Notification not found." });
+        // Only this admin's read state changes; other admins keep theirs.
+        await reads.MarkReadAsync(RecipientKey(), new[] { id }, cancellationToken);
+        return Ok(new { Id = id, IsRead = true });
     }
 
     [HttpPost("read-all")]
     public async Task<IActionResult> MarkAllRead(CancellationToken cancellationToken)
     {
-        var unread = await db.Notifications.Where(n => n.Audience == NotificationAudiences.Admin && !n.IsRead).ToListAsync(cancellationToken);
-        var now = DateTime.UtcNow;
-        foreach (var notification in unread)
-        {
-            notification.IsRead = true;
-            notification.ReadAtUtc = now;
-        }
-        await db.SaveChangesAsync(cancellationToken);
-        return Ok(new { updated = unread.Count });
+        var recipientKey = RecipientKey();
+        var unread = await AdminNotifications()
+            .Where(n => !n.IsRead && !db.NotificationReads.Any(r => r.NotificationId == n.Id && r.RecipientKey == recipientKey))
+            .Select(n => n.Id).ToListAsync(cancellationToken);
+        var updated = await reads.MarkReadAsync(recipientKey, unread, cancellationToken);
+        return Ok(new { updated });
     }
 
-    private static AdminNotificationResponse ToResponse(Notification n, IReadOnlyDictionary<int, string> names)
+    private IQueryable<Notification> AdminNotifications() =>
+        db.Notifications.AsNoTracking().Where(n => n.Audience == NotificationAudiences.Admin);
+
+    // The hardcoded admin's subject is "admin-id"; admins stored in the User Service use their numeric ID.
+    private string RecipientKey() =>
+        RecipientKeys.Admin(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? "admin");
+
+    private static AdminNotificationResponse ToResponse(Notification n, bool isRead, IReadOnlyDictionary<int, string> names)
     {
         var customerName = names.GetValueOrDefault(n.UserId) ?? NotificationFactory.FallbackCustomerName(n.UserId);
         return new AdminNotificationResponse
@@ -90,7 +95,7 @@ public sealed class AdminNotificationsController(NotificationDbContext db, ICust
             // MySQL datetime values have no Kind; notifications are written in UTC.
             ReservationDate = n.ReservationDate is { } reserved ? DateTime.SpecifyKind(reserved, DateTimeKind.Utc) : null,
             Message = n.Message.Replace(NotificationFactory.CustomerPlaceholder, customerName),
-            IsRead = n.IsRead,
+            IsRead = isRead,
             CreatedAtUtc = DateTime.SpecifyKind(n.CreatedAtUtc, DateTimeKind.Utc)
         };
     }

@@ -9,10 +9,10 @@ namespace NotificationService.Tests.Controllers;
 
 public class AdminNotificationsControllerTests
 {
-    private static AdminNotificationsController CreateController(NotificationDbContext db, FakeCustomerDirectory? directory = null)
+    private static AdminNotificationsController CreateController(NotificationDbContext db, FakeCustomerDirectory? directory = null, string adminId = "admin-id")
     {
-        var controller = new AdminNotificationsController(db, directory ?? new FakeCustomerDirectory(new Dictionary<int, string> { [7] = "Kamal Perera" }));
-        TestFactory.AttachUser(controller, "admin-id", role: "Admin");
+        var controller = TestFactory.AdminController(db, directory ?? new FakeCustomerDirectory(new Dictionary<int, string> { [7] = "Kamal Perera" }));
+        TestFactory.AttachUser(controller, adminId, role: "Admin");
         controller.HttpContext.Request.Headers.Authorization = "Bearer admin-token";
         return controller;
     }
@@ -92,7 +92,48 @@ public class AdminNotificationsControllerTests
 
         Assert.IsType<OkObjectResult>(await CreateController(db).MarkAllRead(CancellationToken.None));
 
-        Assert.All(db.Notifications.Where(n => n.Audience == NotificationAudiences.Admin), n => Assert.True(n.IsRead));
+        // Read records for this admin only; the customer notification is untouched.
+        Assert.Equal(new[] { 1, 2 }, db.NotificationReads.Where(r => r.RecipientKey == "admin:admin-id").Select(r => r.NotificationId).OrderBy(id => id));
         Assert.False((await db.Notifications.FindAsync(3))!.IsRead);
+        Assert.Equal(0, Assert.IsType<UnreadCountResponse>(Assert.IsType<OkObjectResult>((await CreateController(db).GetUnreadCount(CancellationToken.None)).Result).Value).Count);
+    }
+
+    [Fact]
+    public async Task MarkRead_ChangesOnlyThisAdminsReadState()
+    {
+        using var db = TestFactory.CreateDbContext();
+        await SeedAsync(db);
+
+        Assert.IsType<OkObjectResult>(await CreateController(db, adminId: "admin-id").MarkRead(1, CancellationToken.None));
+
+        Assert.True(Items(await CreateController(db, adminId: "admin-id").Get(cancellationToken: CancellationToken.None)).Single(n => n.Id == 1).IsRead);
+        Assert.False(Items(await CreateController(db, adminId: "12").Get(cancellationToken: CancellationToken.None)).Single(n => n.Id == 1).IsRead);
+        // The shared row is not flagged; read state lives per admin.
+        Assert.False((await db.Notifications.FindAsync(1))!.IsRead);
+    }
+
+    [Fact]
+    public async Task MarkAllRead_RepeatedSucceedsSafely()
+    {
+        using var db = TestFactory.CreateDbContext();
+        await SeedAsync(db);
+        var controller = CreateController(db);
+
+        Assert.IsType<OkObjectResult>(await controller.MarkAllRead(CancellationToken.None));
+        Assert.IsType<OkObjectResult>(await controller.MarkAllRead(CancellationToken.None));
+
+        Assert.Equal(2, db.NotificationReads.Count());
+    }
+
+    [Fact]
+    public async Task NotificationReadUnderOldSharedFlag_StaysReadForEveryAdmin()
+    {
+        using var db = TestFactory.CreateDbContext();
+        await SeedAsync(db);
+        (await db.Notifications.FindAsync(2))!.IsRead = true;
+        await db.SaveChangesAsync();
+
+        Assert.True(Items(await CreateController(db, adminId: "12").Get(cancellationToken: CancellationToken.None)).Single(n => n.Id == 2).IsRead);
+        Assert.Equal(1, Assert.IsType<UnreadCountResponse>(Assert.IsType<OkObjectResult>((await CreateController(db, adminId: "12").GetUnreadCount(CancellationToken.None)).Result).Value).Count);
     }
 }

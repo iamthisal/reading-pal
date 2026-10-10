@@ -21,7 +21,7 @@ public class AnnouncementReadPersistenceTests
 
     private static NotificationsController Controller(string databaseName, BeforeFirstSaveInterceptor interceptor)
     {
-        var controller = new NotificationsController(TestFactory.CreateDbContext(databaseName, interceptor));
+        var controller = TestFactory.CustomerController(TestFactory.CreateDbContext(databaseName, interceptor));
         TestFactory.AttachUser(controller, "7", activeSince: AnnouncedAt.AddDays(-1));
         return controller;
     }
@@ -61,10 +61,10 @@ public class AnnouncementReadPersistenceTests
                 Type = NotificationTypes.NewBook, BookTitle = "Clean Code", Message = "New in the catalogue: 'Clean Code'.", CreatedAtUtc = AnnouncedAt });
             await seed.SaveChangesAsync();
         }
-        var controller = new NotificationsController(database.CreateContext(new BeforeFirstSaveInterceptor(async () =>
+        var controller = TestFactory.CustomerController(database.CreateContext(new BeforeFirstSaveInterceptor(async () =>
         {
             using var other = database.CreateContext();
-            other.NotificationReads.Add(new NotificationRead { NotificationId = 1, UserId = 7 });
+            other.NotificationReads.Add(new NotificationRead { NotificationId = 1, RecipientKey = "user:7" });
             await other.SaveChangesAsync();
         })));
         TestFactory.AttachUser(controller, "7", activeSince: AnnouncedAt.AddDays(-1));
