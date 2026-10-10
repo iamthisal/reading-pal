@@ -133,13 +133,14 @@ Lending and Inventory publish events that the Notification Service consumes:
 | `book-returned` | Lending (admin records a return) | Notification Service (customer notification) |
 | `fine-recorded` | Lending (a late return saves an unpaid fine) | Notification Service (customer notification) |
 | `book-due-soon` | Lending (hourly reminder check, two days before the due date) | Notification Service (customer reminder) |
+| `reservation-snapshot` | Lending (once per active reservation, at startup) | Notification Service (backfills which customers are connected to a book) |
 | `book-created` | Inventory (admin adds a book) | Notification Service (announcement for customers active at that time) |
 | `book-deleted` | Inventory (admin deletes a book) | Notification Service (customers with a pending reservation or active borrowing for it) |
 
 The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
 
 ```bash
-for topic in reservation-created reservation-accepted reservation-cancelled book-returned fine-recorded book-due-soon book-created book-updated book-deleted; do
+for topic in reservation-created reservation-accepted reservation-cancelled book-returned fine-recorded book-due-soon reservation-snapshot book-created book-updated book-deleted; do
   kafka-topics --bootstrap-server readingpal-kafka-grp13.uaenorth.azurecontainer.io:9092 \
     --create --if-not-exists --topic "$topic" --partitions 1 --replication-factor 1
 done

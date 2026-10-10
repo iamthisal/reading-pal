@@ -11,9 +11,13 @@ namespace NotificationService.Tests.TestSupport;
 
 public static class TestFactory
 {
-    public static NotificationDbContext CreateDbContext() =>
+    public static NotificationDbContext CreateDbContext() => CreateDbContext(Guid.NewGuid().ToString());
+
+    /// <summary>A context on a named in-memory database, so a second context can share its data.</summary>
+    public static NotificationDbContext CreateDbContext(string databaseName, params Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor[] interceptors) =>
         new(new DbContextOptionsBuilder<NotificationDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName)
+            .AddInterceptors(interceptors)
             .Options);
 
     public static LendingEventHandler CreateHandler(NotificationDbContext db, string? title = "Clean Code") =>
@@ -61,4 +65,29 @@ public sealed class FakeCustomerDirectory(IReadOnlyDictionary<int, string> names
         LastAuthorizationHeader = adminAuthorizationHeader;
         return Task.FromResult(names);
     }
+}
+
+/// <summary>
+/// A shared in-memory SQLite database for tests that need real constraint behaviour (unique indexes and
+/// DbUpdateException on conflicts), which the EF in-memory provider does not enforce. Contexts created
+/// from one instance see the same data until it is disposed.
+/// </summary>
+public sealed class SqliteTestDatabase : IDisposable
+{
+    private readonly Microsoft.Data.Sqlite.SqliteConnection _connection = new("DataSource=:memory:");
+
+    public SqliteTestDatabase()
+    {
+        _connection.Open();
+        using var db = CreateContext();
+        db.Database.EnsureCreated();
+    }
+
+    public NotificationDbContext CreateContext(params Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor[] interceptors) =>
+        new(new DbContextOptionsBuilder<NotificationDbContext>()
+            .UseSqlite(_connection)
+            .AddInterceptors(interceptors)
+            .Options);
+
+    public void Dispose() => _connection.Dispose();
 }

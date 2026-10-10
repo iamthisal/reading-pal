@@ -17,6 +17,7 @@ public sealed class KafkaTopicOptions
     public string BookReturned { get; set; } = "book-returned";
     public string FineRecorded { get; set; } = "fine-recorded";
     public string BookDueSoon { get; set; } = "book-due-soon";
+    public string ReservationSnapshot { get; set; } = "reservation-snapshot";
     // Published by Inventory.
     public string BookCreated { get; set; } = "book-created";
     public string BookDeleted { get; set; } = "book-deleted";

@@ -143,8 +143,13 @@ public sealed class NotificationsController(NotificationDbContext db) : Controll
         }
         catch (DbUpdateException)
         {
-            // A parallel request (another tab) recorded the same read first; the result is the same.
+            // Success only if every read record now exists, i.e. a parallel request (another tab) stored
+            // the same reads first. Any other failure is reported, so the client does not show unsaved reads.
             db.ChangeTracker.Clear();
+            var stored = await db.NotificationReads.AsNoTracking()
+                .Where(r => r.UserId == userId && toAdd.Contains(r.NotificationId))
+                .Select(r => r.NotificationId).ToListAsync(cancellationToken);
+            if (toAdd.Except(stored).Any()) throw;
         }
         return toAdd.Count;
     }
