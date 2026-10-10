@@ -12,6 +12,8 @@ namespace NotificationService.Services;
 /// <item>book-created: one shared announcement for customers registered and active at that time.</item>
 /// <item>book-deleted: one notification for each customer with a pending reservation or active borrowing
 /// for that book. The book's title is saved from the event, because the book no longer exists.</item>
+/// <item>book-created, book-updated and book-deleted: one admin notification, which every admin except the
+/// one who made the change sees.</item>
 /// </list>
 /// Idempotent per (EventId, Audience, UserId), like <see cref="LendingEventHandler"/>.
 /// </summary>
@@ -37,47 +39,28 @@ public sealed class CatalogEventHandler(NotificationDbContext db, ILogger<Catalo
             return HandleOutcome.Skipped;
         }
 
-        return evt.EventType switch
+        // Everything this event should produce; anything already stored (a redelivery) is skipped below.
+        var wanted = new List<Notification>();
+        if (NotificationFactory.CreateAdminCatalogNotice(evt) is { } adminNotice) wanted.Add(adminNotice);
+        if (evt.EventType == CatalogEventTypes.BookCreated) wanted.Add(NotificationFactory.CreateNewBookAnnouncement(evt));
+        if (evt.EventType == CatalogEventTypes.BookDeleted)
         {
-            CatalogEventTypes.BookCreated => await AnnounceAsync(evt, cancellationToken),
-            CatalogEventTypes.BookDeleted => await NotifyAffectedCustomersAsync(evt, cancellationToken),
-            _ => HandleOutcome.Skipped
-        };
-    }
-
-    private async Task<HandleOutcome> AnnounceAsync(CatalogEvent evt, CancellationToken cancellationToken)
-    {
-        if (await db.Notifications.AnyAsync(n => n.EventId == evt.EventId && n.Audience == NotificationAudiences.Customers, cancellationToken))
-            return HandleOutcome.Duplicate;
-
-        db.Notifications.Add(NotificationFactory.CreateNewBookAnnouncement(evt));
-        return await SaveAsync(evt.EventId, cancellationToken);
-    }
-
-    private async Task<HandleOutcome> NotifyAffectedCustomersAsync(CatalogEvent evt, CancellationToken cancellationToken)
-    {
-        var affected = await db.ReservationStates.AsNoTracking()
-            .Where(s => s.BookId == evt.BookId && (s.Status == ReservationStatuses.Pending || s.Status == ReservationStatuses.Borrowed))
-            .Select(s => s.UserId).Distinct().ToListAsync(cancellationToken);
-        if (affected.Count == 0)
-        {
-            logger.LogInformation("Book {BookId} was deleted; no customer had a pending reservation or active borrowing for it.", evt.BookId);
-            return HandleOutcome.Skipped;
+            var affected = await db.ReservationStates.AsNoTracking()
+                .Where(s => s.BookId == evt.BookId && (s.Status == ReservationStatuses.Pending || s.Status == ReservationStatuses.Borrowed))
+                .Select(s => s.UserId).Distinct().ToListAsync(cancellationToken);
+            if (affected.Count == 0)
+                logger.LogInformation("Book {BookId} was deleted; no customer had a pending reservation or active borrowing for it.", evt.BookId);
+            wanted.AddRange(affected.Select(userId => NotificationFactory.CreateBookDeletedNotice(evt, userId)));
         }
+        if (wanted.Count == 0) return HandleOutcome.Skipped;
 
-        var alreadyNotified = await db.Notifications.AsNoTracking()
-            .Where(n => n.EventId == evt.EventId && n.Audience == NotificationAudiences.User)
-            .Select(n => n.UserId).ToListAsync(cancellationToken);
-        var missing = affected.Except(alreadyNotified).ToList();
+        var stored = await db.Notifications.AsNoTracking()
+            .Where(n => n.EventId == evt.EventId)
+            .Select(n => new { n.Audience, n.UserId }).ToListAsync(cancellationToken);
+        var missing = wanted.Where(w => !stored.Any(s => s.Audience == w.Audience && s.UserId == w.UserId)).ToList();
         if (missing.Count == 0) return HandleOutcome.Duplicate;
 
-        foreach (var userId in missing)
-            db.Notifications.Add(NotificationFactory.CreateBookDeletedNotice(evt, userId));
-        return await SaveAsync(evt.EventId, cancellationToken);
-    }
-
-    private async Task<HandleOutcome> SaveAsync(Guid eventId, CancellationToken cancellationToken)
-    {
+        db.Notifications.AddRange(missing);
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -85,9 +68,12 @@ public sealed class CatalogEventHandler(NotificationDbContext db, ILogger<Catalo
         }
         catch (DbUpdateException)
         {
-            // A concurrent delivery of the same event stored it first.
+            // A concurrent delivery of the same event stored them first; anything else is a real failure.
             db.ChangeTracker.Clear();
-            if (await db.Notifications.AnyAsync(n => n.EventId == eventId, cancellationToken)) return HandleOutcome.Duplicate;
+            var nowStored = await db.Notifications.AsNoTracking()
+                .Where(n => n.EventId == evt.EventId)
+                .Select(n => new { n.Audience, n.UserId }).ToListAsync(cancellationToken);
+            if (wanted.All(w => nowStored.Any(s => s.Audience == w.Audience && s.UserId == w.UserId))) return HandleOutcome.Duplicate;
             throw;
         }
     }

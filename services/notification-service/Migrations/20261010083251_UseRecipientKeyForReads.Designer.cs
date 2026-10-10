@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NotificationService.Data;
 
@@ -10,9 +11,11 @@ using NotificationService.Data;
 namespace NotificationService.Migrations
 {
     [DbContext(typeof(NotificationDbContext))]
-    partial class NotificationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261010083251_UseRecipientKeyForReads")]
+    partial class UseRecipientKeyForReads
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,10 +57,6 @@ namespace NotificationService.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
-
-                    b.Property<string>("PerformedBy")
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
 
                     b.Property<DateTime?>("ReadAtUtc")
                         .HasColumnType("datetime(6)");

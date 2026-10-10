@@ -13,7 +13,7 @@ public class AnnouncementVisibilityTests
 
     private static NotificationsController Controller(NotificationDbContext db, int userId, DateTime? activeSince)
     {
-        var controller = new NotificationsController(db);
+        var controller = TestFactory.CustomerController(db);
         TestFactory.AttachUser(controller, userId.ToString(), activeSince: activeSince);
         return controller;
     }
