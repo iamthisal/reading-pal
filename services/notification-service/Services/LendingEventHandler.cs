@@ -41,6 +41,10 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
             return HandleOutcome.Skipped;
         }
 
+        await TrackReservationStateAsync(evt, cancellationToken);
+        // A snapshot only updates reservation state; it notifies no one.
+        if (evt.EventType == LendingEventTypes.ReservationSnapshot) return HandleOutcome.Skipped;
+
         // One event can notify the customer, the admins, or both. Work out which audiences it applies to
         // before asking Inventory for the title, so duplicates and irrelevant events cost no HTTP call.
         var audiences = new List<string>();
@@ -76,6 +80,67 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
             throw;
         }
         return HandleOutcome.Created;
+    }
+
+    /// <summary>
+    /// Keeps ReservationStates in step with Lending so a deleted book can be matched to the customers
+    /// who still have a pending reservation or active borrowing for it. Status only moves forward.
+    /// </summary>
+    private async Task TrackReservationStateAsync(LendingEvent evt, CancellationToken cancellationToken)
+    {
+        var status = evt.EventType switch
+        {
+            LendingEventTypes.ReservationCreated => ReservationStatuses.Pending,
+            LendingEventTypes.ReservationAccepted => ReservationStatuses.Borrowed,
+            LendingEventTypes.ReservationCancelled or LendingEventTypes.BookReturned => ReservationStatuses.Closed,
+            // Backfill from Lending's current state. The forward-only rule below means an older snapshot
+            // can never reopen a reservation that a newer event already closed.
+            LendingEventTypes.ReservationSnapshot => evt.Status switch
+            {
+                "Pending" or "Accepting" => ReservationStatuses.Pending,
+                "Borrowed" or "Returning" => ReservationStatuses.Borrowed,
+                _ => null
+            },
+            _ => null
+        };
+        if (status == null || evt.ReservationId <= 0) return;
+
+        // Two attempts: if another delivery inserted the same reservation between our read and our save,
+        // reload it and apply this transition to the stored row instead of discarding it.
+        for (var attempt = 1; ; attempt++)
+        {
+            var state = await db.ReservationStates.SingleOrDefaultAsync(s => s.ReservationId == evt.ReservationId, cancellationToken);
+            if (state == null)
+            {
+                db.ReservationStates.Add(new ReservationState
+                {
+                    ReservationId = evt.ReservationId, UserId = evt.UserId, BookId = evt.BookId, Status = status
+                });
+            }
+            else if (ReservationStatuses.Rank(status) > ReservationStatuses.Rank(state.Status))
+            {
+                state.Status = status;
+                state.UpdatedAtUtc = DateTime.UtcNow;
+            }
+            else
+            {
+                return;
+            }
+
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+                return;
+            }
+            catch (DbUpdateException) when (attempt == 1)
+            {
+                db.ChangeTracker.Clear();
+                // Only a duplicate insert is recoverable here. Anything else (or a second failure) propagates,
+                // so the offset is not committed and Kafka redelivers the message.
+                if (!await db.ReservationStates.AsNoTracking().AnyAsync(s => s.ReservationId == evt.ReservationId, cancellationToken))
+                    throw;
+            }
+        }
     }
 
     private Task<List<string>> StoredAudiencesAsync(Guid eventId, CancellationToken cancellationToken) =>

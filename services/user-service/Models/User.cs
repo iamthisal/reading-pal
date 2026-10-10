@@ -22,5 +22,9 @@ namespace UserService.Models
         public bool IsValidated { get; set; } = false;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // When an admin last approved the account; cleared when access is revoked.
+        // Null for accounts approved before this was recorded, which count as active since CreatedAt.
+        public DateTime? ApprovedAtUtc { get; set; }
     }
 }

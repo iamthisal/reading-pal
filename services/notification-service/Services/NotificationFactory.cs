@@ -75,6 +75,50 @@ public static class NotificationFactory
         _ => $"on {FormatDate(dueUtc)}"
     };
 
+    /// <summary>A new-book announcement for every customer registered and active at the time it was added.</summary>
+    public static Notification CreateNewBookAnnouncement(CatalogEvent evt)
+    {
+        var title = CatalogTitle(evt);
+        var author = evt.Book?.Author?.Trim();
+        return new Notification
+        {
+            EventId = evt.EventId,
+            Audience = NotificationAudiences.Customers,
+            UserId = 0,
+            Type = NotificationTypes.NewBook,
+            BookId = evt.BookId,
+            BookTitle = title,
+            Message = string.IsNullOrEmpty(author)
+                ? $"New in the catalogue: '{title}'."
+                : $"New in the catalogue: '{title}' by {author}.",
+            // The moment the book was added decides which customers were already active to see it.
+            CreatedAtUtc = evt.TimestampUtc == default ? DateTime.UtcNow : AsUtc(evt.TimestampUtc)
+        };
+    }
+
+    /// <summary>
+    /// Tells a customer connected to a book that it was removed. Deliberately says nothing about their
+    /// reservation or fine, which the deletion does not change.
+    /// </summary>
+    public static Notification CreateBookDeletedNotice(CatalogEvent evt, int userId)
+    {
+        var title = CatalogTitle(evt);
+        return new Notification
+        {
+            EventId = evt.EventId,
+            Audience = NotificationAudiences.User,
+            UserId = userId,
+            Type = NotificationTypes.BookDeleted,
+            BookId = evt.BookId,
+            BookTitle = title,
+            Message = $"'{title}', a book on your reservations or borrowings, has been removed from the library catalogue.",
+            CreatedAtUtc = DateTime.UtcNow
+        };
+    }
+
+    private static string CatalogTitle(CatalogEvent evt) =>
+        string.IsNullOrWhiteSpace(evt.Book?.Title) ? FallbackTitle(evt.BookId) : evt.Book.Title.Trim();
+
     public static string FormatRupees(decimal amount) => $"Rs. {amount.ToString("N2", CultureInfo.InvariantCulture)}";
 
     public static string FormatDate(DateTime utc) =>

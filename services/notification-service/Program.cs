@@ -59,6 +59,7 @@ builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection("Kafka
 builder.Services.AddScoped<IBookTitleLookup, InventoryBookTitleLookup>();
 builder.Services.AddScoped<ICustomerDirectory, UserServiceCustomerDirectory>();
 builder.Services.AddScoped<LendingEventHandler>();
+builder.Services.AddScoped<CatalogEventHandler>();
 builder.Services.AddHostedService<NotificationConsumerWorker>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]

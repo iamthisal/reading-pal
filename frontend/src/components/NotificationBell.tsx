@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, Wallet } from 'lucide-react';
+import { AlarmClock, Bell, BookCheck, BookPlus, BookX, CalendarCheck, Sparkles, Trash2, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
@@ -26,11 +26,14 @@ const typeIcon: Record<string, ReactNode> = {
     NewReservation: <BookPlus size={16} />,
     CustomerCancelledReservation: <BookX size={16} />,
     FineRecorded: <Wallet size={16} />,
-    DueDateReminder: <AlarmClock size={16} />
+    DueDateReminder: <AlarmClock size={16} />,
+    NewBook: <Sparkles size={16} />,
+    // No link: a deleted book has no page; the saved title in the message identifies it.
+    BookDeleted: <Trash2 size={16} />
 };
 
 // Shown in the warning colour: something the reader should notice.
-const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded']);
+const warningTypes = new Set(['ReservationCancelled', 'CustomerCancelledReservation', 'FineRecorded', 'BookDeleted']);
 
 const formatTime = (value: string) => new Date(value).toLocaleString('en-GB', {
     timeZone: 'Asia/Colombo', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
