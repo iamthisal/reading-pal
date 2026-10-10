@@ -36,6 +36,9 @@ public static class NotificationFactory
                 evt.ReturnDate is { } returned
                     ? $"'{title}' was returned on {FormatDate(returned)}. Thank you!"
                     : $"'{title}' was returned. Thank you!"),
+            // Only an actual, positive fine is announced; estimated fines never produce this event.
+            LendingEventTypes.FineRecorded when evt.Amount > 0 && evt.DaysOverdue > 0 => (NotificationTypes.FineRecorded,
+                $"A fine of {FormatRupees(evt.Amount!.Value)} was recorded for '{title}': returned {evt.DaysOverdue} {(evt.DaysOverdue == 1 ? "day" : "days")} late."),
             _ => (null, null)
         };
         return type == null ? null : Build(evt, NotificationAudiences.User, type, title, message!);
@@ -61,6 +64,8 @@ public static class NotificationFactory
         };
         return type == null ? null : Build(evt, NotificationAudiences.Admin, type, title, message!);
     }
+
+    public static string FormatRupees(decimal amount) => $"Rs. {amount.ToString("N2", CultureInfo.InvariantCulture)}";
 
     public static string FormatDate(DateTime utc) =>
         ToLibraryTime(utc).ToString("d MMM yyyy", CultureInfo.InvariantCulture);

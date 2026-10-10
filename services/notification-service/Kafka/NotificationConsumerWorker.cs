@@ -42,7 +42,7 @@ public sealed class NotificationConsumerWorker(
         .SetErrorHandler((_, error) => logger.LogWarning("Kafka consumer error: {Reason}", error.Reason))
         .Build();
 
-        consumer.Subscribe(new[] { settings.Topics.ReservationCreated, settings.Topics.ReservationAccepted, settings.Topics.ReservationCancelled, settings.Topics.BookReturned });
+        consumer.Subscribe(new[] { settings.Topics.ReservationCreated, settings.Topics.ReservationAccepted, settings.Topics.ReservationCancelled, settings.Topics.BookReturned, settings.Topics.FineRecorded });
         logger.LogInformation("Notification consumer subscribed as group {GroupId}.", settings.GroupId);
 
         try
