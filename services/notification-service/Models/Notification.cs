@@ -35,6 +35,7 @@ public static class NotificationTypes
     public const string ReservationCancelled = "ReservationCancelled";
     public const string BookReturned = "BookReturned";
     public const string FineRecorded = "FineRecorded";
+    public const string DueDateReminder = "DueDateReminder";
     public const string NewReservation = "NewReservation";
     public const string CustomerCancelledReservation = "CustomerCancelledReservation";
 }

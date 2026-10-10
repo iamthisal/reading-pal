@@ -14,4 +14,5 @@ public sealed class KafkaTopicOptions
     public string ReservationCancelled { get; set; } = "reservation-cancelled";
     public string ReservationCreated { get; set; } = "reservation-created";
     public string FineRecorded { get; set; } = "fine-recorded";
+    public string BookDueSoon { get; set; } = "book-due-soon";
 }

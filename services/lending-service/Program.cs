@@ -73,6 +73,8 @@ builder.Services.AddSingleton<IProducer<string, string>>(services =>
 builder.Services.AddSingleton<IReservationEventPublisher, KafkaReservationEventPublisher>();
 builder.Services.AddScoped<ReservationOutboxDispatcher>();
 builder.Services.AddHostedService<ReservationOutboxWorker>();
+builder.Services.AddScoped<DueDateReminderService>();
+builder.Services.AddHostedService<DueDateReminderWorker>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
     ?? builder.Configuration["ApplicationInsights:ConnectionString"];
