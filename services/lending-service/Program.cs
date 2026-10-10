@@ -75,6 +75,8 @@ builder.Services.AddScoped<ReservationOutboxDispatcher>();
 builder.Services.AddHostedService<ReservationOutboxWorker>();
 builder.Services.AddScoped<DueDateReminderService>();
 builder.Services.AddHostedService<DueDateReminderWorker>();
+builder.Services.AddScoped<ReservationSnapshotService>();
+builder.Services.AddHostedService<ReservationSnapshotWorker>();
 
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
     ?? builder.Configuration["ApplicationInsights:ConnectionString"];

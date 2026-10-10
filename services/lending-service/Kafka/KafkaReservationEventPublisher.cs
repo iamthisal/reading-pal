@@ -20,6 +20,7 @@ public sealed class KafkaReservationEventPublisher(IProducer<string, string> pro
             "reservation-created" => options.Value.Topics.ReservationCreated,
             "fine-recorded" => options.Value.Topics.FineRecorded,
             "book-due-soon" => options.Value.Topics.BookDueSoon,
+            "reservation-snapshot" => options.Value.Topics.ReservationSnapshot,
             _ => throw new InvalidOperationException($"Unsupported reservation event type '{eventType}'.")
         };
         await producer.ProduceAsync(topic, new Message<string, string>
