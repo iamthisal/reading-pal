@@ -56,6 +56,11 @@
   color: #3f4b46;
 }
 
+/* Posters set their own ink to suit each coloured background (cream on green and clay, green on sand). */
+.app-shell .app-main .poster h2 {
+  color: inherit;
+}
+
 .app-shell :is(.admin-users-panel-heading, .my-loans-panel-heading, .profile-panel-heading, .admin-inventory-toolbar, .admin-section-heading) {
   align-items: center;
   border-bottom-color: #f0ece1;
