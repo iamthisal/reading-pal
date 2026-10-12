@@ -15,6 +15,7 @@ namespace InventoryService.Data
         public DbSet<Author> Authors => Set<Author>();
         public DbSet<CuratedList> CuratedLists => Set<CuratedList>();
         public DbSet<CuratedListItem> CuratedListItems => Set<CuratedListItem>();
+        public DbSet<FavouriteBook> FavouriteBooks => Set<FavouriteBook>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,15 @@ namespace InventoryService.Data
                     .HasForeignKey(i => i.AuthorId).OnDelete(DeleteBehavior.Cascade);
                 entity.HasIndex(i => new { i.CuratedListId, i.BookId }).IsUnique();
                 entity.HasIndex(i => new { i.CuratedListId, i.AuthorId }).IsUnique();
+            });
+
+            modelBuilder.Entity<FavouriteBook>(entity =>
+            {
+                entity.HasKey(f => f.Id);
+                // Deleting a book removes it from everyone's favourites.
+                entity.HasOne(f => f.Book).WithMany()
+                    .HasForeignKey(f => f.BookId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(f => new { f.UserId, f.BookId }).IsUnique();
             });
         }
     }

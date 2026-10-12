@@ -17,6 +17,8 @@ import MyNotificationsPage from './pages/MyNotificationsPage';
 import AdminNotificationsPage from './pages/AdminNotificationsPage';
 import AdminAuthorsPage from './pages/AdminAuthorsPage';
 import AdminListsPage from './pages/AdminListsPage';
+import FavouritesPage from './pages/FavouritesPage';
+import { FavouritesProvider } from './contexts/FavouritesContext';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -27,6 +29,7 @@ const RootRedirect = () => {
 function App() {
   return (
     <AuthProvider>
+      <FavouritesProvider>
       <Router>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
@@ -35,6 +38,7 @@ function App() {
           
           <Route element={<ProtectedRoute allowedRoles={['User', 'Admin']} />}>
             <Route path="/home" element={<HomePage />} />
+            <Route path="/favourites" element={<FavouritesPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
@@ -59,6 +63,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </FavouritesProvider>
     </AuthProvider>
   );
 }

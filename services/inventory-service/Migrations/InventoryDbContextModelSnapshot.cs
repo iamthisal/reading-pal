@@ -193,6 +193,35 @@ namespace InventoryService.Migrations
                     b.ToTable("CuratedListItems");
                 });
 
+            modelBuilder.Entity("InventoryService.Models.FavouriteBook", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "BookId")
+                        .IsUnique();
+
+                    b.ToTable("FavouriteBooks");
+                });
+
             modelBuilder.Entity("InventoryService.Models.Genre", b =>
                 {
                     b.Property<int>("Id")
@@ -243,6 +272,17 @@ namespace InventoryService.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("CuratedList");
+                });
+
+            modelBuilder.Entity("InventoryService.Models.FavouriteBook", b =>
+                {
+                    b.HasOne("InventoryService.Models.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
                 });
 
             modelBuilder.Entity("InventoryService.Models.CuratedList", b =>

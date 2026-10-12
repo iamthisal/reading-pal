@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import FavouriteButton from '../Favourites/FavouriteButton';
 import './BookShelf.css';
 
 export type ShelfBook = {
@@ -121,7 +122,8 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelf
                 const available = book.availableCopies > 0;
                 const status = <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>;
                 return variant === 'detail' ? (
-                    <article key={book.id} className="shelf-card">
+                    <article key={book.id} className="shelf-card favourite-anchor">
+                        <FavouriteButton bookId={book.id} title={book.title} variant="plain" />
                         <Cover book={book} />
                         <div className="shelf-info">
                             <h3>{book.title}</h3>
@@ -133,7 +135,10 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelf
                     </article>
                 ) : (
                     <article key={book.id} className="shelf-tile">
-                        <Cover book={book} />
+                        <div className="favourite-anchor shelf-tile-cover">
+                            <Cover book={book} />
+                            <FavouriteButton bookId={book.id} title={book.title} />
+                        </div>
                         <h3>{book.title}</h3>
                         <p className="shelf-byline">{book.author}</p>
                         <div className="shelf-tile-stock">

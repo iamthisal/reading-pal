@@ -6,7 +6,7 @@ import type { AppNavItem } from './AppSidenav';
 
 type LibrarySidenavProps = {
     /** The page being shown, so its menu entry is highlighted. */
-    active: 'discover' | 'borrowings' | 'notifications' | 'profile';
+    active: 'discover' | 'favourites' | 'borrowings' | 'notifications' | 'profile';
     children?: ReactNode;
 };
 
@@ -18,7 +18,7 @@ const LibrarySidenav = ({ active, children }: LibrarySidenavProps) => {
     const items: AppNavItem[] = [
         { label: 'Discover', icon: <BookOpen size={18} />, to: onCatalogue ? '#discover' : '/home', active: onCatalogue },
         { label: 'My Library', icon: <Library size={18} />, to: onCatalogue ? '#recommendations' : '/home#recommendations' },
-        { label: 'Favourites', icon: <Heart size={18} />, to: onCatalogue ? '#recommendations' : '/home#recommendations' },
+        { label: 'Favourites', icon: <Heart size={18} />, to: '/favourites', active: active === 'favourites' },
         ...(user?.role === 'User' ? [
             { label: 'My borrowings & fines', icon: <History size={18} />, to: '/my-borrowings', active: active === 'borrowings' },
             { label: 'My notifications', icon: <Bell size={18} />, to: '/notifications', active: active === 'notifications' },

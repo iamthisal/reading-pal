@@ -8,11 +8,14 @@ import {
     Search,
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { INVENTORY_API_BASE_URL, LENDING_API_BASE_URL } from '../config/api';
+import { INVENTORY_API_BASE_URL } from '../config/api';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import PosterSlider from '../components/PosterSlider/PosterSlider';
 import type { Poster } from '../components/PosterSlider/PosterSlider';
+import BorrowToast from '../components/BorrowToast';
+import FavouriteButton from '../components/Favourites/FavouriteButton';
+import { useBorrow } from '../hooks/useBorrow';
 import CatalogueSections from '../components/CatalogueSections/CatalogueSections';
 
 interface Book {
@@ -99,24 +102,15 @@ const HomePage = () => {
             document.getElementById(target)?.scrollIntoView({ block: 'start' });
         }
     }, [location.hash, location.key]);
-    const { user, token } = useAuth();
+    const { user } = useAuth();
     const [books, setBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
-    const [reservationSuccess, setReservationSuccess] = useState('');
-    const [reservationError, setReservationError] = useState('');
-    const [isReserving, setIsReserving] = useState<Record<number, boolean>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [selectedAuthor, setSelectedAuthor] = useState('All Authors');
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
-
-    useEffect(() => {
-        if (!reservationSuccess) return;
-        const timeout = window.setTimeout(() => setReservationSuccess(''), 5000);
-        return () => window.clearTimeout(timeout);
-    }, [reservationSuccess]);
 
     const fetchBooks = useCallback(async (background = false) => {
         if (!background) setIsLoading(true);
@@ -132,32 +126,7 @@ const HomePage = () => {
         }
     }, []);
 
-    const handleReserve = async (bookId: number) => {
-        if (!user || !token) return;
-        setIsReserving(prev => ({ ...prev, [bookId]: true }));
-        setReservationError('');
-        setReservationSuccess('');
-
-        try {
-            await axios.post(`${LENDING_API_BASE_URL}/api/Reservations`, { bookId }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            setReservationSuccess('Book reserved successfully! It is now pending admin approval.');
-            // Refresh catalogue to reflect any changes if needed
-            fetchBooks();
-        } catch (err: any) {
-            console.error('Failed to reserve book:', err);
-            setReservationError(
-                err.response?.data?.message ||
-                err.response?.data?.title ||
-                (typeof err.response?.data === 'string' ? err.response.data : 'Failed to reserve book. Please try again.')
-            );
-        } finally {
-            setIsReserving(prev => ({ ...prev, [bookId]: false }));
-        }
-    };
+    const borrowing = useBorrow(() => void fetchBooks());
 
     useEffect(() => {
         void fetchBooks();
@@ -318,17 +287,12 @@ const HomePage = () => {
                     </aside>
             </LibrarySidenav>
 
-            {(reservationSuccess || reservationError) && (
-                <div className={`discover-toast${reservationError ? ' discover-toast-error' : ''}`} role={reservationError ? 'alert' : 'status'}>
-                    <span>{reservationError || reservationSuccess}</span>
-                    <button type="button" aria-label="Dismiss" onClick={() => { setReservationError(''); setReservationSuccess(''); }}>×</button>
-                </div>
-            )}
+            <BorrowToast success={borrowing.success} error={borrowing.error} onDismiss={borrowing.dismiss} />
 
             <main id="discover" className="app-main discover-main">
                 <PosterSlider posters={posters} label="Library highlights" />
                 <CatalogueSections liveBooks={books} onSelectAuthor={showAuthor}
-                    borrow={{ canBorrow: Boolean(user?.isValidated), pending: isReserving, onBorrow: bookId => void handleReserve(bookId) }} />
+                    borrow={{ canBorrow: borrowing.canBorrow, pending: borrowing.pending, onBorrow: bookId => void borrowing.borrow(bookId) }} />
                 <section className="discover-hero">
                     <div className="discover-user-strip">
                         <button type="button" className="discover-icon-button" title="Refresh books" aria-label="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
@@ -421,7 +385,10 @@ const HomePage = () => {
 
                                 return (
                                     <article key={book.id} className="discover-featured-book">
-                                        {renderCover(book, 'large')}
+                                        <div className="favourite-anchor">
+                                            {renderCover(book, 'large')}
+                                            <FavouriteButton bookId={book.id} title={book.title} />
+                                        </div>
                                         <div className="discover-book-meta">
                                             <h3>{book.title}</h3>
                                             <p>{book.author}</p>
@@ -431,10 +398,10 @@ const HomePage = () => {
                                                     {statusText}
                                                 </span>
                                             </div>
-                                            {user?.isValidated && isAvailable && (
-                                                <button type="button" onClick={() => handleReserve(book.id)} disabled={isReserving[book.id]}
+                                            {borrowing.canBorrow && isAvailable && (
+                                                <button type="button" onClick={() => void borrowing.borrow(book.id)} disabled={borrowing.pending[book.id]}
                                                     className="shelf-borrow discover-reserve-button" aria-label={`Borrow ${book.title}`}>
-                                                    {isReserving[book.id] ? 'Borrowing…' : 'Borrow'}
+                                                    {borrowing.pending[book.id] ? 'Borrowing…' : 'Borrow'}
                                                 </button>
                                             )}
                                         </div>

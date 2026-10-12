@@ -341,3 +341,17 @@ button.shelf-card:focus-visible {
   color: #7b847f;
   font-size: 0.84rem;
 }
+
+.shelf-tile-cover {
+  width: 100%;
+}
+
+/* Leave room for the heart in the corner of a detailed card. */
+.shelf-card.favourite-anchor .shelf-info h3 {
+  padding-right: 2rem;
+}
+
+.shelf-card.favourite-anchor > .favourite-button {
+  top: 0.45rem;
+  right: 0.45rem;
+}
