@@ -2805,3 +2805,88 @@ body {
     display: none;
   }
 }
+
+/* ==========================================================================
+   Catalogue page: larger books and the borrow result toast
+   ========================================================================== */
+.discover-main .discover-book-row {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem 1.5rem;
+}
+
+.discover-main .discover-book-meta h3 {
+  color: #3f4b46;
+  font-size: 1rem;
+}
+
+.discover-main .discover-book-meta p {
+  font-size: 0.84rem;
+}
+
+.discover-main .discover-reserve-button {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .discover-main .discover-book-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+}
+
+/* Borrow buttons sit all down the page, so the result is shown in a corner where it is always visible. */
+.discover-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: min(420px, calc(100vw - 2.5rem));
+  padding: 0.9rem 1rem;
+  border: 1px solid #ceead6;
+  border-radius: 14px;
+  background: #e6f4ea;
+  color: #14613a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: 0 14px 34px rgba(47, 61, 56, 0.18);
+}
+
+.discover-toast-error {
+  border-color: #f2c9c0;
+  background: #fbeae6;
+  color: #9a3a26;
+}
+
+.discover-toast button {
+  flex: none;
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.discover-main .discover-book-meta :is(h3, p) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.discover-main .discover-book-meta :is(h3, p) a:hover {
+  color: #1f4d44;
+  text-decoration: underline;
+}
+
+.admin-book-description {
+  height: auto;
+  min-height: 84px;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  line-height: 1.45;
+  resize: vertical;
+}

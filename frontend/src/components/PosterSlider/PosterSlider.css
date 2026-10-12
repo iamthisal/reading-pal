@@ -1,7 +1,7 @@
 /* Poster slider: wide banners that slide sideways, with arrows, dots and an optional button. */
 .poster-slider {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.25rem;
   border-radius: 22px;
   overflow: hidden;
 }
@@ -22,7 +22,7 @@
   flex: 0 0 100%;
   display: flex;
   align-items: center;
-  min-height: clamp(220px, 21vw, 300px);
+  min-height: clamp(300px, 30vw, 460px);
   box-sizing: border-box;
   padding: 2rem clamp(3.5rem, 6vw, 5rem);
   overflow: hidden;
@@ -71,7 +71,7 @@
 .poster-copy {
   position: relative;
   z-index: 1;
-  max-width: min(520px, 62%);
+  max-width: min(600px, 62%);
   color: var(--poster-ink, #f6f1df);
 }
 
@@ -87,7 +87,7 @@
 .poster h2 {
   margin: 0;
   color: inherit;
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-size: clamp(1.9rem, 4vw, 3.4rem);
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -0.02em;
@@ -96,7 +96,7 @@
 .poster-text {
   margin: 0.7rem 0 0;
   color: var(--poster-soft, #c9dbd1);
-  font-size: 0.98rem;
+  font-size: 1.08rem;
   line-height: 1.5;
 }
 
@@ -139,7 +139,7 @@
 }
 
 .poster-art span {
-  width: clamp(64px, 7.5vw, 104px);
+  width: clamp(72px, 10vw, 150px);
   aspect-ratio: 2 / 3;
   border-radius: 6px 10px 10px 6px;
   background: rgba(255, 255, 255, 0.2);
@@ -224,7 +224,7 @@
 @media (max-width: 760px) {
   .poster {
     align-items: flex-start;
-    min-height: 250px;
+    min-height: 300px;
     padding: 1.5rem 1.25rem 3rem;
   }
 

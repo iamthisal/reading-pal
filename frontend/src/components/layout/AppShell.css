@@ -272,18 +272,71 @@
   background: var(--shell-page);
 }
 
-/* The hero's strip now holds only the refresh button (the user chip and bell moved to the top bar),
-   so pin it to the corner instead of leaving an empty row above the heading. */
-.app-main .discover-hero {
-  padding-top: 2rem;
+/* Pages that open with a banner (Discover, borrowings, notifications, profile): the banner hangs
+   directly from the top bar, and whatever follows it keeps a clear gap. */
+.app-main.app-main-banner {
+  padding-top: 0;
 }
 
-.app-main .discover-user-strip {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
+.app-main > .page-banner {
+  margin-bottom: 2rem;
+}
+
+.app-main > .page-banner .page-banner-copy {
+  position: relative;
   z-index: 1;
+  min-width: 0;
+}
+
+.app-main > .page-banner .page-banner-text {
+  max-width: 520px;
   margin: 0;
+  color: #605d55;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.app-main > .page-banner .page-banner-text q {
+  color: var(--shell-accent);
+  font-weight: 700;
+}
+
+.app-main > .page-banner .profile-hero-mark {
+  flex-shrink: 0;
+}
+
+/* Banner headings use the same soft ink as the rest of the shell rather than near-black. */
+.app-main > .page-banner h1 {
+  color: var(--shell-text);
+}
+
+/* Clicking into the banner's search box highlights the whole box, not a ring inside it. */
+.app-main .discover-search-input input:focus-visible {
+  outline: none;
+}
+
+.app-main .discover-search-panel:focus-within {
+  box-shadow: 0 0 0 2px var(--shell-accent), 0 14px 32px rgba(43, 40, 31, 0.08);
+}
+
+/* Things placed under a banner's text (search box, counts, notices) keep a steady rhythm. */
+.app-main > .page-banner .page-banner-copy {
+  flex: 1;
+}
+
+.app-main > .page-banner .page-banner-copy > :is(.discover-search-panel, .discover-stats, .discover-warning, .discover-error) {
+  margin-top: 1.1rem;
+}
+
+/* The banner's search is now a single box and button that open the Search page. */
+.app-main .discover-search-panel-single {
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: min(620px, 100%);
+}
+
+.app-main .discover-search-panel-single .discover-search-button {
+  padding: 0.72rem 1.25rem;
 }
 
 /* Links to sections on the page should not land underneath the sticky top bar. */
@@ -359,4 +412,32 @@
     order: 3;
     flex: 1 1 100%;
   }
+}
+
+/* Phone: the banner search stacks so the box is wide enough to show its hint in full. */
+@media (max-width: 640px) {
+  .app-main .discover-search-panel-single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-main .discover-search-panel-single .discover-search-input {
+    padding: 0.5rem 0.4rem;
+  }
+}
+
+/* Buttons and labels that belong to a page sit under the banner's text. */
+.app-main > .page-banner .page-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.1rem;
+}
+
+/* ---------- Admin pages inside the shell ---------- */
+/* Tables and panels use the full width of the page instead of a centred 1080px column. */
+.app-main.admin-main :is(.admin-users-panel, .admin-inventory-panel, .admin-inventory-alert, .admin-message) {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }

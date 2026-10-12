@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BookOpen, Clock3, History, RefreshCw, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
+import PageBanner from '../components/layout/PageBanner';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import './MyBorrowingsPage.css';
@@ -78,11 +79,9 @@ export default function MyBorrowingsPage() {
     return <div className="app-shell my-loans-shell">
         <AppTopbar />
         <LibrarySidenav active="borrowings" />
-        <main className="app-main discover-main profile-main my-loans-page">
-        <section className="profile-hero my-loans-hero">
-            <div><p className="discover-eyebrow">Your reading journey</p><h1>My borrowings<br />&amp; fines</h1><p>Keep track of your next return and look back at the books you’ve borrowed.</p></div>
-            <div className="profile-hero-mark" aria-hidden="true"><BookOpen size={38} /></div>
-        </section>
+        <main className="app-main app-main-banner discover-main profile-main my-loans-page">
+        <PageBanner eyebrow="Your reading journey" title="My borrowings" icon={<BookOpen size={38} />}
+            text="Keep track of your next return, any fines, and the books you’ve borrowed before." />
         <div className="my-loans-toolbar"><p><Clock3 size={16} aria-hidden="true" />Dates and overdue days use Sri Lanka time.</p>
             <button type="button" className="btn-primary profile-save-button my-loans-refresh" disabled={loading} onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{loading ? 'Refreshing…' : 'Refresh'}</button></div>
         <div className="my-loans-note"><strong>Late returns: Rs. 10 per day after the due date.</strong> Current fines are estimates until your return is processed.</div>

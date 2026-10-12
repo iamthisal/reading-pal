@@ -1,13 +1,16 @@
+import { LayoutDashboard as LayoutDashboardIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import AdminSidebar from '../components/layout/AdminSidebar';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowUpRight, Bell, BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, ShieldAlert, Users } from 'lucide-react';
+import { ArrowUpRight, BookMarked, BookOpen, BookPlus, ShieldAlert, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 const AdminDashboard = () => {
-    const { logout, token, user } = useAuth();
+    const { token } = useAuth();
     const [adminMessage, setAdminMessage] = useState<string>('');
 
     useEffect(() => {
@@ -31,72 +34,13 @@ const AdminDashboard = () => {
     }, [token]);
 
     return (
-        <div className="admin-shell">
-            <aside className="admin-sidebar">
-                <Link to="/admin/dashboard" className="admin-brand">
-                    <BookMarked size={23} />
-                    <span>Reading Pal</span>
-                </Link>
+        <div className="app-shell">
+        <AppTopbar />
+            <AdminSidebar active="dashboard" />
 
-                <nav className="admin-nav" aria-label="Administration navigation">
-                    <span className="admin-nav-label">Workspace</span>
-                    <Link to="/admin/dashboard" className="admin-nav-item admin-nav-item-active">
-                        <LayoutDashboard size={16} />
-                        Overview
-                    </Link>
-                    <Link to="/admin/users/pending" className="admin-nav-item">
-                        <Users size={16} />
-                        User approvals
-                    </Link>
-                    <Link to="/admin/users/active" className="admin-nav-item">
-                        <Users size={16} />
-                        Active users
-                    </Link>
-                    <Link to="/admin/books" className="admin-nav-item">
-                        <BookPlus size={16} />
-                        Book inventory
-                    </Link>
-                    <Link to="/admin/reservations/pending" className="admin-nav-item"><BookMarked size={16} />Pending reservations</Link>
-                    <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
-                    <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
-                    <Link to="/admin/notifications" className="admin-nav-item"><Bell size={16} />Notifications</Link>
-                    <Link to="/home" className="admin-nav-item">
-                        <BookOpen size={16} />
-                        Public catalogue
-                    </Link>
-                </nav>
-
-                <div className="admin-sidebar-bottom">
-                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button">
-                        <LogOut size={16} />
-                        Log out
-                    </button>
-                </div>
-            </aside>
-
-            <main className="admin-main">
-                <header className="admin-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Library operations</p>
-                        <h1>Admin dashboard</h1>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <div className="admin-user-chip">
-                            <span className="admin-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'A'}</span>
-                            <span>{user?.email || 'Administrator'}</span>
-                        </div>
-                        <NotificationBell />
-                    </div>
-                </header>
-
-                <section className="admin-welcome">
-                    <div>
-                        <p className="admin-kicker">Good to see you</p>
-                        <h2>Keep the library moving.</h2>
-                        <p>Review member activity, maintain the catalogue, and keep every shelf ready for its next reader.</p>
-                    </div>
-                    <div className="admin-welcome-mark"><BookMarked size={42} /></div>
-                </section>
+            <main className="app-main app-main-banner admin-main">
+                <PageBanner eyebrow="Library operations" title="Admin dashboard" icon={<LayoutDashboardIcon size={38} />}
+                    text="Review member activity, maintain the catalogue, and keep every shelf ready for its next reader." />
 
                 <section className="admin-section" aria-labelledby="admin-actions-heading">
                     <div className="admin-section-heading">

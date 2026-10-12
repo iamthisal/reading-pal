@@ -1,0 +1,160 @@
+/* Loading placeholders: grey shapes where content will appear, with a light band sliding across.
+   Plain CSS only. The slide is one background animation per shape, so it costs very little. */
+.skeleton {
+  background-color: #e7e3d7;
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0) 70%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0;
+  animation: skeleton-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-slide {
+  to { background-position: -50% 0; }
+}
+
+/* Readers who ask for less motion get the grey shapes without the sliding band. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+}
+
+/* A picture that is still downloading: no broken-image icon or stray alt text over the placeholder. */
+img.skeleton {
+  color: transparent;
+}
+
+.skeleton-line {
+  display: block;
+  height: 0.85rem;
+  border-radius: 6px;
+}
+
+.skeleton-line + .skeleton-line {
+  margin-top: 0.55rem;
+}
+
+.skeleton-title {
+  width: min(260px, 60%);
+  height: 1.5rem;
+  border-radius: 8px;
+}
+
+.skeleton-pill {
+  width: 110px;
+  height: 2.2rem;
+  border-radius: 999px;
+}
+
+/* A shelf of placeholders does not scroll; it just fills the row and is clipped. */
+.shelf-track.skeleton-track {
+  overflow: hidden;
+}
+
+.skeleton-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+}
+
+.shelf-tile .skeleton-cover + .skeleton-line {
+  margin-top: 0.85rem;
+}
+
+.shelf-card .skeleton-cover {
+  flex: none;
+  width: 124px;
+  border-radius: 6px;
+}
+
+.skeleton-circle {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+}
+
+.skeleton-fill {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-list-row .skeleton-cover {
+  flex: none;
+  width: 72px;
+  border-radius: 6px;
+}
+
+.detail-card .skeleton-cover {
+  flex: none;
+  width: clamp(160px, 20vw, 250px);
+  align-self: flex-start;
+  border-radius: 12px;
+}
+
+.detail-card .skeleton-circle {
+  width: clamp(110px, 13vw, 170px);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.discover-featured-book .skeleton-cover {
+  aspect-ratio: 3 / 4.2;
+  border-radius: 8px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Stand-ins for the small count pills in a banner, so the banner keeps its height while loading. */
+.skeleton-stat {
+  display: inline-block;
+  width: 84px;
+  height: 1.85rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.skeleton-stat:nth-child(2) {
+  width: 128px;
+}
+
+/* A form whose values are still loading: its fields shimmer like any other placeholder. */
+.profile-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.skeleton-fields input {
+  border-color: transparent;
+  background-color: #e7e3d7;
+  background-image: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0) 70%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: 150% 0;
+  animation: skeleton-slide 1.4s ease-in-out infinite;
+}
+
+.skeleton-fields input::placeholder {
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-fields input {
+    animation: none;
+    background-image: none;
+  }
+}

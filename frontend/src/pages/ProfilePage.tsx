@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { Save, User } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
+import PageBanner from '../components/layout/PageBanner';
+import '../components/Skeleton/Skeleton.css';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 
@@ -65,28 +67,14 @@ const ProfilePage = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="profile-shell profile-loading">
-                <p>Loading profile...</p>
-            </div>
-        );
-    }
-
     return (
         <div className="app-shell">
             <AppTopbar />
         <LibrarySidenav active="profile" />
 
-            <main className="app-main profile-main discover-main">
-                <section className="profile-hero">
-                    <div>
-                        <p className="discover-eyebrow">Your reading identity</p>
-                        <h1>My profile</h1>
-                        <p>Keep your details current so your Reading Pal experience stays personal.</p>
-                    </div>
-                    <div className="profile-hero-mark"><User size={38} /></div>
-                </section>
+            <main className="app-main app-main-banner profile-main discover-main">
+                <PageBanner eyebrow="Your reading identity" title="My profile" icon={<User size={38} />}
+                    text="Keep your details current so your Reading Pal experience stays personal." />
 
                 <section className="profile-form-panel">
                     <div className="profile-panel-heading">
@@ -100,7 +88,9 @@ const ProfilePage = () => {
                     {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
                     {successMsg && <div style={{ padding: '1rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>{successMsg}</div>}
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} aria-busy={isLoading}>
+                        {/* While the details are loading the fields are greyed placeholders that cannot be typed in. */}
+                        <fieldset className={`profile-fieldset${isLoading ? ' skeleton-fields' : ''}`} disabled={isLoading}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div className="form-group">
                                 <label className="form-label" htmlFor="firstName">First Name</label>
@@ -159,6 +149,7 @@ const ProfilePage = () => {
                                 </div>
                             </button>
                         </div>
+                        </fieldset>
                     </form>
                 </section>
             </main>

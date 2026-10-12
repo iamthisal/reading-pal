@@ -1,0 +1,53 @@
+.favourite-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #7b847f;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.favourite-button:hover {
+  color: #c9503a;
+  transform: scale(1.08);
+}
+
+.favourite-button-active {
+  color: #d9482f;
+}
+
+.favourite-button-floating {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 12px rgba(49, 44, 33, 0.18);
+}
+
+.favourite-button-plain:hover {
+  background: #f6ece8;
+}
+
+.favourite-button:focus-visible {
+  outline: 3px solid #1f4d44;
+  outline-offset: 2px;
+}
+
+/* Where the heart sits: the top right corner of whatever holds it. */
+.favourite-anchor {
+  position: relative;
+}
+
+.favourite-anchor > .favourite-button {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favourite-button { transition: none; }
+  .favourite-button:hover { transform: none; }
+}

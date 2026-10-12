@@ -1,18 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, ChevronDown, LayoutDashboard, LogOut, Search, User } from 'lucide-react';
+import { BookOpen, ChevronDown, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import NotificationBell from '../NotificationBell';
 import './AppShell.css';
-
-type AppTopbarProps = {
-    /** Omit the search props on pages that have nothing to search. */
-    searchValue?: string;
-    onSearchChange?: (value: string) => void;
-    onSearchSubmit?: () => void;
-    searchPlaceholder?: string;
-};
+import './Theme.css';
 
 // The profile button and its menu: who is signed in, their profile (or the admin dashboard), and log out.
 const UserMenu = () => {
@@ -58,11 +50,17 @@ const UserMenu = () => {
     );
 };
 
-const AppTopbar = ({ searchValue, onSearchChange, onSearchSubmit, searchPlaceholder = 'Search' }: AppTopbarProps) => {
+const AppTopbar = () => {
+    /* Top-bar search is switched off for now: the page banners carry the search box instead.
+       To bring it back, restore this block and the form below, and re-import FormEvent, useNavigate and Search.
+    const navigate = useNavigate();
+    const [text, setText] = useState('');
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        onSearchSubmit?.();
+        const trimmed = text.trim();
+        navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : '/search');
     };
+    */
 
     return (
         <header className="app-topbar">
@@ -70,13 +68,13 @@ const AppTopbar = ({ searchValue, onSearchChange, onSearchSubmit, searchPlacehol
                 <span className="app-brand-mark"><BookOpen size={18} /></span>
                 <span>Reading Pal</span>
             </Link>
-            {onSearchChange && (
-                <form className="app-search" role="search" onSubmit={submit}>
-                    <Search size={16} />
-                    <input type="search" value={searchValue ?? ''} onChange={event => onSearchChange(event.target.value)}
-                        placeholder={searchPlaceholder} aria-label={searchPlaceholder} />
-                </form>
-            )}
+            {/* Top-bar search is switched off for now.
+            <form className="app-search" role="search" onSubmit={submit}>
+                <Search size={16} />
+                <input type="search" value={text} onChange={event => setText(event.target.value)}
+                    placeholder="Search books, authors, ISBN" aria-label="Search the catalogue" />
+            </form>
+            */}
             <div className="app-topbar-actions">
                 <NotificationBell />
                 <UserMenu />
