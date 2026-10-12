@@ -9,26 +9,14 @@ import { INVENTORY_API_BASE_URL } from '../config/api';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import BorrowToast from '../components/BorrowToast';
-import FavouriteButton from '../components/Favourites/FavouriteButton';
-import '../components/BookShelf/BookShelf.css';
+import { BookListRow } from '../components/BookList/BookList';
+import type { ListBook } from '../components/BookList/BookList';
 import './FavouritesPage.css';
-
-interface Book {
-    id: number; title: string; author: string; genre: string; coverImageUrl?: string | null;
-    totalCopies: number; availableCopies: number;
-}
-
-const Cover = ({ book }: { book: Book }) => {
-    const [failed, setFailed] = useState(false);
-    return book.coverImageUrl && !failed
-        ? <img className="favourites-cover" src={book.coverImageUrl} alt={`${book.title} cover`} loading="lazy" onError={() => setFailed(true)} />
-        : <div className="favourites-cover favourites-cover-fallback" aria-hidden="true">{book.title}</div>;
-};
 
 const FavouritesPage = () => {
     const { token } = useAuth();
     const { isFavourite } = useFavourites();
-    const [books, setBooks] = useState<Book[]>([]);
+    const [books, setBooks] = useState<ListBook[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [reload, setReload] = useState(0);
@@ -36,7 +24,7 @@ const FavouritesPage = () => {
 
     useEffect(() => {
         const controller = new AbortController();
-        axios.get<Book[]>(`${INVENTORY_API_BASE_URL}/api/favourites`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal })
+        axios.get<ListBook[]>(`${INVENTORY_API_BASE_URL}/api/favourites`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal })
             .then(response => { setBooks(response.data); setError(''); })
             .catch(() => { if (!controller.signal.aborted) setError('Unable to load your favourites. Please try again.'); })
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -74,31 +62,9 @@ const FavouritesPage = () => {
                 )}
 
                 {visible.length > 0 && (
-                    <ul className="favourites-list" aria-label="Favourite books">
-                        {visible.map(book => {
-                            const available = book.availableCopies > 0;
-                            const busy = Boolean(borrowing.pending[book.id]);
-                            return (
-                                <li key={book.id} className="favourites-row">
-                                    <Cover book={book} />
-                                    <div className="favourites-info">
-                                        <h2>{book.title}</h2>
-                                        <p>{book.author}{book.genre && <><span aria-hidden="true"> • </span>{book.genre}</>}</p>
-                                        <div className="favourites-stock">
-                                            <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>
-                                            <span>{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'} on the shelf</span>
-                                        </div>
-                                    </div>
-                                    <div className="favourites-actions">
-                                        {borrowing.canBorrow && available && (
-                                            <button type="button" className="shelf-borrow" disabled={busy} aria-label={`Borrow ${book.title}`}
-                                                onClick={() => void borrowing.borrow(book.id)}>{busy ? 'Borrowing…' : 'Borrow'}</button>
-                                        )}
-                                        <FavouriteButton bookId={book.id} title={book.title} variant="plain" />
-                                    </div>
-                                </li>
-                            );
-                        })}
+                    <ul className="book-list" aria-label="Favourite books">
+                        {visible.map(book => <BookListRow key={book.id} book={book} canBorrow={borrowing.canBorrow}
+                            pending={borrowing.pending} onBorrow={bookId => void borrowing.borrow(bookId)} />)}
                     </ul>
                 )}
             </main>

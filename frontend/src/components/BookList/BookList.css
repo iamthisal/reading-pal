@@ -1,0 +1,134 @@
+/* Books as a list of rows: shared by search results and favourites. */
+.book-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ebe7db;
+  border-radius: 18px;
+  background: #ffffff;
+  list-style: none;
+  overflow: hidden;
+  transition: opacity 0.15s ease;
+}
+
+/* While newer contents are loading, keep the old rows in place but dimmed. */
+.book-list-stale {
+  opacity: 0.55;
+}
+
+.book-list-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.book-list-row + .book-list-row {
+  border-top: 1px solid #f0ece1;
+}
+
+.book-list-row:hover {
+  background: #fbfaf6;
+}
+
+.book-list-cover {
+  flex: none;
+  width: 72px;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #ddd8c6;
+  box-shadow: 0 8px 16px rgba(49, 44, 33, 0.14);
+}
+
+.book-list-cover-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0.35rem;
+  background: linear-gradient(145deg, #1f4d44, #c9684c);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.book-list-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-list-info h2 {
+  margin: 0;
+  color: #3f4b46;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.book-list-byline {
+  margin: 0.25rem 0 0;
+  color: #5d6863;
+  font-size: 0.9rem;
+}
+
+.book-list-meta {
+  margin: 0.2rem 0 0.55rem;
+  color: #7b847f;
+  font-size: 0.82rem;
+}
+
+.book-list-stock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  color: #7b847f;
+  font-size: 0.82rem;
+}
+
+.book-list-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+@media (max-width: 640px) {
+  .book-list-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .book-list-cover {
+    width: 60px;
+  }
+
+  /* Cover and details share the first line; the buttons take the second. */
+  .book-list-info {
+    flex: 1 1 0;
+  }
+
+  .book-list-actions {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-list {
+    transition: none;
+  }
+}
+
+/* The heart keeps to the right even when a row has no Borrow button beside it. */
+.book-list-actions .favourite-button {
+  margin-left: auto;
+}

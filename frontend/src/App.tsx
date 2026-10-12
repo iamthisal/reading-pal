@@ -18,6 +18,7 @@ import AdminNotificationsPage from './pages/AdminNotificationsPage';
 import AdminAuthorsPage from './pages/AdminAuthorsPage';
 import AdminListsPage from './pages/AdminListsPage';
 import FavouritesPage from './pages/FavouritesPage';
+import SearchPage from './pages/SearchPage';
 import { FavouritesProvider } from './contexts/FavouritesContext';
 
 const RootRedirect = () => {
@@ -39,6 +40,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['User', 'Admin']} />}>
             <Route path="/home" element={<HomePage />} />
             <Route path="/favourites" element={<FavouritesPage />} />
+            <Route path="/search" element={<SearchPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>

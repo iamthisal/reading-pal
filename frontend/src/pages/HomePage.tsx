@@ -2,8 +2,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
-    Check,
-    Filter,
     RefreshCw,
     Search,
 } from 'lucide-react';
@@ -107,7 +105,6 @@ const HomePage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [selectedAuthor, setSelectedAuthor] = useState('All Authors');
     const [selectedStatus, setSelectedStatus] = useState('All Statuses');
     const [failedCoverIds, setFailedCoverIds] = useState<Set<number>>(new Set());
@@ -142,16 +139,6 @@ const HomePage = () => {
         return books.length >= 5 ? books : [...books, ...fillers].slice(0, 8);
     }, [books]);
 
-    const genreOptions = useMemo(() => {
-        const counts = new Map<string, number>();
-        displayBooks.forEach(book => {
-            if (book.genre) counts.set(book.genre, (counts.get(book.genre) || 0) + 1);
-        });
-        return Array.from(counts.entries())
-            .map(([name, count]) => ({ name, count }))
-            .sort((first, second) => first.name.localeCompare(second.name));
-    }, [displayBooks]);
-
     const authors = useMemo(() => {
         const uniqueAuthors = Array.from(new Set(displayBooks.map(book => book.author))).filter(Boolean);
         return ['All Authors', ...uniqueAuthors.sort((first, second) => first.localeCompare(second))];
@@ -161,7 +148,6 @@ const HomePage = () => {
         const query = searchQuery.trim().toLowerCase();
 
         return displayBooks.filter(book => {
-            const matchesGenre = selectedGenres.length === 0 || selectedGenres.includes(book.genre);
             const matchesAuthor = selectedAuthor === 'All Authors' || book.author === selectedAuthor;
             const isAvailable = book.isAvailable ?? book.availableCopies > 0;
             const matchesStatus = selectedStatus === 'All Statuses' ||
@@ -172,9 +158,9 @@ const HomePage = () => {
                 book.isbn.toLowerCase().includes(query) ||
                 book.genre.toLowerCase().includes(query);
 
-            return matchesGenre && matchesAuthor && matchesStatus && matchesQuery;
+            return matchesAuthor && matchesStatus && matchesQuery;
         });
-    }, [displayBooks, searchQuery, selectedGenres, selectedAuthor, selectedStatus]);
+    }, [displayBooks, searchQuery, selectedAuthor, selectedStatus]);
 
     const recommendationBooks = filteredBooks;
     const availableCount = books.filter(book => (book.isAvailable ?? book.availableCopies > 0)).length;
@@ -196,7 +182,6 @@ const HomePage = () => {
 
     const resetFilters = () => {
         setSearchQuery('');
-        setSelectedGenres([]);
         setSelectedAuthor('All Authors');
         setSelectedStatus('All Statuses');
     };
@@ -235,57 +220,9 @@ const HomePage = () => {
 
     return (
         <div className="app-shell">
-            <AppTopbar
-                searchValue={searchQuery}
-                onSearchChange={setSearchQuery}
-                onSearchSubmit={showSearchResults}
-                searchPlaceholder="Search books"
-            />
+            <AppTopbar />
 
-            <LibrarySidenav active="discover">
-                    <aside className="discover-filter-rail" aria-label="Book filters">
-                        <div className="discover-filter-heading">
-                            <Filter size={16} />
-                            <span>Filters</span>
-                            {(selectedGenres.length > 0 || selectedStatus === 'Available') && (
-                                <button type="button" className="discover-filter-reset" onClick={resetFilters}>Clear</button>
-                            )}
-                        </div>
-
-                        <fieldset className="discover-filter-group">
-                            <legend>Stock status</legend>
-                            <label className="discover-check-row">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedStatus === 'Available'}
-                                    onChange={e => setSelectedStatus(e.target.checked ? 'Available' : 'All Statuses')}
-                                />
-                                <span className="discover-custom-checkbox"><Check size={12} /></span>
-                                <span>Available</span>
-                                <small>{availableCount}</small>
-                            </label>
-                        </fieldset>
-
-                        <fieldset className="discover-filter-group">
-                            <legend>Categories</legend>
-                            {genreOptions.map(option => (
-                                <label className="discover-check-row" key={option.name}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedGenres.includes(option.name)}
-                                        onChange={e => setSelectedGenres(current => e.target.checked
-                                            ? [...current, option.name]
-                                            : current.filter(genre => genre !== option.name))}
-                                    />
-                                    <span className="discover-custom-checkbox"><Check size={12} /></span>
-                                    <span>{option.name}</span>
-                                    <small>{option.count}</small>
-                                </label>
-                            ))}
-                            {genreOptions.length === 0 && <p className="discover-filter-empty">No categories yet</p>}
-                        </fieldset>
-                    </aside>
-            </LibrarySidenav>
+            <LibrarySidenav active="discover" />
 
             <BorrowToast success={borrowing.success} error={borrowing.error} onDismiss={borrowing.dismiss} />
 
@@ -343,7 +280,7 @@ const HomePage = () => {
 
                     <div className="discover-filter-summary">
                         <span>{filteredBooks.length} matching books</span>
-                        {(searchQuery || selectedGenres.length > 0 || selectedAuthor !== 'All Authors' || selectedStatus !== 'All Statuses') && (
+                        {(searchQuery || selectedAuthor !== 'All Authors' || selectedStatus !== 'All Statuses') && (
                             <button type="button" className="discover-clear-button" onClick={resetFilters}>Clear filters</button>
                         )}
                     </div>

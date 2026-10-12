@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { Bell, BookOpen, Heart, History, LayoutDashboard, Library, User } from 'lucide-react';
+import { Bell, BookOpen, Heart, History, LayoutDashboard, Library, Search, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import AppSidenav from './AppSidenav';
 import type { AppNavItem } from './AppSidenav';
 
 type LibrarySidenavProps = {
     /** The page being shown, so its menu entry is highlighted. */
-    active: 'discover' | 'favourites' | 'borrowings' | 'notifications' | 'profile';
+    active: 'discover' | 'search' | 'favourites' | 'borrowings' | 'notifications' | 'profile';
     children?: ReactNode;
 };
 
@@ -17,6 +17,7 @@ const LibrarySidenav = ({ active, children }: LibrarySidenavProps) => {
     const onCatalogue = active === 'discover';
     const items: AppNavItem[] = [
         { label: 'Discover', icon: <BookOpen size={18} />, to: onCatalogue ? '#discover' : '/home', active: onCatalogue },
+        { label: 'Search', icon: <Search size={18} />, to: '/search', active: active === 'search' },
         { label: 'My Library', icon: <Library size={18} />, to: onCatalogue ? '#recommendations' : '/home#recommendations' },
         { label: 'Favourites', icon: <Heart size={18} />, to: '/favourites', active: active === 'favourites' },
         ...(user?.role === 'User' ? [
