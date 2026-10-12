@@ -19,15 +19,26 @@ export type ShelfAuthor = {
     bookCount: number;
 };
 
+/** What the reader can do with a book on a shelf. Leave it out for a read-only shelf. */
+export type BorrowControls = {
+    /** Whether this reader is allowed to borrow at all (signed in and approved). */
+    canBorrow: boolean;
+    /** IDs with a request in flight, so their buttons show progress and cannot be pressed twice. */
+    pending: Record<number, boolean>;
+    onBorrow: (bookId: number) => void;
+};
+
 type ShelfProps = {
     title: string;
+    /** Sizes the cards: wide detailed cards or taller cover-led ones. */
+    variant: 'detail' | 'cover' | 'author';
     /** Changes whenever the cards do, so the arrows are re-checked. */
     itemCount: number;
     children: ReactNode;
 };
 
 // A titled row of cards shown a page at a time. It only moves when the reader uses the arrows (or swipes).
-const Shelf = ({ title, itemCount, children }: ShelfProps) => {
+const Shelf = ({ title, variant, itemCount, children }: ShelfProps) => {
     const trackRef = useRef<HTMLDivElement>(null);
     const [atStart, setAtStart] = useState(true);
     const [atEnd, setAtEnd] = useState(false);
@@ -69,7 +80,7 @@ const Shelf = ({ title, itemCount, children }: ShelfProps) => {
                     <button type="button" aria-label={`More in ${title}`} disabled={atEnd} onClick={() => move(1)}><ChevronRight size={18} /></button>
                 </div>}
             </header>
-            <div className="shelf-track" ref={trackRef} onScroll={syncArrows}>
+            <div className={`shelf-track shelf-track-${variant}`} ref={trackRef} onScroll={syncArrows}>
                 {children}
             </div>
         </section>
@@ -83,21 +94,53 @@ const Cover = ({ book }: { book: ShelfBook }) => {
         : <div className="shelf-cover shelf-cover-fallback" aria-hidden="true"><span>{book.title}</span></div>;
 };
 
-export const BookShelf = ({ title, books }: { title: string; books: ShelfBook[] }) => {
+const BorrowButton = ({ book, borrow }: { book: ShelfBook; borrow?: BorrowControls }) => {
+    if (!borrow?.canBorrow || book.availableCopies <= 0) return null;
+    const busy = Boolean(borrow.pending[book.id]);
+    return (
+        <button type="button" className="shelf-borrow" disabled={busy} onClick={() => borrow.onBorrow(book.id)}
+            aria-label={`Borrow ${book.title}`}>
+            {busy ? 'Borrowing…' : 'Borrow'}
+        </button>
+    );
+};
+
+type BookShelfProps = {
+    title: string;
+    books: ShelfBook[];
+    /** "detail": wide cards with the cover beside the text. "cover": tall cards led by a large cover. */
+    variant?: 'detail' | 'cover';
+    borrow?: BorrowControls;
+};
+
+export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelfProps) => {
     if (books.length === 0) return null;
     return (
-        <Shelf title={title} itemCount={books.length}>
+        <Shelf title={title} variant={variant} itemCount={books.length}>
             {books.map(book => {
                 const available = book.availableCopies > 0;
-                return (
+                const status = <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>;
+                return variant === 'detail' ? (
                     <article key={book.id} className="shelf-card">
                         <Cover book={book} />
                         <div className="shelf-info">
                             <h3>{book.title}</h3>
                             <p className="shelf-byline">{book.author}{book.genre && <><span aria-hidden="true"> • </span>{book.genre}</>}</p>
-                            <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>
+                            {status}
                             <p className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'} on the shelf</p>
+                            <BorrowButton book={book} borrow={borrow} />
                         </div>
+                    </article>
+                ) : (
+                    <article key={book.id} className="shelf-tile">
+                        <Cover book={book} />
+                        <h3>{book.title}</h3>
+                        <p className="shelf-byline">{book.author}</p>
+                        <div className="shelf-tile-stock">
+                            <span className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'}</span>
+                            {status}
+                        </div>
+                        <BorrowButton book={book} borrow={borrow} />
                     </article>
                 );
             })}
@@ -114,7 +157,7 @@ type AuthorShelfProps = {
 export const AuthorShelf = ({ title, authors, onSelect }: AuthorShelfProps) => {
     if (authors.length === 0) return null;
     return (
-        <Shelf title={title} itemCount={authors.length}>
+        <Shelf title={title} variant="author" itemCount={authors.length}>
             {authors.map(author => (
                 <button key={author.id} type="button" className="shelf-card" onClick={() => onSelect?.(author)}
                     aria-label={`Show books by ${author.name}`}>

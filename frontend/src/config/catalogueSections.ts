@@ -1,8 +1,9 @@
 // The sections shown on the catalogue page, top to bottom. Edit this list to change what readers see.
 // A section whose list, author or category is missing or has no books is simply not shown.
 export type CatalogueSection =
-    /** A curated list from the inventory service, by its key. Works for book lists and author lists. */
-    | { kind: 'list'; key: string; limit?: number; title?: string }
+    /** A curated list from the inventory service, by its key. Works for book lists and author lists.
+     *  Book lists show large covers unless variant is 'detail' (wide cards with the cover beside the text). */
+    | { kind: 'list'; key: string; limit?: number; title?: string; variant?: 'detail' | 'cover' }
     /** Books by one author. Leave the name out to feature the first author on the popular-authors list. */
     | { kind: 'author'; name?: string; limit?: number; title?: string }
     /** Books in one category. Leave the name out to feature the first category that has books. */
@@ -11,7 +12,7 @@ export type CatalogueSection =
 export const POPULAR_AUTHORS_LIST = 'popular-authors';
 
 export const catalogueSections: CatalogueSection[] = [
-    { kind: 'list', key: 'recommended', limit: 6 },
+    { kind: 'list', key: 'recommended', limit: 6, variant: 'detail' },
     { kind: 'list', key: 'top-100', limit: 12 },
     { kind: 'list', key: POPULAR_AUTHORS_LIST },
     { kind: 'author', limit: 12 },

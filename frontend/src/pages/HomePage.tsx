@@ -318,9 +318,17 @@ const HomePage = () => {
                     </aside>
             </LibrarySidenav>
 
+            {(reservationSuccess || reservationError) && (
+                <div className={`discover-toast${reservationError ? ' discover-toast-error' : ''}`} role={reservationError ? 'alert' : 'status'}>
+                    <span>{reservationError || reservationSuccess}</span>
+                    <button type="button" aria-label="Dismiss" onClick={() => { setReservationError(''); setReservationSuccess(''); }}>×</button>
+                </div>
+            )}
+
             <main id="discover" className="app-main discover-main">
                 <PosterSlider posters={posters} label="Library highlights" />
-                <CatalogueSections liveBooks={books} onSelectAuthor={showAuthor} />
+                <CatalogueSections liveBooks={books} onSelectAuthor={showAuthor}
+                    borrow={{ canBorrow: Boolean(user?.isValidated), pending: isReserving, onBorrow: bookId => void handleReserve(bookId) }} />
                 <section className="discover-hero">
                     <div className="discover-user-strip">
                         <button type="button" className="discover-icon-button" title="Refresh books" aria-label="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
@@ -397,13 +405,6 @@ const HomePage = () => {
                     </div>
 
                     {errorMessage && <div className="discover-error">{errorMessage}</div>}
-                    {reservationError && <div className="discover-error" style={{ marginTop: '10px' }}>{reservationError}</div>}
-                    {reservationSuccess && (
-                        <div role="status" style={{ marginTop: '6px', marginBottom: '20px', padding: '12px', background: '#e6f4ea', color: '#137333', borderRadius: '8px', fontSize: '0.875rem', border: '1px solid #ceead6' }}>
-                            {reservationSuccess}
-                        </div>
-                    )}
-
                     {isLoading && (
                         <div className="discover-empty">Loading books...</div>
                     )}
@@ -431,24 +432,9 @@ const HomePage = () => {
                                                 </span>
                                             </div>
                                             {user?.isValidated && isAvailable && (
-                                                <button
-                                                    onClick={() => handleReserve(book.id)}
-                                                    disabled={isReserving[book.id]}
-                                                    className="discover-reserve-button"
-                                                    style={{
-                                                        padding: '8px 12px',
-                                                        background: 'var(--primary-color, #2563eb)',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        borderRadius: '6px',
-                                                        cursor: isReserving[book.id] ? 'not-allowed' : 'pointer',
-                                                        fontSize: '0.875rem',
-                                                        fontWeight: '500',
-                                                        opacity: isReserving[book.id] ? 0.7 : 1,
-                                                        width: '100%'
-                                                    }}
-                                                >
-                                                    {isReserving[book.id] ? 'Reserving...' : 'Reserve Book'}
+                                                <button type="button" onClick={() => handleReserve(book.id)} disabled={isReserving[book.id]}
+                                                    className="shelf-borrow discover-reserve-button" aria-label={`Borrow ${book.title}`}>
+                                                    {isReserving[book.id] ? 'Borrowing…' : 'Borrow'}
                                                 </button>
                                             )}
                                         </div>

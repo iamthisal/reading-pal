@@ -4,11 +4,11 @@ import { INVENTORY_API_BASE_URL } from '../../config/api';
 import { catalogueSections, POPULAR_AUTHORS_LIST } from '../../config/catalogueSections';
 import type { CatalogueSection } from '../../config/catalogueSections';
 import { AuthorShelf, BookShelf } from '../BookShelf/BookShelf';
-import type { ShelfAuthor, ShelfBook } from '../BookShelf/BookShelf';
+import type { BorrowControls, ShelfAuthor, ShelfBook } from '../BookShelf/BookShelf';
 
 type ListResponse = { name: string; itemType: 'Books' | 'Authors'; books: ShelfBook[]; authors: ShelfAuthor[] };
 type Named = { id: number; name: string };
-type LoadedSection = { id: string; title: string; books?: ShelfBook[]; authors?: ShelfAuthor[] };
+type LoadedSection = { id: string; title: string; variant?: 'detail' | 'cover'; books?: ShelfBook[]; authors?: ShelfAuthor[] };
 
 const api = `${INVENTORY_API_BASE_URL}/api`;
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -22,7 +22,7 @@ const loadSection = async (section: CatalogueSection, index: number): Promise<Lo
     if (section.kind === 'list') {
         const list = await loadList(section.key, section.limit);
         const title = section.title ?? list.name;
-        return list.itemType === 'Authors' ? { id, title, authors: list.authors } : { id, title, books: list.books };
+        return list.itemType === 'Authors' ? { id, title, authors: list.authors } : { id, title, variant: section.variant, books: list.books };
     }
 
     if (section.kind === 'author') {
@@ -50,10 +50,11 @@ type CatalogueSectionsProps = {
     /** The page's own, regularly refreshed books: used so copies and availability on the shelves stay current. */
     liveBooks?: ShelfBook[];
     onSelectAuthor?: (name: string) => void;
+    borrow?: BorrowControls;
 };
 
 // The curated shelves on the catalogue page: lists, an author and a category, as set in config/catalogueSections.
-const CatalogueSections = ({ liveBooks, onSelectAuthor }: CatalogueSectionsProps) => {
+const CatalogueSections = ({ liveBooks, onSelectAuthor, borrow }: CatalogueSectionsProps) => {
     const [sections, setSections] = useState<LoadedSection[]>([]);
 
     useEffect(() => {
@@ -70,7 +71,7 @@ const CatalogueSections = ({ liveBooks, onSelectAuthor }: CatalogueSectionsProps
         <>
             {sections.map(section => section.authors
                 ? <AuthorShelf key={section.id} title={section.title} authors={section.authors} onSelect={author => onSelectAuthor?.(author.name)} />
-                : <BookShelf key={section.id} title={section.title} books={(section.books ?? []).map(book => live.get(book.id) ?? book)} />)}
+                : <BookShelf key={section.id} title={section.title} variant={section.variant} borrow={borrow} books={(section.books ?? []).map(book => live.get(book.id) ?? book)} />)}
         </>
     );
 };

@@ -1,0 +1,263 @@
+/* Admin pages for authors and curated lists. */
+.curation-panel + .curation-panel {
+  margin-top: 1.5rem;
+}
+
+.curation-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 1rem 0 0.25rem;
+}
+
+.curation-form label {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  color: #6f6b62;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.curation-form label.curation-field-narrow {
+  flex: 0 1 150px;
+}
+
+.curation-form input,
+.curation-form select,
+.curation-inline-input,
+.curation-search {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 0.75rem;
+  border: 1px solid #d8d1c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2e2b28;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.curation-form input:focus-visible,
+.curation-form select:focus-visible,
+.curation-inline-input:focus-visible,
+.curation-search:focus-visible {
+  outline: 3px solid #123f38;
+  outline-offset: 1px;
+}
+
+.curation-hint {
+  margin: 0.4rem 0 0;
+  color: #777267;
+  font-size: 0.8rem;
+}
+
+.curation-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 1rem;
+  border: 1px solid #d8d1c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #123f38;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.curation-button:hover:not(:disabled) {
+  background: #f3f0e7;
+}
+
+.curation-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.curation-button:focus-visible {
+  outline: 3px solid #123f38;
+  outline-offset: 2px;
+}
+
+.curation-button-primary {
+  border-color: #123f38;
+  background: #123f38;
+  color: #ffffff;
+}
+
+.curation-button-primary:hover:not(:disabled) {
+  background: #1b574d;
+}
+
+.curation-button-danger {
+  border-color: #e8c4bb;
+  color: #a33a25;
+}
+
+.curation-button-small {
+  height: 32px;
+  padding: 0 0.7rem;
+  font-size: 0.8rem;
+}
+
+.curation-button-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.curation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.curation-table-wrap {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.curation-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.curation-key {
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: #f1eee4;
+  color: #5d584e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.curation-message {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #e6f4ea;
+  color: #14613a;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.curation-message-error {
+  background: #fbeae6;
+  color: #9a3a26;
+}
+
+.curation-empty {
+  margin-top: 1rem;
+  color: #777267;
+  font-size: 0.9rem;
+}
+
+/* The list editor: what is on the list (left) and what can be added (right). */
+.curation-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.curation-editor h3 {
+  margin: 0 0 0.6rem;
+  color: #2e2b28;
+  font-size: 0.95rem;
+}
+
+.curation-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 460px;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.curation-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #ece8dc;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.curation-item-position {
+  flex: none;
+  width: 1.6rem;
+  color: #777267;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.curation-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.curation-item-text strong,
+.curation-item-text small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.curation-item-text strong {
+  color: #2e2b28;
+  font-size: 0.88rem;
+}
+
+.curation-item-text small {
+  color: #777267;
+  font-size: 0.78rem;
+}
+
+.curation-editor-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ece8dc;
+}
+
+.curation-editor-footer span {
+  margin-right: auto;
+  color: #777267;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 860px) {
+  .curation-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The shared users table decorates its second and fourth columns; these tables have plain cells. */
+.curation-table-wrap .admin-users-table td::after {
+  content: none;
+}
+
+.curation-table-wrap .admin-users-table td {
+  font-weight: 400;
+}
