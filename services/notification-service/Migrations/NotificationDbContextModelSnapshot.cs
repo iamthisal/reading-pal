@@ -19,6 +19,27 @@ namespace NotificationService.Migrations
                 .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("NotificationService.Models.DeletedBook", b =>
+                {
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DeletedAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.HasKey("BookId");
+
+                    b.ToTable("DeletedBooks");
+                });
+
             modelBuilder.Entity("NotificationService.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
