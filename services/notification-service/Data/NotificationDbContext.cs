@@ -8,6 +8,7 @@ public sealed class NotificationDbContext(DbContextOptions<NotificationDbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationRead> NotificationReads => Set<NotificationRead>();
     public DbSet<ReservationState> ReservationStates => Set<ReservationState>();
+    public DbSet<DeletedBook> DeletedBooks => Set<DeletedBook>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,5 +33,10 @@ public sealed class NotificationDbContext(DbContextOptions<NotificationDbContext
         state.Property(s => s.ReservationId).ValueGeneratedNever();
         state.Property(s => s.Status).HasMaxLength(16);
         state.HasIndex(s => new { s.BookId, s.Status });
+
+        var deleted = modelBuilder.Entity<DeletedBook>();
+        deleted.HasKey(d => d.BookId);
+        deleted.Property(d => d.BookId).ValueGeneratedNever();
+        deleted.Property(d => d.Title).HasMaxLength(200);
     }
 }

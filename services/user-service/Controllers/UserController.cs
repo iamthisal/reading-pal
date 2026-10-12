@@ -40,7 +40,8 @@ namespace UserService.Controllers
             {
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email
+                Email = user.Email,
+                IsValidated = user.IsValidated
             };
 
             return Ok(response);

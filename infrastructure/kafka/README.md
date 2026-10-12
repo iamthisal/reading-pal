@@ -50,7 +50,7 @@ The root Compose file still contains the older Kafka/ZooKeeper services. They ar
 | Docker-network bootstrap address | `kafka:19092` |
 | Kafka UI | <http://localhost:8085> |
 | Topic defaults | One partition, replication factor one |
-| Automatic topic creation | Disabled; create topics explicitly |
+| Automatic topic creation | Disabled; the `kafka-init` service creates the required topics on startup |
 | Message retention | 24 hours; old log segments become eligible for deletion |
 | Broker Java heap | 256 MB initial / 512 MB maximum; total process memory can be higher |
 
@@ -98,22 +98,29 @@ To start only the broker, omit the UI profile:
 docker compose -f infrastructure/kafka/docker-compose.yml up -d --wait --wait-timeout 180
 ```
 
-### 3. Create or verify Inventory topics
+### 3. Topics are created automatically
 
-Topic creation must be repeated on a fresh broker or after deleting its data volume. Topic data is not stored in Git.
+The broker has automatic topic creation switched off, so the `kafka-init` service in this compose file creates the
+topics instead. It runs [create-topics.sh](create-topics.sh) every time the stack starts, waits for the broker
+(retrying for about two and a half minutes), creates any of the ten topics that are missing, and exits. Topics that
+already exist, and their messages, are left untouched.
+
+| Written by | Topics |
+| --- | --- |
+| Inventory | `book-created`, `book-updated`, `book-deleted` |
+| Lending | `reservation-created`, `reservation-accepted`, `reservation-cancelled`, `book-returned`, `fine-recorded`, `book-due-soon`, `reservation-snapshot` |
+
+To check that it worked, or to see why it did not:
 
 ```powershell
-$inventoryTopics = @("book-created", "book-updated", "book-deleted")
-
-foreach ($topic in $inventoryTopics) {
-    docker compose -f infrastructure/kafka/docker-compose.yml exec -T kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --create --if-not-exists --topic $topic --partitions 1 --replication-factor 1
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not create topic: $topic"
-    }
-}
-
+docker compose -f infrastructure/kafka/docker-compose.yml logs kafka-init
 docker compose -f infrastructure/kafka/docker-compose.yml exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:19092 --list
 ```
+
+A failure is logged as a line starting `kafka-init: ERROR` that names the topic, and the container exits with a
+non-zero code. To run it again by hand: `docker compose -f infrastructure/kafka/docker-compose.yml run --rm kafka-init`.
+
+When a new topic is added to a service, add it to `create-topics.sh` as well.
 
 | Inventory operation | Expected topic |
 | --- | --- |

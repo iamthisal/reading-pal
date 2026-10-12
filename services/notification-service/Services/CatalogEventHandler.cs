@@ -45,6 +45,8 @@ public sealed class CatalogEventHandler(NotificationDbContext db, ILogger<Catalo
         if (evt.EventType == CatalogEventTypes.BookCreated) wanted.Add(NotificationFactory.CreateNewBookAnnouncement(evt));
         if (evt.EventType == CatalogEventTypes.BookDeleted)
         {
+            // Remember the deletion first: a reservation for this book may still be on its way here.
+            await RememberDeletionAsync(evt, cancellationToken);
             var affected = await db.ReservationStates.AsNoTracking()
                 .Where(s => s.BookId == evt.BookId && (s.Status == ReservationStatuses.Pending || s.Status == ReservationStatuses.Borrowed))
                 .Select(s => s.UserId).Distinct().ToListAsync(cancellationToken);
@@ -75,6 +77,26 @@ public sealed class CatalogEventHandler(NotificationDbContext db, ILogger<Catalo
                 .Select(n => new { n.Audience, n.UserId }).ToListAsync(cancellationToken);
             if (wanted.All(w => nowStored.Any(s => s.Audience == w.Audience && s.UserId == w.UserId))) return HandleOutcome.Duplicate;
             throw;
+        }
+    }
+
+    private async Task RememberDeletionAsync(CatalogEvent evt, CancellationToken cancellationToken)
+    {
+        if (await db.DeletedBooks.AsNoTracking().AnyAsync(d => d.BookId == evt.BookId, cancellationToken)) return;
+
+        db.DeletedBooks.Add(new DeletedBook
+        {
+            BookId = evt.BookId, EventId = evt.EventId, Title = NotificationFactory.CatalogTitle(evt), DeletedAtUtc = DateTime.UtcNow
+        });
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // A redelivery of the same event recorded it first; anything else is a real failure.
+            db.ChangeTracker.Clear();
+            if (!await db.DeletedBooks.AsNoTracking().AnyAsync(d => d.BookId == evt.BookId, cancellationToken)) throw;
         }
     }
 }

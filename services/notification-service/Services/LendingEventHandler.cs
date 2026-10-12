@@ -42,6 +42,7 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
         }
 
         await TrackReservationStateAsync(evt, cancellationToken);
+        await NotifyIfBookAlreadyDeletedAsync(evt, cancellationToken);
         // A snapshot only updates reservation state; it notifies no one.
         if (evt.EventType == LendingEventTypes.ReservationSnapshot) return HandleOutcome.Skipped;
 
@@ -140,6 +141,39 @@ public sealed class LendingEventHandler(NotificationDbContext db, IBookTitleLook
                 if (!await db.ReservationStates.AsNoTracking().AnyAsync(s => s.ReservationId == evt.ReservationId, cancellationToken))
                     throw;
             }
+        }
+    }
+
+    /// <summary>
+    /// Covers the case where the book was deleted before this reservation's events arrived: the deletion
+    /// found no reservation to notify, so the notice is sent now. It reuses the deletion's event ID, so a
+    /// customer who was already told (or is told again by a redelivery) never gets a second one.
+    /// </summary>
+    private async Task NotifyIfBookAlreadyDeletedAsync(LendingEvent evt, CancellationToken cancellationToken)
+    {
+        if (evt.ReservationId <= 0) return;
+        var deleted = await db.DeletedBooks.AsNoTracking().SingleOrDefaultAsync(d => d.BookId == evt.BookId, cancellationToken);
+        if (deleted == null) return;
+
+        // Only a reservation that is still open connects the customer to the book.
+        var state = await db.ReservationStates.AsNoTracking().SingleOrDefaultAsync(s => s.ReservationId == evt.ReservationId, cancellationToken);
+        if (state == null || (state.Status != ReservationStatuses.Pending && state.Status != ReservationStatuses.Borrowed)) return;
+
+        bool AlreadyTold() => db.Notifications.AsNoTracking()
+            .Any(n => n.EventId == deleted.EventId && n.Audience == NotificationAudiences.User && n.UserId == state.UserId);
+        if (AlreadyTold()) return;
+
+        db.Notifications.Add(NotificationFactory.CreateBookDeletedNotice(deleted.EventId, deleted.BookId, deleted.Title, state.UserId));
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Book {BookId} was deleted before reservation {ReservationId} was known; notified user {UserId} now.",
+                deleted.BookId, evt.ReservationId, state.UserId);
+        }
+        catch (DbUpdateException)
+        {
+            db.ChangeTracker.Clear();
+            if (!AlreadyTold()) throw;
         }
     }
 

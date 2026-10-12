@@ -14,10 +14,13 @@ public class ReservationsControllerReserveBookTests
         FakeHttpMessageHandler handler,
         string? userId = "20",
         string? inventoryBaseUrl = "http://inventory-service.test",
-        LendingService.Data.LendingDbContext? context = null)
+        LendingService.Data.LendingDbContext? context = null,
+        Func<HttpResponseMessage>? profile = null)
     {
         context ??= ControllerTestFactory.CreateDbContext();
         var config = ControllerTestFactory.CreateConfiguration(inventoryServiceBaseUrl: inventoryBaseUrl);
+        // Unless a test says otherwise, the User Service confirms the member is approved.
+        handler = handler.AnsweringProfileWith(profile ?? (() => JsonResponse.Ok(new { IsValidated = true })));
         var controller = new ReservationsController(context, new FakeHttpClientFactory(handler), config);
 
         var claims = new List<Claim>();
@@ -149,5 +152,123 @@ public class ReservationsControllerReserveBookTests
 
         Assert.Empty(context.Reservations);
         Assert.Empty(context.ReservationEvents);
+    }
+
+    // ---- Issue #92: a revoked (or never approved) member cannot reserve, whatever their token says ----
+
+    private static FakeHttpMessageHandler InventoryWithCopies() => new(_ => JsonResponse.Ok(new { AvailableCopies = 3 }));
+
+    [Fact]
+    public async Task ReserveBook_WhenMemberIsNoLongerApproved_IsForbiddenAndSavesNothing()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(InventoryWithCopies(), context: context,
+            profile: () => JsonResponse.Ok(new { IsValidated = false }));
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        var forbidden = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(403, forbidden.StatusCode);
+        Assert.Empty(context.Reservations);
+        Assert.Empty(context.ReservationEvents);
+    }
+
+    [Fact]
+    public async Task ReserveBook_WhenUserServiceDoesNotKnowTheMember_IsForbidden()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(InventoryWithCopies(), context: context, profile: () => JsonResponse.NotFound());
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.Equal(403, Assert.IsType<ObjectResult>(result.Result).StatusCode);
+        Assert.Empty(context.Reservations);
+    }
+
+    [Fact]
+    public async Task ReserveBook_WhenUserServiceIsUnreachable_Returns503AndSavesNothing()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(InventoryWithCopies(), context: context,
+            profile: () => throw new HttpRequestException("Simulated network failure."));
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.Equal(503, Assert.IsType<ObjectResult>(result.Result).StatusCode);
+        Assert.Empty(context.Reservations);
+    }
+
+    [Fact]
+    public async Task ReserveBook_WhenUserServiceDoesNotReportTheStatus_StillReserves()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(InventoryWithCopies(), context: context,
+            profile: () => JsonResponse.Ok(new { FirstName = "Ada", LastName = "Lovelace", Email = "ada@example.com" }));
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.IsType<CreatedAtActionResult>(result.Result);
+    }
+
+    // ---- Issue #91: one pending reservation per member and book ----
+
+    [Theory]
+    [InlineData("Pending")]
+    [InlineData("Accepting")]
+    public async Task ReserveBook_WhenTheMemberAlreadyHasAnOpenRequestForTheBook_ReturnsConflict(string existingStatus)
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        context.Reservations.Add(new LendingService.Models.Reservation { UserId = 20, BookId = 42, Status = existingStatus, ReservationDate = DateTime.UtcNow });
+        await context.SaveChangesAsync();
+        var controller = CreateController(InventoryWithCopies(), context: context);
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.IsType<ConflictObjectResult>(result.Result);
+        Assert.Single(context.Reservations);
+        Assert.Empty(context.ReservationEvents);
+    }
+
+    [Fact]
+    public async Task ReserveBook_Twice_CreatesOneReservation()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        var controller = CreateController(InventoryWithCopies(), context: context);
+
+        var first = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+        var second = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.IsType<CreatedAtActionResult>(first.Result);
+        Assert.IsType<ConflictObjectResult>(second.Result);
+        Assert.Single(context.Reservations);
+    }
+
+    [Theory]
+    [InlineData("Cancelled")]
+    [InlineData("Returned")]
+    [InlineData("Borrowed")]
+    public async Task ReserveBook_AfterAnEarlierRequestIsNoLongerPending_IsAllowed(string earlierStatus)
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        context.Reservations.Add(new LendingService.Models.Reservation { UserId = 20, BookId = 42, Status = earlierStatus, ReservationDate = DateTime.UtcNow });
+        await context.SaveChangesAsync();
+        var controller = CreateController(InventoryWithCopies(), context: context);
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.IsType<CreatedAtActionResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task ReserveBook_ForABookAnotherMemberHasPending_IsAllowed()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        context.Reservations.Add(new LendingService.Models.Reservation { UserId = 99, BookId = 42, Status = "Pending", ReservationDate = DateTime.UtcNow });
+        await context.SaveChangesAsync();
+        var controller = CreateController(InventoryWithCopies(), context: context);
+
+        var result = await controller.ReserveBook(new ReserveBookRequest { BookId = 42 });
+
+        Assert.IsType<CreatedAtActionResult>(result.Result);
     }
 }

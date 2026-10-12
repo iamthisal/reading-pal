@@ -363,6 +363,24 @@ namespace UserService.Tests
             Assert.Equal("dahamya12@gmail.com", unchangedUser.Email);
         }
 
+        // The Lending Service asks for this before accepting a reservation (issue #92), so it must come
+        // from the database as it stands now, not from the sign-in token.
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void GetProfile_ReportsWhetherTheAccountIsCurrentlyApproved(bool approved)
+        {
+            using var context = GetDbContext();
+            var user = CreateTestUser(context);
+            user.IsValidated = approved;
+            context.SaveChanges();
+
+            var result = CreateController(context, user.Id).GetProfile();
+
+            var okResult = Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(result);
+            Assert.Equal(approved, Assert.IsType<UserProfileResponse>(okResult.Value).IsValidated);
+        }
+
         // TC-PROFILE-009
         [Fact]
         public void GetProfile_WithoutJwt_ReturnsUnauthorized()

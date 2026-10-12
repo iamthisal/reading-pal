@@ -100,16 +100,22 @@ public static class NotificationFactory
     /// Tells a customer connected to a book that it was removed. Deliberately says nothing about their
     /// reservation or fine, which the deletion does not change.
     /// </summary>
-    public static Notification CreateBookDeletedNotice(CatalogEvent evt, int userId)
+    public static Notification CreateBookDeletedNotice(CatalogEvent evt, int userId) =>
+        CreateBookDeletedNotice(evt.EventId, evt.BookId, CatalogTitle(evt), userId);
+
+    /// <summary>
+    /// The same notice, built from what was remembered about the deletion. Used when a reservation for the
+    /// book only becomes known after the book-deleted event has already been handled.
+    /// </summary>
+    public static Notification CreateBookDeletedNotice(Guid deletionEventId, int bookId, string title, int userId)
     {
-        var title = CatalogTitle(evt);
         return new Notification
         {
-            EventId = evt.EventId,
+            EventId = deletionEventId,
             Audience = NotificationAudiences.User,
             UserId = userId,
             Type = NotificationTypes.BookDeleted,
-            BookId = evt.BookId,
+            BookId = bookId,
             BookTitle = title,
             Message = $"'{title}', a book on your reservations or borrowings, has been removed from the library catalogue.",
             CreatedAtUtc = DateTime.UtcNow
@@ -148,7 +154,7 @@ public static class NotificationFactory
         };
     }
 
-    private static string CatalogTitle(CatalogEvent evt) =>
+    internal static string CatalogTitle(CatalogEvent evt) =>
         string.IsNullOrWhiteSpace(evt.Book?.Title) ? FallbackTitle(evt.BookId) : evt.Book.Title.Trim();
 
     public static string FormatRupees(decimal amount) => $"Rs. {amount.ToString("N2", CultureInfo.InvariantCulture)}";
