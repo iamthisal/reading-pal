@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCheck, RefreshCw } from 'lucide-react';
@@ -48,12 +48,28 @@ const NotificationList = () => {
         }
     }, [baseUrl, token]);
 
-    // Reads made from the bell show up here too.
+    // How many pages are on screen, readable from the event handler below without re-subscribing.
+    const pageRef = useRef(1);
+    useEffect(() => { pageRef.current = page; }, [page]);
+
+    // Re-reads the pages already on screen, quietly: no loading state, and the reader keeps their place.
+    const refreshLoaded = useCallback(async () => {
+        try {
+            const pages = await Promise.all(Array.from({ length: pageRef.current }, (_, index) => fetchPage(index + 1)));
+            const seen = new Set<number>();
+            setItems(pages.flat().filter(item => !seen.has(item.id) && seen.add(item.id)));
+            setHasMore(pages[pages.length - 1].length === PAGE_SIZE);
+        } catch {
+            // Keep what is shown; the next change or a manual refresh will catch up.
+        }
+    }, [fetchPage]);
+
+    // Reads made from the bell show up here too: the total and each row's Read/Unread status.
     useEffect(() => {
-        const onChanged = () => { void loadUnreadTotal(); };
+        const onChanged = () => { void loadUnreadTotal(); void refreshLoaded(); };
         window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged);
         return () => window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged);
-    }, [loadUnreadTotal]);
+    }, [loadUnreadTotal, refreshLoaded]);
 
     const load = useCallback(async () => {
         setLoading(true);
