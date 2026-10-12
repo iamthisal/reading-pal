@@ -323,24 +323,7 @@ namespace InventoryService.Controllers
             });
         }
 
-        private static BookResponse ToBookResponse(Book book)
-        {
-            return new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ISBN = book.ISBN,
-                Genre = book.Genre,
-                CoverImageUrl = book.CoverImageUrl,
-                TotalCopies = book.TotalCopies,
-                AvailableCopies = book.AvailableCopies,
-                IsAvailable = book.AvailableCopies > 0,
-                AvailabilityStatus = book.AvailableCopies > 0 ? "Available" : "Not available now",
-                CreatedAt = book.CreatedAt,
-                UpdatedAt = book.UpdatedAt
-            };
-        }
+        private static BookResponse ToBookResponse(Book book) => BookResponse.FromBook(book);
 
         private static string? NormalizeOptionalUrl(string? url)
         {

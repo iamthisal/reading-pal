@@ -1,4 +1,5 @@
 using System;
+using InventoryService.Models;
 
 namespace InventoryService.DTOs
 {
@@ -16,5 +17,24 @@ namespace InventoryService.DTOs
         public string AvailabilityStatus { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        public static BookResponse FromBook(Book book)
+        {
+            return new BookResponse
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                ISBN = book.ISBN,
+                Genre = book.Genre,
+                CoverImageUrl = book.CoverImageUrl,
+                TotalCopies = book.TotalCopies,
+                AvailableCopies = book.AvailableCopies,
+                IsAvailable = book.AvailableCopies > 0,
+                AvailabilityStatus = book.AvailableCopies > 0 ? "Available" : "Not available now",
+                CreatedAt = book.CreatedAt,
+                UpdatedAt = book.UpdatedAt
+            };
+        }
     }
 }
