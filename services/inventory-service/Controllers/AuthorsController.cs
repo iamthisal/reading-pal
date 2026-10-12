@@ -39,6 +39,41 @@ namespace InventoryService.Controllers
             return Ok(ToAuthorResponse(author, await BookCountsAsync()));
         }
 
+        /// <summary>
+        /// An author and their books, looked up by name. Books store the author as text, so this also works
+        /// for an author who has books in the catalogue but no author entry yet (Id is then null).
+        /// </summary>
+        [HttpGet("profile")]
+        public async Task<ActionResult<AuthorProfileResponse>> GetProfile([FromQuery] string? name)
+        {
+            var wanted = (name ?? string.Empty).Trim().ToLower();
+            if (wanted.Length == 0)
+            {
+                return BadRequest(new { message = "An author name is required." });
+            }
+
+            var author = await _context.Authors.FirstOrDefaultAsync(a => a.Name.ToLower() == wanted);
+            var books = await _context.Books
+                .Where(book => book.Author.ToLower() == wanted)
+                .OrderByDescending(book => book.CreatedAt)
+                .ThenByDescending(book => book.Id)
+                .ToListAsync();
+            if (author == null && books.Count == 0)
+            {
+                return NotFound(new { message = $"No author named '{name!.Trim()}' was found." });
+            }
+
+            return Ok(new AuthorProfileResponse
+            {
+                Id = author?.Id,
+                Name = author?.Name ?? books[0].Author.Trim(),
+                Description = author?.Description,
+                ImageUrl = author?.ImageUrl,
+                BookCount = books.Count,
+                Books = books.Select(BookResponse.FromBook).ToList()
+            });
+        }
+
         /// <summary>The books carrying this author's name, newest first.</summary>
         [HttpGet("{id:int}/books")]
         public async Task<ActionResult<IEnumerable<BookResponse>>> GetBooks(int id, [FromQuery] int? limit = null)
@@ -78,7 +113,14 @@ namespace InventoryService.Controllers
             }
 
             var now = DateTime.UtcNow;
-            var author = new Author { Name = name, CreatedAt = now, UpdatedAt = now };
+            var author = new Author
+            {
+                Name = name,
+                Description = Clean(request.Description),
+                ImageUrl = Clean(request.ImageUrl),
+                CreatedAt = now,
+                UpdatedAt = now
+            };
             _context.Authors.Add(author);
             await _context.SaveChangesAsync();
 
@@ -109,6 +151,9 @@ namespace InventoryService.Controllers
             // Books are matched to an author by name, so a rename has to carry over to them.
             var oldName = author.Name;
             author.Name = name;
+            // Leaving a field out keeps what is there; sending it empty clears it.
+            if (request.Description != null) author.Description = Clean(request.Description);
+            if (request.ImageUrl != null) author.ImageUrl = Clean(request.ImageUrl);
             author.UpdatedAt = DateTime.UtcNow;
 
             var booksByAuthor = await _context.Books
@@ -140,6 +185,8 @@ namespace InventoryService.Controllers
             return NoContent();
         }
 
+        private static string? Clean(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+
         private async Task<Dictionary<string, int>> BookCountsAsync()
         {
             var names = await _context.Books.Select(book => book.Author).ToListAsync();
@@ -154,6 +201,8 @@ namespace InventoryService.Controllers
             {
                 Id = author.Id,
                 Name = author.Name,
+                Description = author.Description,
+                ImageUrl = author.ImageUrl,
                 BookCount = bookCounts.TryGetValue(author.Name.Trim().ToLowerInvariant(), out var count) ? count : 0,
                 CreatedAt = author.CreatedAt,
                 UpdatedAt = author.UpdatedAt

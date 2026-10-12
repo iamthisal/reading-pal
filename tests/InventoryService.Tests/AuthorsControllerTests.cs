@@ -95,6 +95,80 @@ namespace InventoryService.Tests
         }
 
         [Fact]
+        public async Task GetProfile_Returns_The_Author_And_Their_Books_Newest_First()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+            var author = new Author { Name = "Jane Austen" };
+            context.Authors.Add(author);
+            context.Books.AddRange(
+                CatalogueTestData.Book("Older", "Jane Austen", createdAt: new System.DateTime(2026, 1, 1)),
+                CatalogueTestData.Book("Newer", "jane austen", createdAt: new System.DateTime(2026, 2, 1)),
+                CatalogueTestData.Book("Other", "Someone Else"));
+            await context.SaveChangesAsync();
+
+            var result = await new AuthorsController(context).GetProfile("  JANE AUSTEN ");
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var profile = Assert.IsType<AuthorProfileResponse>(ok.Value);
+            Assert.Equal(author.Id, profile.Id);
+            Assert.Equal("Jane Austen", profile.Name);
+            Assert.Equal(2, profile.BookCount);
+            Assert.Equal(new[] { "Newer", "Older" }, profile.Books.Select(b => b.Title));
+        }
+
+        [Fact]
+        public async Task GetProfile_Works_For_An_Author_With_Books_But_No_Author_Entry()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+            context.Books.Add(CatalogueTestData.Book("Emma", "Jane Austen"));
+            await context.SaveChangesAsync();
+
+            var result = await new AuthorsController(context).GetProfile("jane austen");
+
+            var profile = Assert.IsType<AuthorProfileResponse>(Assert.IsType<OkObjectResult>(result.Result).Value);
+            Assert.Null(profile.Id);
+            Assert.Equal("Jane Austen", profile.Name);
+            Assert.Equal("Emma", Assert.Single(profile.Books).Title);
+        }
+
+        [Fact]
+        public async Task GetProfile_For_An_Author_Entry_Without_Books_Returns_An_Empty_List()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+            context.Authors.Add(new Author { Name = "New Writer" });
+            await context.SaveChangesAsync();
+
+            var result = await new AuthorsController(context).GetProfile("New Writer");
+
+            var profile = Assert.IsType<AuthorProfileResponse>(Assert.IsType<OkObjectResult>(result.Result).Value);
+            Assert.Equal(0, profile.BookCount);
+            Assert.Empty(profile.Books);
+        }
+
+        [Fact]
+        public async Task GetProfile_Unknown_Name_Returns_NotFound()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+
+            Assert.IsType<NotFoundObjectResult>((await new AuthorsController(context).GetProfile("Nobody")).Result);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("   ")]
+        public async Task GetProfile_Without_A_Name_Returns_BadRequest(string? name)
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+
+            Assert.IsType<BadRequestObjectResult>((await new AuthorsController(context).GetProfile(name)).Result);
+        }
+
+        [Fact]
         public async Task Admin_Can_Create_Author_With_Trimmed_Name()
         {
             using var factory = new SqliteInventoryDbContextFactory();
@@ -106,6 +180,72 @@ namespace InventoryService.Tests
             var response = Assert.IsType<AuthorResponse>(created.Value);
             Assert.Equal("Jane Austen", response.Name);
             Assert.NotEqual(0, response.Id);
+        }
+
+        [Fact]
+        public async Task Create_Stores_Description_And_Image()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+
+            var result = await new AuthorsController(context).Create(new CreateAuthorRequest
+            {
+                Name = "Jane Austen", Description = "  English novelist.  ", ImageUrl = " https://example.com/austen.jpg "
+            });
+
+            var response = Assert.IsType<AuthorResponse>(Assert.IsType<CreatedAtActionResult>(result.Result).Value);
+            Assert.Equal("English novelist.", response.Description);
+            Assert.Equal("https://example.com/austen.jpg", response.ImageUrl);
+        }
+
+        [Fact]
+        public async Task Update_Keeps_Omitted_Details_And_Clears_Empty_Ones()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+            var author = new Author { Name = "Jane Austen", Description = "English novelist.", ImageUrl = "https://example.com/austen.jpg" };
+            context.Authors.Add(author);
+            await context.SaveChangesAsync();
+            var controller = new AuthorsController(context);
+
+            await controller.Update(author.Id, new UpdateAuthorRequest { Name = "Jane Austen" });
+            Assert.Equal("English novelist.", author.Description);
+            Assert.Equal("https://example.com/austen.jpg", author.ImageUrl);
+
+            await controller.Update(author.Id, new UpdateAuthorRequest { Name = "Jane Austen", Description = "New text.", ImageUrl = "  " });
+            Assert.Equal("New text.", author.Description);
+            Assert.Null(author.ImageUrl);
+        }
+
+        [Theory]
+        [InlineData(null, true)]
+        [InlineData("", true)]
+        [InlineData("   ", true)]
+        [InlineData("https://example.com/a.jpg", true)]
+        [InlineData("not a link", false)]
+        [InlineData("ftp://example.com/a.jpg", false)]
+        public void Update_Request_Accepts_An_Empty_Image_Url_But_Not_A_Malformed_One(string? imageUrl, bool expectedValid)
+        {
+            var request = new UpdateAuthorRequest { Name = "Jane Austen", ImageUrl = imageUrl };
+
+            var valid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(
+                request, new System.ComponentModel.DataAnnotations.ValidationContext(request), null, validateAllProperties: true);
+
+            Assert.Equal(expectedValid, valid);
+        }
+
+        [Fact]
+        public async Task GetProfile_Includes_Description_And_Image()
+        {
+            using var factory = new SqliteInventoryDbContextFactory();
+            using var context = factory.CreateContext();
+            context.Authors.Add(new Author { Name = "Jane Austen", Description = "English novelist.", ImageUrl = "https://example.com/austen.jpg" });
+            await context.SaveChangesAsync();
+
+            var profile = Assert.IsType<AuthorProfileResponse>(Assert.IsType<OkObjectResult>((await new AuthorsController(context).GetProfile("jane austen")).Result).Value);
+
+            Assert.Equal("English novelist.", profile.Description);
+            Assert.Equal("https://example.com/austen.jpg", profile.ImageUrl);
         }
 
         [Fact]
@@ -219,6 +359,7 @@ namespace InventoryService.Tests
         [InlineData(nameof(AuthorsController.GetAll))]
         [InlineData(nameof(AuthorsController.GetById))]
         [InlineData(nameof(AuthorsController.GetBooks))]
+        [InlineData(nameof(AuthorsController.GetProfile))]
         public void Read_Endpoints_Are_Public(string method)
         {
             Assert.Null(typeof(AuthorsController).GetMethod(method)!.GetCustomAttribute<AuthorizeAttribute>());
