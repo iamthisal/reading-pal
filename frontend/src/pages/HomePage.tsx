@@ -13,7 +13,7 @@ import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import PosterSlider from '../components/PosterSlider/PosterSlider';
 import type { Poster } from '../components/PosterSlider/PosterSlider';
-import RecommendedBooks from '../components/RecommendedBooks/RecommendedBooks';
+import CatalogueSections from '../components/CatalogueSections/CatalogueSections';
 
 interface Book {
     id: number;
@@ -173,11 +173,6 @@ const HomePage = () => {
         return books.length >= 5 ? books : [...books, ...fillers].slice(0, 8);
     }, [books]);
 
-    // Six picks for the shelf under the posters: books that can be reserved now come first.
-    const recommendedForYou = useMemo(() => [...displayBooks]
-        .sort((a, b) => Number(b.availableCopies > 0) - Number(a.availableCopies > 0))
-        .slice(0, 6), [displayBooks]);
-
     const genreOptions = useMemo(() => {
         const counts = new Map<string, number>();
         displayBooks.forEach(book => {
@@ -218,6 +213,12 @@ const HomePage = () => {
 
     const markCoverFailed = (bookId: number) => {
         setFailedCoverIds(prev => new Set(prev).add(bookId));
+    };
+
+    // Picking an author on a shelf filters the catalogue to their books.
+    const showAuthor = (name: string) => {
+        setSelectedAuthor(authors.find(author => author.trim().toLowerCase() === name.trim().toLowerCase()) ?? name);
+        document.getElementById('recommendations')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
     const showSearchResults = () => {
@@ -319,7 +320,7 @@ const HomePage = () => {
 
             <main id="discover" className="app-main discover-main">
                 <PosterSlider posters={posters} label="Library highlights" />
-                <RecommendedBooks books={recommendedForYou} />
+                <CatalogueSections liveBooks={books} onSelectAuthor={showAuthor} />
                 <section className="discover-hero">
                     <div className="discover-user-strip">
                         <button type="button" className="discover-icon-button" title="Refresh books" aria-label="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>

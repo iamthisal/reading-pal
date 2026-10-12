@@ -1,11 +1,11 @@
-/* Recommended books: a shelf of cards, three to a page, moved with the arrows in the header. */
-.recommended {
-  --recommended-gap: 1rem;
-  container: recommended / inline-size;
+/* Book shelf: a titled row of cards, a page at a time, moved with the arrows in the header. */
+.shelf {
+  --shelf-gap: 1rem;
+  container: shelf / inline-size;
   margin-bottom: 1.5rem;
 }
 
-.recommended-header {
+.shelf-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -13,19 +13,19 @@
   margin-bottom: 0.9rem;
 }
 
-.recommended-header h2 {
+.shelf-header h2 {
   margin: 0;
   color: #3f4b46;
   font-size: 1.25rem;
   font-weight: 700;
 }
 
-.recommended-arrows {
+.shelf-arrows {
   display: flex;
   gap: 0.4rem;
 }
 
-.recommended-arrows button {
+.shelf-arrows button {
   display: grid;
   place-items: center;
   width: 36px;
@@ -39,36 +39,36 @@
   transition: background 0.15s ease;
 }
 
-.recommended-arrows button:hover:not(:disabled) {
+.shelf-arrows button:hover:not(:disabled) {
   background: #e6efe9;
 }
 
-.recommended-arrows button:disabled {
+.shelf-arrows button:disabled {
   color: #b9bfbb;
   cursor: default;
 }
 
-.recommended-arrows button:focus-visible {
+.shelf-arrows button:focus-visible {
   outline: 3px solid #1f4d44;
   outline-offset: 2px;
 }
 
-.recommended-track {
-  --recommended-per-page: 3;
+.shelf-track {
+  --shelf-per-page: 3;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - (var(--recommended-per-page) - 1) * var(--recommended-gap)) / var(--recommended-per-page));
-  gap: var(--recommended-gap);
+  grid-auto-columns: calc((100% - (var(--shelf-per-page) - 1) * var(--shelf-gap)) / var(--shelf-per-page));
+  gap: var(--shelf-gap);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 
-.recommended-track::-webkit-scrollbar {
+.shelf-track::-webkit-scrollbar {
   display: none;
 }
 
-.recommended-card {
+.shelf-card {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -81,7 +81,7 @@
   scroll-snap-align: start;
 }
 
-.recommended-cover {
+.shelf-cover {
   flex: none;
   width: 84px;
   aspect-ratio: 2 / 3;
@@ -91,7 +91,7 @@
   box-shadow: 0 8px 16px rgba(49, 44, 33, 0.14);
 }
 
-.recommended-cover-fallback {
+.shelf-cover-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,7 +106,7 @@
   overflow: hidden;
 }
 
-.recommended-cover-fallback span {
+.shelf-cover-fallback span {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
@@ -114,11 +114,11 @@
   overflow-wrap: anywhere;
 }
 
-.recommended-info {
+.shelf-info {
   min-width: 0;
 }
 
-.recommended-info h3 {
+.shelf-info h3 {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -130,7 +130,7 @@
   line-height: 1.3;
 }
 
-.recommended-byline {
+.shelf-byline {
   margin: 0.3rem 0 0.6rem;
   overflow: hidden;
   color: #7b847f;
@@ -139,7 +139,7 @@
   white-space: nowrap;
 }
 
-.recommended-status {
+.shelf-status {
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
@@ -150,12 +150,12 @@
   white-space: nowrap;
 }
 
-.recommended-status-out {
+.shelf-status-out {
   background: #f6e7e1;
   color: #9a4630;
 }
 
-.recommended-copies {
+.shelf-copies {
   margin: 0.5rem 0 0;
   color: #7b847f;
   font-size: 0.8rem;
@@ -163,18 +163,67 @@
 
 /* Cards per page follow the width of the shelf itself, not the window, so the side panel is accounted for.
    A very wide shelf shows all six at once. */
-@container recommended (max-width: 900px) {
-  .recommended-track { --recommended-per-page: 2; }
+@container shelf (max-width: 900px) {
+  .shelf-track { --shelf-per-page: 2; }
 }
 
-@container recommended (max-width: 560px) {
-  .recommended-track { --recommended-per-page: 1; }
+@container shelf (max-width: 560px) {
+  .shelf-track { --shelf-per-page: 1; }
 }
 
-@container recommended (min-width: 1500px) {
-  .recommended-track { --recommended-per-page: 4; }
+@container shelf (min-width: 1500px) {
+  .shelf-track { --shelf-per-page: 4; }
 }
 
-@container recommended (min-width: 1900px) {
-  .recommended-track { --recommended-per-page: 6; }
+@container shelf (min-width: 1900px) {
+  .shelf-track { --shelf-per-page: 6; }
+}
+
+/* Author cards on a shelf: a round initial instead of a cover, and the whole card is a button. */
+button.shelf-card {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+button.shelf-card:hover {
+  border-color: #c9dbd1;
+  background: #f7faf8;
+}
+
+button.shelf-card:focus-visible {
+  outline: 3px solid #1f4d44;
+  outline-offset: -3px;
+}
+
+.shelf-author-initial {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e6efe9;
+  color: #1f4d44;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.shelf-info strong {
+  display: block;
+  overflow: hidden;
+  color: #3f4b46;
+  font-size: 1rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shelf-info small {
+  display: block;
+  margin-top: 0.2rem;
+  color: #7b847f;
+  font-size: 0.84rem;
 }
