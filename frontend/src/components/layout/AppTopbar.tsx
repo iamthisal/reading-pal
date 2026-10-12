@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, ChevronDown, LayoutDashboard, LogOut, Search, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BookOpen, ChevronDown, LayoutDashboard, LogOut, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import NotificationBell from '../NotificationBell';
 import './AppShell.css';
-
-type AppTopbarProps = {
-    /** What the search box starts with: the Search page passes its current query. */
-    query?: string;
-};
+import './Theme.css';
 
 // The profile button and its menu: who is signed in, their profile (or the admin dashboard), and log out.
 const UserMenu = () => {
@@ -55,22 +50,17 @@ const UserMenu = () => {
     );
 };
 
-const AppTopbar = ({ query = '' }: AppTopbarProps) => {
+const AppTopbar = () => {
+    /* Top-bar search is switched off for now: the page banners carry the search box instead.
+       To bring it back, restore this block and the form below, and re-import FormEvent, useNavigate and Search.
     const navigate = useNavigate();
-    const [text, setText] = useState(query);
-    // Follow the page when its query changes (back button, a cleared search), without fighting the reader's typing.
-    const [lastQuery, setLastQuery] = useState(query);
-    if (query !== lastQuery) {
-        setLastQuery(query);
-        setText(query);
-    }
-
-    // Searching from anywhere opens the Search page. An empty box simply browses everything.
+    const [text, setText] = useState('');
     const submit = (event: FormEvent) => {
         event.preventDefault();
         const trimmed = text.trim();
         navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : '/search');
     };
+    */
 
     return (
         <header className="app-topbar">
@@ -78,11 +68,13 @@ const AppTopbar = ({ query = '' }: AppTopbarProps) => {
                 <span className="app-brand-mark"><BookOpen size={18} /></span>
                 <span>Reading Pal</span>
             </Link>
+            {/* Top-bar search is switched off for now.
             <form className="app-search" role="search" onSubmit={submit}>
                 <Search size={16} />
                 <input type="search" value={text} onChange={event => setText(event.target.value)}
                     placeholder="Search books, authors, ISBN" aria-label="Search the catalogue" />
             </form>
+            */}
             <div className="app-topbar-actions">
                 <NotificationBell />
                 <UserMenu />

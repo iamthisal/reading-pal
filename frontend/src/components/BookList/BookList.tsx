@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { authorPath, bookPath } from '../../utils/links';
 import FavouriteButton from '../Favourites/FavouriteButton';
+import { LazyImage } from '../Skeleton/Skeleton';
 import '../BookShelf/BookShelf.css';
 import './BookList.css';
 
@@ -16,12 +18,10 @@ type BookListRowProps = {
     onBorrow: (bookId: number) => void;
 };
 
-const Cover = ({ book }: { book: ListBook }) => {
-    const [failed, setFailed] = useState(false);
-    return book.coverImageUrl && !failed
-        ? <img className="book-list-cover" src={book.coverImageUrl} alt={`${book.title} cover`} loading="lazy" onError={() => setFailed(true)} />
-        : <div className="book-list-cover book-list-cover-fallback" aria-hidden="true">{book.title}</div>;
-};
+const Cover = ({ book }: { book: ListBook }) => (
+    <LazyImage className="book-list-cover" src={book.coverImageUrl ?? undefined} alt={`${book.title} cover`} loading="lazy"
+        fallback={<div className="book-list-cover book-list-cover-fallback" aria-hidden="true">{book.title}</div>} />
+);
 
 // One book as a row: cover, details, then Borrow and the heart. Used wherever books are shown as a list
 // (search results, favourites) so they look and behave the same. Place inside an element with class "book-list".
@@ -32,8 +32,8 @@ export const BookListRow = ({ book, canBorrow, pending, onBorrow }: BookListRowP
         <li className="book-list-row">
             <Cover book={book} />
             <div className="book-list-info">
-                <h2>{book.title}</h2>
-                <p className="book-list-byline">{book.author}</p>
+                <h2><Link to={bookPath(book.id)}>{book.title}</Link></h2>
+                <p className="book-list-byline"><Link to={authorPath(book.author)}>{book.author}</Link></p>
                 <p className="book-list-meta">{book.genre}{book.isbn && <><span aria-hidden="true"> • </span>ISBN {book.isbn}</>}</p>
                 <div className="book-list-stock">
                     <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>

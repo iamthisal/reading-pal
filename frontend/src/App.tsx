@@ -19,6 +19,8 @@ import AdminAuthorsPage from './pages/AdminAuthorsPage';
 import AdminListsPage from './pages/AdminListsPage';
 import FavouritesPage from './pages/FavouritesPage';
 import SearchPage from './pages/SearchPage';
+import BookPage from './pages/BookPage';
+import AuthorPage from './pages/AuthorPage';
 import { FavouritesProvider } from './contexts/FavouritesContext';
 
 const RootRedirect = () => {
@@ -41,6 +43,8 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/favourites" element={<FavouritesPage />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/books/:bookId" element={<BookPage />} />
+            <Route path="/authors/:name" element={<AuthorPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>

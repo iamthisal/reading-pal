@@ -1,3 +1,7 @@
+import { Users as UsersIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import Modal from '../components/Modal/Modal';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -5,7 +9,6 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Users } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 interface UserSummary {
     id: number;
@@ -177,24 +180,17 @@ const AdminUsersPage = () => {
     };
 
     return (
-        <div className="admin-shell">
+        <div className="app-shell">
+        <AppTopbar />
             <AdminSidebar active={isPending ? 'users-pending' : 'users-active'} />
 
-            <main className="admin-main admin-users-main">
-                <header className="admin-topbar admin-users-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Member operations</p>
-                        <h1>{pageTitle}</h1>
-                        <p className="admin-users-subtitle">{pageDescription}</p>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <div className={`admin-users-mode ${isPending ? 'admin-users-mode-pending' : 'admin-users-mode-active'}`}>
+            <main className="app-main app-main-banner admin-main admin-users-main">
+                <PageBanner eyebrow="Member operations" title={pageTitle} icon={<UsersIcon size={38} />} text={pageDescription}>
+                    <div className="page-banner-actions"><div className={`admin-users-mode ${isPending ? 'admin-users-mode-pending' : 'admin-users-mode-active'}`}>
                             <Users size={17} />
                             {isPending ? 'Approval queue' : 'Member directory'}
-                        </div>
-                        <NotificationBell />
-                    </div>
-                </header>
+                        </div></div>
+                </PageBanner>
 
                 <div className="admin-users-panel glass-panel">
                     <div className="admin-users-panel-heading">
@@ -255,106 +251,61 @@ const AdminUsersPage = () => {
                 </div>
             </main>
 
-            {/* Modal Overlay */}
             {isModalOpen && selectedUser && (
-                <div className="admin-user-modal-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div className="admin-user-modal glass-panel" style={{ width: '90%', maxWidth: '600px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-                        <div>
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>User Details</h2>
-                            <p style={{ color: 'var(--text-secondary)' }}>Review the {isPending ? 'pending registration' : 'active user'} details.</p>
-                        </div>
-                        
-                        <div className="admin-user-details" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px' }}>
-                            <div>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Name</span>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 500 }}>{selectedUser.firstName} {selectedUser.lastName}</div>
-                            </div>
-                            <div>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Email Address</span>
-                                <div style={{ fontSize: '1.1rem' }}>{selectedUser.email}</div>
-                            </div>
-                            <div>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Registration Date</span>
-                                <div style={{ fontSize: '1.1rem' }}>{new Date(selectedUser.createdAt).toLocaleDateString()} at {new Date(selectedUser.createdAt).toLocaleTimeString()}</div>
-                            </div>
-                        </div>
+                <Modal title={`${selectedUser.firstName} ${selectedUser.lastName}`} size={isPending ? 'default' : 'wide'} busy={actionLoading} onClose={closeModal}
+                    description={isPending ? 'This member has registered and is waiting for approval.' : 'An approved member of the library.'}>
+                    <dl className="modal-facts">
+                        <div><dt>Name</dt><dd>{selectedUser.firstName} {selectedUser.lastName}</dd></div>
+                        <div><dt>Email address</dt><dd>{selectedUser.email}</dd></div>
+                        <div><dt>Registered</dt><dd>{new Date(selectedUser.createdAt).toLocaleDateString()} at {new Date(selectedUser.createdAt).toLocaleTimeString()}</dd></div>
+                    </dl>
 
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-                            <button className="btn-outline" onClick={closeModal} disabled={actionLoading}>Close</button>
-                            {isPending ? (
-                                <>
-                                    <button 
-                                        onClick={handleReject} 
-                                        disabled={actionLoading}
-                                        style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
-                                    >
-                                        Reject
-                                    </button>
-                                    <button 
-                                        onClick={handleAccept} 
-                                        disabled={actionLoading}
-                                        className="btn-primary" 
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Accept User'}
-                                    </button>
-                                </>
-                            ) : (
-                                <button 
-                                    onClick={handleRevoke} 
-                                    disabled={actionLoading}
-                                    style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}
-                                >
-                                    {actionLoading ? 'Processing...' : 'Revoke Access'}
-                                </button>
-                            )}
-                        </div>
-
-                        {!isPending && (
-                            <div style={{ marginTop: '1rem' }}>
-                                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Borrowing History</h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    
-                                    {/* Current Borrowings */}
-                                    <div style={{ backgroundColor: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                        <h4 style={{ color: 'var(--accent-color)', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Current Borrowings</h4>
-                                        {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).length === 0 ? (
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No current borrowings.</p>
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                                {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).map((record, idx) => (
-                                                    <div key={idx} style={{ fontSize: '0.875rem' }}>
-                                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{record.bookTitle}</div>
-                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>ID: {record.bookId}</div>
-                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Borrowed: {new Date(record.borrowedDate).toLocaleDateString()}</div>
-                                                    </div>
-                                                ))}
+                    {!isPending && (
+                        <section className="modal-section">
+                            <h3>Borrowing History</h3>
+                            <div className="modal-columns">
+                                <div className="modal-tile">
+                                    <h4>Current Borrowings</h4>
+                                    {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).length === 0
+                                        ? <p>No current borrowings.</p>
+                                        : generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate === null).map((record, idx) => (
+                                            <div key={idx}>
+                                                <strong>{record.bookTitle}</strong>
+                                                <small>ID: {record.bookId}</small>
+                                                <small>Borrowed: {new Date(record.borrowedDate).toLocaleDateString()}</small>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* Past Borrowings */}
-                                    <div style={{ backgroundColor: 'rgba(0,0,0,0.15)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                        <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Past Borrowings</h4>
-                                        {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).length === 0 ? (
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>No past borrowings.</p>
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                                {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).map((record, idx) => (
-                                                    <div key={idx} style={{ fontSize: '0.875rem' }}>
-                                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{record.bookTitle}</div>
-                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>ID: {record.bookId}</div>
-                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Returned: {new Date(record.returnedDate!).toLocaleDateString()}</div>
-                                                    </div>
-                                                ))}
+                                        ))}
+                                </div>
+                                <div className="modal-tile">
+                                    <h4>Past Borrowings</h4>
+                                    {generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).length === 0
+                                        ? <p>No past borrowings.</p>
+                                        : generateMockBorrowings(selectedUser.id).filter(b => b.returnedDate !== null).map((record, idx) => (
+                                            <div key={idx}>
+                                                <strong>{record.bookTitle}</strong>
+                                                <small>ID: {record.bookId}</small>
+                                                <small>Returned: {new Date(record.returnedDate!).toLocaleDateString()}</small>
                                             </div>
-                                        )}
-                                    </div>
-                                    
+                                        ))}
                                 </div>
                             </div>
+                        </section>
+                    )}
+
+                    <div className="modal-actions">
+                        <button type="button" className="modal-button" onClick={closeModal} disabled={actionLoading}>Close</button>
+                        {isPending ? <>
+                            <button type="button" className="modal-button modal-button-danger" onClick={handleReject} disabled={actionLoading}>Reject</button>
+                            <button type="button" className="modal-button modal-button-primary" onClick={handleAccept} disabled={actionLoading}>
+                                {actionLoading ? 'Processing...' : 'Accept User'}
+                            </button>
+                        </> : (
+                            <button type="button" className="modal-button modal-button-danger" onClick={handleRevoke} disabled={actionLoading}>
+                                {actionLoading ? 'Processing...' : 'Revoke Access'}
+                            </button>
                         )}
                     </div>
-                </div>
+                </Modal>
             )}
         </div>
     );

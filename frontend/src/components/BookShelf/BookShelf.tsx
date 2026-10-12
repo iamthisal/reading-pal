@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { authorPath, bookPath } from '../../utils/links';
 import FavouriteButton from '../Favourites/FavouriteButton';
+import { LazyImage } from '../Skeleton/Skeleton';
 import './BookShelf.css';
 
 export type ShelfBook = {
@@ -17,6 +20,7 @@ export type ShelfBook = {
 export type ShelfAuthor = {
     id: number;
     name: string;
+    imageUrl?: string | null;
     bookCount: number;
 };
 
@@ -29,17 +33,21 @@ export type BorrowControls = {
     onBorrow: (bookId: number) => void;
 };
 
+export type ShelfAction = { label: string; to: string };
+
 type ShelfProps = {
     title: string;
     /** Sizes the cards: wide detailed cards or taller cover-led ones. */
     variant: 'detail' | 'cover' | 'author';
+    /** A link beside the title, such as "View all". */
+    action?: ShelfAction;
     /** Changes whenever the cards do, so the arrows are re-checked. */
     itemCount: number;
     children: ReactNode;
 };
 
 // A titled row of cards shown a page at a time. It only moves when the reader uses the arrows (or swipes).
-const Shelf = ({ title, variant, itemCount, children }: ShelfProps) => {
+const Shelf = ({ title, variant, action, itemCount, children }: ShelfProps) => {
     const trackRef = useRef<HTMLDivElement>(null);
     const [atStart, setAtStart] = useState(true);
     const [atEnd, setAtEnd] = useState(false);
@@ -75,6 +83,7 @@ const Shelf = ({ title, variant, itemCount, children }: ShelfProps) => {
         <section className="shelf" aria-label={title}>
             <header className="shelf-header">
                 <h2>{title}</h2>
+                {action && <Link to={action.to} className="shelf-action">{action.label}</Link>}
                 {/* Nothing to page through when every card already fits. */}
                 {!(atStart && atEnd) && <div className="shelf-arrows">
                     <button type="button" aria-label={`Previous in ${title}`} disabled={atStart} onClick={() => move(-1)}><ChevronLeft size={18} /></button>
@@ -88,12 +97,10 @@ const Shelf = ({ title, variant, itemCount, children }: ShelfProps) => {
     );
 };
 
-const Cover = ({ book }: { book: ShelfBook }) => {
-    const [failed, setFailed] = useState(false);
-    return book.coverImageUrl && !failed
-        ? <img className="shelf-cover" src={book.coverImageUrl} alt={`${book.title} cover`} loading="lazy" onError={() => setFailed(true)} />
-        : <div className="shelf-cover shelf-cover-fallback" aria-hidden="true"><span>{book.title}</span></div>;
-};
+const Cover = ({ book }: { book: ShelfBook }) => (
+    <LazyImage className="shelf-cover" src={book.coverImageUrl ?? undefined} alt={`${book.title} cover`} loading="lazy"
+        fallback={<div className="shelf-cover shelf-cover-fallback" aria-hidden="true"><span>{book.title}</span></div>} />
+);
 
 const BorrowButton = ({ book, borrow }: { book: ShelfBook; borrow?: BorrowControls }) => {
     if (!borrow?.canBorrow || book.availableCopies <= 0) return null;
@@ -112,12 +119,13 @@ type BookShelfProps = {
     /** "detail": wide cards with the cover beside the text. "cover": tall cards led by a large cover. */
     variant?: 'detail' | 'cover';
     borrow?: BorrowControls;
+    action?: ShelfAction;
 };
 
-export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelfProps) => {
+export const BookShelf = ({ title, books, variant = 'cover', borrow, action }: BookShelfProps) => {
     if (books.length === 0) return null;
     return (
-        <Shelf title={title} variant={variant} itemCount={books.length}>
+        <Shelf title={title} variant={variant} action={action} itemCount={books.length}>
             {books.map(book => {
                 const available = book.availableCopies > 0;
                 const status = <span className={`shelf-status${available ? '' : ' shelf-status-out'}`}>{available ? 'Available' : 'Not available now'}</span>;
@@ -126,8 +134,8 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelf
                         <FavouriteButton bookId={book.id} title={book.title} variant="plain" />
                         <Cover book={book} />
                         <div className="shelf-info">
-                            <h3>{book.title}</h3>
-                            <p className="shelf-byline">{book.author}{book.genre && <><span aria-hidden="true"> • </span>{book.genre}</>}</p>
+                            <h3><Link to={bookPath(book.id)}>{book.title}</Link></h3>
+                            <p className="shelf-byline"><Link to={authorPath(book.author)}>{book.author}</Link>{book.genre && <><span aria-hidden="true"> • </span>{book.genre}</>}</p>
                             {status}
                             <p className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'} on the shelf</p>
                             <BorrowButton book={book} borrow={borrow} />
@@ -136,11 +144,11 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelf
                 ) : (
                     <article key={book.id} className="shelf-tile">
                         <div className="favourite-anchor shelf-tile-cover">
-                            <Cover book={book} />
+                            <Link to={bookPath(book.id)} tabIndex={-1} aria-hidden="true"><Cover book={book} /></Link>
                             <FavouriteButton bookId={book.id} title={book.title} />
                         </div>
-                        <h3>{book.title}</h3>
-                        <p className="shelf-byline">{book.author}</p>
+                        <h3><Link to={bookPath(book.id)}>{book.title}</Link></h3>
+                        <p className="shelf-byline"><Link to={authorPath(book.author)}>{book.author}</Link></p>
                         <div className="shelf-tile-stock">
                             <span className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'}</span>
                             {status}
@@ -153,25 +161,23 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow }: BookShelf
     );
 };
 
-type AuthorShelfProps = {
-    title: string;
-    authors: ShelfAuthor[];
-    onSelect?: (author: ShelfAuthor) => void;
-};
+const AuthorPortrait = ({ author }: { author: ShelfAuthor }) => (
+    <LazyImage className="shelf-author-initial shelf-author-portrait" src={author.imageUrl ?? undefined} alt="" loading="lazy"
+        fallback={<span className="shelf-author-initial" aria-hidden="true">{author.name.slice(0, 1).toUpperCase()}</span>} />
+);
 
-export const AuthorShelf = ({ title, authors, onSelect }: AuthorShelfProps) => {
+export const AuthorShelf = ({ title, authors }: { title: string; authors: ShelfAuthor[] }) => {
     if (authors.length === 0) return null;
     return (
         <Shelf title={title} variant="author" itemCount={authors.length}>
             {authors.map(author => (
-                <button key={author.id} type="button" className="shelf-card" onClick={() => onSelect?.(author)}
-                    aria-label={`Show books by ${author.name}`}>
-                    <span className="shelf-author-initial" aria-hidden="true">{author.name.slice(0, 1).toUpperCase()}</span>
+                <Link key={author.id} to={authorPath(author.name)} className="shelf-card shelf-card-link">
+                    <AuthorPortrait author={author} />
                     <span className="shelf-info">
                         <strong>{author.name}</strong>
                         <small>{author.bookCount} {author.bookCount === 1 ? 'book' : 'books'}</small>
                     </span>
-                </button>
+                </Link>
             ))}
         </Shelf>
     );

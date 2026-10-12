@@ -1,17 +1,19 @@
+import { History as HistoryIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import DateTime from '../components/DateTime';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 interface HistoryRecord {
     id: number; userName: string; bookTitle: string; status: string; reservationDate: string;
     checkoutDate: string | null; dueDate: string | null; returnDate: string | null;
     daysOverdue: number | null; fineAmount: number | null; fineStatus: string | null;
 }
-const format = (value: string | null) => value ? new Date(value).toLocaleString() : '—';
 
 export default function AdminReservationHistoryPage() {
     const { token } = useAuth();
@@ -41,12 +43,13 @@ export default function AdminReservationHistoryPage() {
         return () => { stopRefresh(); controller.abort(); };
     }, [token, refresh]);
     const visible = records.filter(record => filter === 'All' || record.status === filter);
-    return <div className="admin-shell">
+    return <div className="app-shell">
+        <AppTopbar />
         <AdminSidebar active="history" />
-        <main className="admin-main admin-users-main">
-            <header className="admin-topbar admin-users-topbar"><div><p className="admin-eyebrow">Counter operations</p><h1>Reservation history</h1>
-                <p className="admin-users-subtitle">Returned books and cancelled reservations, newest reservation first. Times are shown in your local timezone.</p></div>
-                <div className="admin-topbar-actions"><button type="button" className="btn-outline" disabled={loading} onClick={() => setRefresh(value => value + 1)}>{loading ? 'Loading…' : 'Refresh'}</button><NotificationBell /></div></header>
+        <main className="app-main app-main-banner admin-main admin-users-main">
+            <PageBanner eyebrow="Counter operations" title="Reservation history" icon={<HistoryIcon size={38} />} text={<>Returned books and cancelled reservations, newest reservation first. Times are shown in your local timezone.</>}>
+                    <div className="page-banner-actions"><button type="button" className="btn-outline" disabled={loading} onClick={() => setRefresh(value => value + 1)}>{loading ? 'Loading…' : 'Refresh'}</button></div>
+                </PageBanner>
             <section className="admin-users-panel glass-panel" aria-label="Reservation history" aria-busy={loading}>
                 <div className="admin-users-panel-heading"><h2>Past records</h2><label>Status <select value={filter} onChange={event => setFilter(event.target.value)}>
                     <option value="All">All</option><option value="Returned">Returned</option><option value="Cancelled">Cancelled</option></select></label></div>
@@ -57,8 +60,8 @@ export default function AdminReservationHistoryPage() {
                             <thead><tr>{['Reservation', 'User name', 'Book title', 'Status', 'Reserved', 'Checkout', 'Due date', 'Returned', 'Days overdue', 'Fine (Rs.)', 'Fine status'].map(title => <th scope="col" key={title}>{title}</th>)}</tr></thead>
                             <tbody>{visible.map(record => <tr key={record.id}>
                                 <td>#{record.id}</td><td>{record.userName}</td><td>{record.bookTitle}</td>
-                                <td><span className="borrow-status">{record.status}</span></td><td>{format(record.reservationDate)}</td>
-                                <td>{format(record.checkoutDate)}</td><td>{format(record.dueDate)}</td><td>{format(record.returnDate)}</td>
+                                <td><span className="borrow-status">{record.status}</span></td><td><DateTime value={record.reservationDate} /></td>
+                                <td><DateTime value={record.checkoutDate} /></td><td><DateTime value={record.dueDate} /></td><td><DateTime value={record.returnDate} /></td>
                                 <td>{record.daysOverdue ?? '—'}</td><td>{record.fineAmount?.toFixed(2) ?? '—'}</td><td>{record.fineStatus ?? '—'}</td>
                             </tr>)}</tbody>
                         </table>

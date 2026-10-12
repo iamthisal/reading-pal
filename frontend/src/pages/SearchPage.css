@@ -15,29 +15,6 @@
   gap: var(--search-gap);
 }
 
-.search-heading p {
-  margin: 0;
-  color: #7b847f;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.search-heading h1 {
-  margin: 0.3rem 0 0;
-  color: #3f4b46;
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
-}
-
-.search-heading h1 q {
-  color: #1f4d44;
-}
-
 .search-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -45,7 +22,7 @@
   justify-content: space-between;
   gap: 0.75rem 1rem;
   /* Above the list only, not above the filter card. */
-  margin: 1.25rem calc(var(--search-filters-width) + var(--search-gap)) 1rem 0;
+  margin: 0 calc(var(--search-filters-width) + var(--search-gap)) 1rem 0;
 }
 
 .search-count {

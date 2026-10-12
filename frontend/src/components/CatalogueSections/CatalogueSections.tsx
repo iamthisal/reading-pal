@@ -4,6 +4,7 @@ import { INVENTORY_API_BASE_URL } from '../../config/api';
 import { catalogueSections, POPULAR_AUTHORS_LIST } from '../../config/catalogueSections';
 import type { CatalogueSection } from '../../config/catalogueSections';
 import { AuthorShelf, BookShelf } from '../BookShelf/BookShelf';
+import { ShelfSkeleton } from '../Skeleton/Skeleton';
 import type { BorrowControls, ShelfAuthor, ShelfBook } from '../BookShelf/BookShelf';
 
 type ListResponse = { name: string; itemType: 'Books' | 'Authors'; books: ShelfBook[]; authors: ShelfAuthor[] };
@@ -49,13 +50,13 @@ const loadSection = async (section: CatalogueSection, index: number): Promise<Lo
 type CatalogueSectionsProps = {
     /** The page's own, regularly refreshed books: used so copies and availability on the shelves stay current. */
     liveBooks?: ShelfBook[];
-    onSelectAuthor?: (name: string) => void;
     borrow?: BorrowControls;
 };
 
 // The curated shelves on the catalogue page: lists, an author and a category, as set in config/catalogueSections.
-const CatalogueSections = ({ liveBooks, onSelectAuthor, borrow }: CatalogueSectionsProps) => {
-    const [sections, setSections] = useState<LoadedSection[]>([]);
+const CatalogueSections = ({ liveBooks, borrow }: CatalogueSectionsProps) => {
+    // null while the sections are still being fetched.
+    const [sections, setSections] = useState<LoadedSection[] | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -67,10 +68,23 @@ const CatalogueSections = ({ liveBooks, onSelectAuthor, borrow }: CatalogueSecti
 
     const live = useMemo(() => new Map((liveBooks ?? []).map(book => [book.id, book])), [liveBooks]);
 
+    if (sections === null) {
+        // One placeholder shelf per configured section, in the shape that section will take.
+        return (
+            <div aria-busy="true">
+                <span className="visually-hidden" role="status">Loading the catalogue…</span>
+                {catalogueSections.map((section, index) => (
+                    <ShelfSkeleton key={index} variant={section.kind === 'list'
+                        ? (section.key === POPULAR_AUTHORS_LIST ? 'author' : section.variant ?? 'cover') : 'cover'} />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <>
             {sections.map(section => section.authors
-                ? <AuthorShelf key={section.id} title={section.title} authors={section.authors} onSelect={author => onSelectAuthor?.(author.name)} />
+                ? <AuthorShelf key={section.id} title={section.title} authors={section.authors} />
                 : <BookShelf key={section.id} title={section.title} variant={section.variant} borrow={borrow} books={(section.books ?? []).map(book => live.get(book.id) ?? book)} />)}
         </>
     );

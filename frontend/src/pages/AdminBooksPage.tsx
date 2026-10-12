@@ -1,10 +1,13 @@
+import { BookPlus as BookPlusIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import Modal from '../components/Modal/Modal';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { AlertCircle, BookPlus, CheckCircle, CircleOff, Layers, Pencil, RefreshCw, Search, Tags, Trash2, X } from 'lucide-react';
+import { AlertCircle, BookPlus, CheckCircle, CircleOff, Layers, Pencil, RefreshCw, Search, Tags, Trash2 } from 'lucide-react';
 import { INVENTORY_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 export interface Book {
     id: number;
@@ -13,6 +16,7 @@ export interface Book {
     isbn: string;
     genre: string;
     coverImageUrl?: string | null;
+    description?: string | null;
     totalCopies: number;
     availableCopies: number;
     isAvailable?: boolean;
@@ -37,6 +41,7 @@ const AdminBooksPage = () => {
     const [isbn, setIsbn] = useState('');
     const [genre, setGenre] = useState('');
     const [coverImageUrl, setCoverImageUrl] = useState('');
+    const [description, setDescription] = useState('');
     const [totalCopies, setTotalCopies] = useState('1');
 
     // UI state
@@ -47,13 +52,14 @@ const AdminBooksPage = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [isFormOpen, setIsFormOpen] = useState(true);
+    const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingBook, setEditingBook] = useState<Book | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [editAuthor, setEditAuthor] = useState('');
     const [editIsbn, setEditIsbn] = useState('');
     const [editGenre, setEditGenre] = useState('');
     const [editCoverImageUrl, setEditCoverImageUrl] = useState('');
+    const [editDescription, setEditDescription] = useState('');
     const [editTotalCopies, setEditTotalCopies] = useState('1');
     const [isUpdating, setIsUpdating] = useState(false);
     const [editErrorMessage, setEditErrorMessage] = useState('');
@@ -216,6 +222,7 @@ const AdminBooksPage = () => {
                 isbn: isbn.trim(),
                 genre: genre.trim(),
                 coverImageUrl: coverImageUrl.trim() || null,
+                description: description.trim(),
                 totalCopies: copies
             };
 
@@ -231,6 +238,7 @@ const AdminBooksPage = () => {
             );
 
             const createdBook = response.data;
+            setIsFormOpen(false);
             setSuccessMessage(
                 `Successfully added "${createdBook.title}" (ID: ${createdBook.id}, Available Copies: ${createdBook.availableCopies})`
             );
@@ -244,6 +252,7 @@ const AdminBooksPage = () => {
             setIsbn('');
             setGenre('');
             setCoverImageUrl('');
+            setDescription('');
             setTotalCopies('1');
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -271,6 +280,7 @@ const AdminBooksPage = () => {
         setEditIsbn(book.isbn);
         setEditGenre(book.genre);
         setEditCoverImageUrl(book.coverImageUrl || '');
+        setEditDescription(book.description || '');
         setEditTotalCopies(String(book.totalCopies));
         setEditErrorMessage('');
     };
@@ -310,6 +320,7 @@ const AdminBooksPage = () => {
                     isbn: editIsbn.trim(),
                     genre: editGenre.trim(),
                     coverImageUrl: editCoverImageUrl.trim() || null,
+                    description: editDescription.trim(),
                     totalCopies: copies
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -446,27 +457,21 @@ const AdminBooksPage = () => {
     const emptyInventoryMessage = books.length === 0 ? 'No books added to the catalogue yet.' : 'No books match your search query.';
 
     return (
-        <div className="admin-shell">
+        <div className="app-shell">
+        <AppTopbar />
             <AdminSidebar active="books" />
 
-            <main className="admin-main admin-inventory-main">
-                <header className="admin-topbar admin-inventory-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Library operations</p>
-                        <h1>Book inventory</h1>
-                        <p className="admin-inventory-subtitle">Keep the catalogue current, useful, and ready for its next reader.</p>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <button
-                            onClick={() => setIsFormOpen(prev => !prev)}
-                            className="admin-primary-action"
-                        >
+            <main className="app-main app-main-banner admin-main admin-inventory-main">
+                <PageBanner eyebrow="Library operations" title="Book inventory" icon={<BookPlusIcon size={38} />} text={<>Keep the catalogue current, useful, and ready for its next reader.</>}>
+                    <div className="page-banner-actions"><button type="button" className="admin-primary-action" onClick={() => { setErrorMessage(''); setIsFormOpen(true); }}>
                             <BookPlus size={17} />
-                            {isFormOpen ? 'Hide add form' : 'Add new book'}
+                            Add new book
                         </button>
-                        <NotificationBell />
-                    </div>
-                </header>
+                        <button type="button" className="btn-outline" onClick={() => { setIsGenreManagerOpen(true); setGenreErrorMessage(''); }}>
+                            <Tags size={16} />
+                            Manage genres
+                        </button></div>
+                </PageBanner>
 
             {/* Notification Alerts */}
             {successMessage && (
@@ -486,7 +491,7 @@ const AdminBooksPage = () => {
                 </div>
             )}
 
-            {errorMessage && (
+            {errorMessage && !isFormOpen && (
                 <div className="admin-inventory-alert admin-inventory-alert-error error-message" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <AlertCircle size={20} color="var(--danger-color)" />
                     <span>{errorMessage}</span>
@@ -494,73 +499,36 @@ const AdminBooksPage = () => {
             )}
 
             {isGenreManagerOpen && (
-                <dialog open aria-labelledby="genre-manager-title" style={{ position: 'fixed', inset: 0, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
-                    <div className="glass-panel" style={{ width: '100%', maxWidth: '520px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 id="genre-manager-title" style={{ fontSize: '1.25rem' }}>Manage Genres</h2>
-                            <button type="button" className="btn-outline" onClick={() => setIsGenreManagerOpen(false)} title="Close genre manager" style={{ padding: '0.5rem' }}>
-                                <X size={18} />
-                            </button>
-                        </div>
-                        {genreErrorMessage && <div className="error-message" style={{ marginBottom: '1rem' }}>{genreErrorMessage}</div>}
-                        <form onSubmit={handleCreateGenre} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                            <input id="new-genre-name" type="text" className="form-input" placeholder="e.g. Science Fiction" value={newGenreName} onChange={e => setNewGenreName(e.target.value)} maxLength={100} required />
-                            <button type="submit" className="btn-primary" disabled={isGenreSubmitting}>Add</button>
-                        </form>
-                        <div style={{ display: 'grid', gap: '0.75rem' }}>
-                            {genres.map(item => (
-                                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
-                                    {editingGenreId === item.id ? (
-                                        <input className="form-input" value={editingGenreName} onChange={e => setEditingGenreName(e.target.value)} maxLength={100} autoFocus />
-                                    ) : (
-                                        <span style={{ flex: 1 }}>{item.name}</span>
-                                    )}
-                                    {editingGenreId === item.id ? (
-                                        <>
-                                            <button type="button" className="btn-primary" onClick={() => handleUpdateGenre(item)} disabled={isGenreSubmitting}>Save</button>
-                                            <button type="button" className="btn-outline" onClick={() => setEditingGenreId(null)} disabled={isGenreSubmitting}>Cancel</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button type="button" className="btn-outline" onClick={() => { setEditingGenreId(item.id); setEditingGenreName(item.name); }} title={`Edit ${item.name}`} style={{ padding: '0.5rem' }}><Pencil size={15} /></button>
-                                            <button type="button" className="btn-outline" onClick={() => handleDeleteGenre(item)} disabled={isGenreSubmitting} title={`Delete ${item.name}`} style={{ padding: '0.5rem' }}><Trash2 size={15} /></button>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                            {genres.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>No genres have been added yet.</p>}
-                        </div>
+                <Modal title="Manage genres" description="Genres are the categories readers browse and filter by." busy={isGenreSubmitting}
+                    onClose={() => { setIsGenreManagerOpen(false); setEditingGenreId(null); }}>
+                    {genreErrorMessage && <p role="alert" className="modal-error">{genreErrorMessage}</p>}
+                    <form className="modal-inline-form" onSubmit={handleCreateGenre}>
+                        <input id="new-genre-name" type="text" aria-label="New genre name" placeholder="e.g. Science Fiction" value={newGenreName} onChange={e => setNewGenreName(e.target.value)} maxLength={100} required />
+                        <button type="submit" className="modal-button modal-button-primary" disabled={isGenreSubmitting}>Add</button>
+                    </form>
+                    <div className="modal-rows">
+                        {genres.map(item => (
+                            <div key={item.id} className="modal-row">
+                                {editingGenreId === item.id ? <>
+                                    <input aria-label={`New name for ${item.name}`} value={editingGenreName} onChange={e => setEditingGenreName(e.target.value)} maxLength={100} autoFocus
+                                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void handleUpdateGenre(item); } }} />
+                                    <button type="button" className="modal-button modal-button-primary" onClick={() => handleUpdateGenre(item)} disabled={isGenreSubmitting}>Save</button>
+                                    <button type="button" className="modal-button" onClick={() => setEditingGenreId(null)} disabled={isGenreSubmitting}>Cancel</button>
+                                </> : <>
+                                    <span>{item.name}</span>
+                                    <button type="button" className="modal-button" onClick={() => { setEditingGenreId(item.id); setEditingGenreName(item.name); }} title={`Edit ${item.name}`}><Pencil size={15} />Edit</button>
+                                    <button type="button" className="modal-button modal-button-danger" onClick={() => handleDeleteGenre(item)} disabled={isGenreSubmitting} title={`Delete ${item.name}`}><Trash2 size={15} />Delete</button>
+                                </>}
+                            </div>
+                        ))}
+                        {genres.length === 0 && <p className="modal-hint">No genres have been added yet.</p>}
                     </div>
-                </dialog>
+                </Modal>
             )}
 
             {editingBook && (
-                <dialog
-                    open
-                    aria-labelledby="edit-book-title"
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        zIndex: 10,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '1rem',
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                    }}
-                >
-                    <div
-                        className="glass-panel"
-                        style={{ width: '100%', maxWidth: '640px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h2 id="edit-book-title" style={{ fontSize: '1.25rem' }}>Edit Book</h2>
-                            <button type="button" className="btn-outline" onClick={closeEditModal} disabled={isUpdating} title="Close edit dialog" style={{ padding: '0.5rem' }}>
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {editErrorMessage && <div className="error-message" style={{ marginBottom: '1rem' }}>{editErrorMessage}</div>}
+                <Modal title="Edit book" size="wide" busy={isUpdating} onClose={closeEditModal}>
+                        {editErrorMessage && <p role="alert" className="modal-error">{editErrorMessage}</p>}
 
                         <form onSubmit={handleUpdateBook}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
@@ -588,32 +556,30 @@ const AdminBooksPage = () => {
                                     <label className="form-label" htmlFor="edit-book-cover">Cover Image URL</label>
                                     <input id="edit-book-cover" type="url" className="form-input" value={editCoverImageUrl} onChange={e => setEditCoverImageUrl(e.target.value)} maxLength={500} placeholder="https://example.com/cover.jpg" />
                                 </div>
+                                <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                                    <label className="form-label" htmlFor="edit-book-description">Description</label>
+                                    <textarea id="edit-book-description" className="form-input admin-book-description" value={editDescription} onChange={e => setEditDescription(e.target.value)} maxLength={2000} rows={3} placeholder="A short summary of the book" />
+                                </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
                                     <input id="edit-book-copies" type="number" min="0" max="100000" className="form-input" value={editTotalCopies} onChange={e => setEditTotalCopies(e.target.value)} required />
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
-                                <button type="button" className="btn-outline" onClick={closeEditModal} disabled={isUpdating}>Cancel</button>
-                                <button type="submit" className="btn-primary" disabled={isUpdating}>
-                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                            <div className="modal-actions">
+                                <button type="button" className="modal-button" onClick={closeEditModal} disabled={isUpdating}>Cancel</button>
+                                <button type="submit" className="modal-button modal-button-primary" disabled={isUpdating}>
+                                    {isUpdating ? 'Saving…' : 'Save changes'}
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </dialog>
+                </Modal>
             )}
 
             {/* Add Book Form Panel */}
             {isFormOpen && (
-                <div className="admin-inventory-form glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <BookPlus size={20} color="var(--accent-color)" />
-                        Add New Book to Catalogue
-                    </h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                        Enter book details. System automatically sets ID, Available Copies (matches Total Copies), and timestamps.
-                    </p>
+                <Modal title="Add a book" size="wide" busy={isSubmitting} onClose={() => setIsFormOpen(false)}
+                    description="The ID, available copies (same as total copies) and dates are filled in automatically.">
+                    {errorMessage && <p role="alert" className="modal-error">{errorMessage}</p>}
 
                     <form onSubmit={handleSubmit}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
@@ -685,6 +651,12 @@ const AdminBooksPage = () => {
                                 />
                             </div>
 
+                            <div className="form-group" style={{ marginBottom: 0, gridColumn: '1 / -1' }}>
+                                <label className="form-label" htmlFor="book-description">Description</label>
+                                <textarea id="book-description" className="form-input admin-book-description" placeholder="A short summary of the book"
+                                    value={description} onChange={e => setDescription(e.target.value)} maxLength={2000} rows={3} />
+                            </div>
+
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label" htmlFor="book-copies">
                                     Total Copies <span style={{ color: 'var(--danger-color)' }}>*</span>
@@ -702,39 +674,18 @@ const AdminBooksPage = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
-                            <button type="button" className="btn-outline" onClick={() => { setIsGenreManagerOpen(true); setGenreErrorMessage(''); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="modal-actions">
+                            <button type="button" className="modal-button modal-actions-start" onClick={() => { setIsGenreManagerOpen(true); setGenreErrorMessage(''); }}>
                                 <Tags size={16} />
-                                Manage Genres
+                                Manage genres
                             </button>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button
-                                type="button"
-                                className="btn-outline"
-                                onClick={() => {
-                                    setTitle('');
-                                    setAuthor('');
-                                    setIsbn('');
-                                    setGenre('');
-                                    setCoverImageUrl('');
-                                    setTotalCopies('1');
-                                    setErrorMessage('');
-                                }}
-                            >
-                                Clear
+                            <button type="button" className="modal-button" disabled={isSubmitting} onClick={() => setIsFormOpen(false)}>Cancel</button>
+                            <button type="submit" className="modal-button modal-button-primary" disabled={isSubmitting}>
+                                {isSubmitting ? 'Adding…' : 'Add book'}
                             </button>
-                            <button
-                                type="submit"
-                                className="btn-primary"
-                                style={{ width: 'auto', padding: '0.75rem 2rem', marginTop: 0 }}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Adding Book...' : 'Add Book'}
-                            </button>
-                            </div>
                         </div>
                     </form>
-                </div>
+                </Modal>
             )}
 
             {/* Current Books Inventory List */}

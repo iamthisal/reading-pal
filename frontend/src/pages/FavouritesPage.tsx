@@ -6,10 +6,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavourites } from '../contexts/FavouritesContext';
 import { useBorrow } from '../hooks/useBorrow';
 import { INVENTORY_API_BASE_URL } from '../config/api';
+import PageBanner from '../components/layout/PageBanner';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import BorrowToast from '../components/BorrowToast';
 import { BookListRow } from '../components/BookList/BookList';
+import { BookListSkeleton } from '../components/Skeleton/Skeleton';
 import type { ListBook } from '../components/BookList/BookList';
 import './FavouritesPage.css';
 
@@ -39,18 +41,18 @@ const FavouritesPage = () => {
             <AppTopbar />
             <LibrarySidenav active="favourites" />
             <BorrowToast success={borrowing.success} error={borrowing.error} onDismiss={borrowing.dismiss} />
-            <main className="app-main favourites-main">
-                <header className="favourites-header">
-                    <div>
-                        <p className="favourites-eyebrow">Your shortlist</p>
-                        <h1>Favourites</h1>
-                        <p>Books you have saved with the heart, most recently added first.</p>
-                    </div>
-                    {!loading && visible.length > 0 && <span className="favourites-count">{visible.length} {visible.length === 1 ? 'book' : 'books'}</span>}
-                </header>
+            <main className="app-main app-main-banner favourites-main">
+                <PageBanner eyebrow="Your shortlist" title="Favourites" icon={<Heart size={38} />}
+                    text="Books you have saved with the heart, most recently added first.">
+                    {!error && (
+                        <div className="discover-stats" aria-busy={loading}>
+                            {loading ? <span className="skeleton skeleton-stat" /> : <span>{visible.length} {visible.length === 1 ? 'book' : 'books'}</span>}
+                        </div>
+                    )}
+                </PageBanner>
 
                 {error && <p role="alert" className="favourites-error">{error}</p>}
-                {loading && <p role="status">Loading your favourites…</p>}
+                {loading && <BookListSkeleton rows={4} label="Loading your favourites…" />}
 
                 {!loading && !error && visible.length === 0 && (
                     <div className="favourites-empty">

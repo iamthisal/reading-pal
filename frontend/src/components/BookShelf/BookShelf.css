@@ -151,8 +151,8 @@
 }
 
 .shelf-status-out {
-  background: #f6e7e1;
-  color: #9a4630;
+  background: #f4eeea;
+  color: #8f6658;
 }
 
 .shelf-copies {
@@ -268,7 +268,7 @@
 
 /* Cover-led cards are narrower, so more of them fit. */
 .shelf-track-cover {
-  --shelf-per-page: 4;
+  --shelf-per-page: 5;
   --shelf-gap: 1.5rem;
   align-items: stretch;
 }
@@ -282,32 +282,30 @@
 }
 
 @container shelf (min-width: 1250px) {
-  .shelf-track-cover { --shelf-per-page: 5; }
-}
-
-@container shelf (min-width: 1500px) {
   .shelf-track-cover { --shelf-per-page: 6; }
 }
 
-@container shelf (min-width: 1900px) {
-  .shelf-track-cover { --shelf-per-page: 8; }
+@container shelf (min-width: 1500px) {
+  .shelf-track-cover { --shelf-per-page: 7; }
 }
 
-/* Author cards on a shelf: a round initial instead of a cover, and the whole card is a button. */
-button.shelf-card {
-  width: 100%;
-  font: inherit;
-  text-align: left;
+@container shelf (min-width: 1900px) {
+  .shelf-track-cover { --shelf-per-page: 9; }
+}
+
+/* Author cards on a shelf: a round initial instead of a cover, and the whole card is a link. */
+a.shelf-card-link {
+  text-decoration: none;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-button.shelf-card:hover {
+a.shelf-card-link:hover {
   border-color: #c9dbd1;
   background: #f7faf8;
 }
 
-button.shelf-card:focus-visible {
+a.shelf-card-link:focus-visible {
   outline: 3px solid #1f4d44;
   outline-offset: -3px;
 }
@@ -316,12 +314,12 @@ button.shelf-card:focus-visible {
   flex: none;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   background: #e6efe9;
   color: #1f4d44;
-  font-size: 1.25rem;
+  font-size: 1.7rem;
   font-weight: 700;
 }
 
@@ -329,7 +327,7 @@ button.shelf-card:focus-visible {
   display: block;
   overflow: hidden;
   color: #3f4b46;
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -337,9 +335,9 @@ button.shelf-card:focus-visible {
 
 .shelf-info small {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: 0.3rem;
   color: #7b847f;
-  font-size: 0.84rem;
+  font-size: 0.95rem;
 }
 
 .shelf-tile-cover {
@@ -354,4 +352,44 @@ button.shelf-card:focus-visible {
 .shelf-card.favourite-anchor > .favourite-button {
   top: 0.45rem;
   right: 0.45rem;
+}
+
+/* Titles and author names lead to their own pages; they look like text until pointed at. */
+.shelf-card h3 a,
+.shelf-tile h3 a,
+.shelf-byline a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shelf-card h3 a:hover,
+.shelf-tile h3 a:hover,
+.shelf-byline a:hover {
+  color: #1f4d44;
+  text-decoration: underline;
+}
+
+.shelf-tile-cover > a {
+  display: block;
+}
+
+.shelf :is(h3, .shelf-byline) a:focus-visible,
+.shelf-action:focus-visible {
+  outline: 3px solid #1f4d44;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* "View all" sits beside the arrows, pushed to the right of the title. */
+.shelf-action {
+  margin-left: auto;
+  color: #1f4d44;
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.shelf-author-portrait {
+  object-fit: cover;
+  object-position: center 20%;
 }

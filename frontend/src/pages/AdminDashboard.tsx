@@ -1,3 +1,6 @@
+import { LayoutDashboard as LayoutDashboardIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowUpRight, BookMarked, BookOpen, BookPlus, ShieldAlert, Users } from 'lucide-react';
@@ -5,10 +8,9 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 const AdminDashboard = () => {
-    const { token, user } = useAuth();
+    const { token } = useAuth();
     const [adminMessage, setAdminMessage] = useState<string>('');
 
     useEffect(() => {
@@ -32,32 +34,13 @@ const AdminDashboard = () => {
     }, [token]);
 
     return (
-        <div className="admin-shell">
+        <div className="app-shell">
+        <AppTopbar />
             <AdminSidebar active="dashboard" />
 
-            <main className="admin-main">
-                <header className="admin-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Library operations</p>
-                        <h1>Admin dashboard</h1>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <div className="admin-user-chip">
-                            <span className="admin-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'A'}</span>
-                            <span>{user?.email || 'Administrator'}</span>
-                        </div>
-                        <NotificationBell />
-                    </div>
-                </header>
-
-                <section className="admin-welcome">
-                    <div>
-                        <p className="admin-kicker">Good to see you</p>
-                        <h2>Keep the library moving.</h2>
-                        <p>Review member activity, maintain the catalogue, and keep every shelf ready for its next reader.</p>
-                    </div>
-                    <div className="admin-welcome-mark"><BookMarked size={42} /></div>
-                </section>
+            <main className="app-main app-main-banner admin-main">
+                <PageBanner eyebrow="Library operations" title="Admin dashboard" icon={<LayoutDashboardIcon size={38} />}
+                    text="Review member activity, maintain the catalogue, and keep every shelf ready for its next reader." />
 
                 <section className="admin-section" aria-labelledby="admin-actions-heading">
                     <div className="admin-section-heading">

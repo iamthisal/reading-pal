@@ -3,46 +3,6 @@
   padding: 2rem clamp(1.25rem, 4vw, 4rem) 3rem;
 }
 
-.favourites-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.favourites-header p {
-  margin: 0;
-  color: #7b847f;
-}
-
-.favourites-eyebrow {
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.favourites-header h1 {
-  margin: 0.3rem 0 0.4rem;
-  color: #3f4b46;
-  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.favourites-count {
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  background: #e6efe9;
-  color: #1f4d44;
-  font-size: 0.84rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 .favourites-empty {
   max-width: 560px;
   padding: 2.5rem 2rem;

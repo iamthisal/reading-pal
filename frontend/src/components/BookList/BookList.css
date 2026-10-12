@@ -132,3 +132,19 @@
 .book-list-actions .favourite-button {
   margin-left: auto;
 }
+
+.book-list-info :is(h2, .book-list-byline) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-list-info :is(h2, .book-list-byline) a:hover {
+  color: #1f4d44;
+  text-decoration: underline;
+}
+
+.book-list-info a:focus-visible {
+  outline: 3px solid #1f4d44;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

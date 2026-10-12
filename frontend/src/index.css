@@ -2871,3 +2871,22 @@ body {
   line-height: 1;
   cursor: pointer;
 }
+
+.discover-main .discover-book-meta :is(h3, p) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.discover-main .discover-book-meta :is(h3, p) a:hover {
+  color: #1f4d44;
+  text-decoration: underline;
+}
+
+.admin-book-description {
+  height: auto;
+  min-height: 84px;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  line-height: 1.45;
+  resize: vertical;
+}

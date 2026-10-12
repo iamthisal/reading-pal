@@ -1,3 +1,7 @@
+import { BookMarked as BookMarkedIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import DateTime from '../components/DateTime';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
@@ -5,7 +9,6 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 interface PendingReservation {
     id: number;
@@ -14,11 +17,6 @@ interface PendingReservation {
     reservationDate: string;
     status: string;
 }
-
-const timestampFormat = new Intl.DateTimeFormat(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
-});
 
 export default function AdminReservationsPage() {
     const { token } = useAuth();
@@ -90,22 +88,15 @@ export default function AdminReservationsPage() {
     }, [token, refresh, location.key]);
 
     return (
-        <div className="admin-shell">
+        <div className="app-shell">
+        <AppTopbar />
             <AdminSidebar active="reservations-pending" />
-            <main className="admin-main admin-users-main">
-                <header className="admin-topbar admin-users-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Counter operations</p>
-                        <h1>Pending reservations</h1>
-                        <p className="admin-users-subtitle">Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</p>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
+            <main className="app-main app-main-banner admin-main admin-users-main">
+                <PageBanner eyebrow="Counter operations" title="Pending reservations" icon={<BookMarkedIcon size={38} />} text={<>Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</>}>
+                    <div className="page-banner-actions"><button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
                             {isLoading ? 'Loading…' : 'Refresh'}
-                        </button>
-                        <NotificationBell />
-                    </div>
-                </header>
+                        </button></div>
+                </PageBanner>
                 <section className="admin-users-panel glass-panel" aria-label="Pending reservation queue" aria-busy={isLoading}>
                     <div className="admin-users-panel-heading">
                         <h2>Awaiting pickup</h2>
@@ -123,7 +114,7 @@ export default function AdminReservationsPage() {
                                     <tr key={reservation.id}>
                                         <td>{reservation.userName}</td>
                                         <td>{reservation.bookTitle}</td>
-                                        <td><time dateTime={reservation.reservationDate}>{timestampFormat.format(new Date(reservation.reservationDate))}</time></td>
+                                        <td><DateTime value={reservation.reservationDate} /></td>
                                         <td><div className="reservation-actions"><button type="button" className="reservation-accept-button" disabled={processingId !== null}
                                             aria-label={`Accept ${reservation.bookTitle} for ${reservation.userName}`}
                                             onClick={() => void processReservation(reservation, 'accept')}>

@@ -261,3 +261,71 @@
 .curation-table-wrap .admin-users-table td {
   font-weight: 400;
 }
+
+/* Longer text fields take a full row of the form. */
+.curation-form label.curation-field-wide {
+  flex: 1 1 100%;
+}
+
+.curation-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d8d1c0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2e2b28;
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.curation-form textarea:focus-visible {
+  outline: 3px solid #123f38;
+  outline-offset: 1px;
+}
+
+.curation-edit-form {
+  margin: 0.25rem 0;
+}
+
+.curation-author {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.curation-author img,
+.curation-author > span {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e6efe9;
+}
+
+.curation-author > span {
+  display: grid;
+  place-items: center;
+  color: #123f38;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.curation-about {
+  max-width: 420px;
+  color: #6f6b62;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+/* The shared users table colours its second column; here that column is plain descriptive text. */
+.curation-table-wrap .admin-users-table td.curation-about {
+  /* The shared rule is marked !important, so this has to be as well. */
+  color: #6f6b62 !important;
+  font-weight: 400 !important;
+}

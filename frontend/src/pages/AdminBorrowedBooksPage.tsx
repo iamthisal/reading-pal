@@ -1,10 +1,13 @@
+import { BookOpen as BookOpenIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import DateTime from '../components/DateTime';
 import AdminSidebar from '../components/layout/AdminSidebar';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
 
 interface BorrowRecord {
     id: number;
@@ -17,11 +20,6 @@ interface BorrowRecord {
     daysOverdue?: number;
     fineAmount?: number;
 }
-
-const timestampFormat = new Intl.DateTimeFormat(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
-});
 
 export default function AdminBorrowedBooksPage() {
     const { token } = useAuth();
@@ -84,22 +82,15 @@ export default function AdminBorrowedBooksPage() {
     }, [token, refresh]);
 
     return (
-        <div className="admin-shell">
+        <div className="app-shell">
+        <AppTopbar />
             <AdminSidebar active="borrowed" />
-            <main className="admin-main admin-users-main">
-                <header className="admin-topbar admin-users-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Counter operations</p>
-                        <h1>Borrowed books</h1>
-                        <p className="admin-users-subtitle">Current loans, earliest due date first. Times are shown in your local timezone. Late returns cost Rs. 10 per calendar day after the due date in Sri Lanka.</p>
-                    </div>
-                    <div className="admin-topbar-actions">
-                        <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
+            <main className="app-main app-main-banner admin-main admin-users-main">
+                <PageBanner eyebrow="Counter operations" title="Borrowed books" icon={<BookOpenIcon size={38} />} text={<>Current loans, earliest due date first. Times are shown in your local timezone. Late returns cost Rs. 10 per calendar day after the due date in Sri Lanka.</>}>
+                    <div className="page-banner-actions"><button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
                             {isLoading ? 'Loading…' : 'Refresh'}
-                        </button>
-                        <NotificationBell />
-                    </div>
-                </header>
+                        </button></div>
+                </PageBanner>
                 <section className="admin-users-panel glass-panel" aria-label="Current borrowed books" aria-busy={isLoading}>
                     <div className="admin-users-panel-heading">
                         <h2>Currently borrowed</h2>
@@ -121,8 +112,8 @@ export default function AdminBorrowedBooksPage() {
                                     <tr key={reservation.id}>
                                         <td>{reservation.userName}</td>
                                         <td>{reservation.bookTitle}</td>
-                                        <td><time dateTime={reservation.checkoutDate}>{timestampFormat.format(new Date(reservation.checkoutDate))}</time></td>
-                                        <td><time dateTime={reservation.dueDate}>{timestampFormat.format(new Date(reservation.dueDate))}</time></td>
+                                        <td><DateTime value={reservation.checkoutDate} /></td>
+                                        <td><DateTime value={reservation.dueDate} /></td>
                                         <td>{typeof reservation.daysOverdue === 'number' && Number.isFinite(reservation.daysOverdue) ? reservation.daysOverdue : 'Unavailable'}</td>
                                         <td>{typeof reservation.fineAmount === 'number' && Number.isFinite(reservation.fineAmount) ? reservation.fineAmount.toFixed(2) : 'Unavailable'}</td>
                                         <td><span className={`borrow-status ${reservation.isOverdue ? 'borrow-status-overdue' : ''}`}>

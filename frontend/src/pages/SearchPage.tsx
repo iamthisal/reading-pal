@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronDown, ChevronLeft, ChevronRight, SearchX, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Search as SearchIcon, SearchX, SlidersHorizontal, X } from 'lucide-react';
 import { useBorrow } from '../hooks/useBorrow';
 import { INVENTORY_API_BASE_URL } from '../config/api';
+import BannerSearch from '../components/layout/BannerSearch';
+import PageBanner from '../components/layout/PageBanner';
 import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import BorrowToast from '../components/BorrowToast';
 import { BookListRow } from '../components/BookList/BookList';
+import { BookListSkeleton, SkeletonLine } from '../components/Skeleton/Skeleton';
 import type { ListBook } from '../components/BookList/BookList';
 import './SearchPage.css';
 
@@ -47,6 +50,7 @@ const SearchPage = () => {
 
     const [data, setData] = useState<SearchResponse | null>(null);
     const [allGenres, setAllGenres] = useState<string[]>([]);
+    const [genresLoaded, setGenresLoaded] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [reload, setReload] = useState(0);
@@ -57,7 +61,8 @@ const SearchPage = () => {
     useEffect(() => {
         axios.get<Genre[]>(`${INVENTORY_API_BASE_URL}/api/genres`)
             .then(response => setAllGenres(response.data.map(genre => genre.name)))
-            .catch(() => { /* The checklist falls back to the categories found in the results. */ });
+            .catch(() => { /* The checklist falls back to the categories found in the results. */ })
+            .finally(() => setGenresLoaded(true));
     }, []);
 
     useEffect(() => {
@@ -113,14 +118,14 @@ const SearchPage = () => {
 
     return (
         <div className="app-shell">
-            <AppTopbar query={query} />
+            <AppTopbar />
             <LibrarySidenav active="search" />
             <BorrowToast success={borrowing.success} error={borrowing.error} onDismiss={borrowing.dismiss} />
-            <main className="app-main search-main">
-                <header className="search-heading">
-                    <p>Catalogue search</p>
-                    <h1>{query ? <>Results for <q>{query}</q></> : 'Browse all books'}</h1>
-                </header>
+            <main className="app-main app-main-banner search-main">
+                <PageBanner eyebrow="Catalogue search" title={query ? 'Search' : 'Browse All'} icon={<SearchIcon size={38} />}
+                    text={query ? <>Results for <q>{query}</q></> : 'Every book in the catalogue. Search by title, author, category or ISBN.'}>
+                    <BannerSearch query={query} />
+                </PageBanner>
 
                 <div className="search-toolbar">
                     <p className="search-count" role="status">
@@ -147,6 +152,9 @@ const SearchPage = () => {
                 <div className="search-layout">
                     <section aria-label="Search results" aria-busy={loading}>
                         {error && <p role="alert" className="search-error">{error}</p>}
+
+                        {/* Only the very first search has nothing to show yet; later ones dim the previous results instead. */}
+                        {!error && !data && <BookListSkeleton rows={8} label="Searching…" />}
 
                         {!error && data && total === 0 && (
                             <div className="search-empty">
@@ -214,7 +222,9 @@ const SearchPage = () => {
                                             </li>
                                         );
                                     })}
-                                    {genreOptions.length === 0 && <li className="search-check-empty"><small>No genres yet</small></li>}
+                                    {genreOptions.length === 0 && (genresLoaded && data
+                                        ? <li className="search-check-empty"><small>No genres yet</small></li>
+                                        : Array.from({ length: 6 }, (_, index) => <li key={index} className="search-check" aria-hidden="true"><SkeletonLine width={`${55 + (index % 3) * 12}%`} /></li>))}
                                 </ul>
                             )}
                         </div>
