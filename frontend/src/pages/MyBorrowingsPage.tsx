@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { BookMarked, BookOpen, Clock3, Heart, History, Library, LogOut, RefreshCw, User, Wallet } from 'lucide-react';
+import { Bell, BookMarked, BookOpen, Clock3, Heart, History, Library, LogOut, RefreshCw, User, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
 import NotificationBell from '../components/NotificationBell';
@@ -83,6 +83,7 @@ export default function MyBorrowingsPage() {
                 <Link to="/home#recommendations" className="discover-nav-item"><Library size={16} />My Library</Link>
                 <Link to="/home#recommendations" className="discover-nav-item"><Heart size={16} />Favorite</Link>
                 <Link to="/my-borrowings" className="discover-nav-item discover-nav-item-active" aria-current="page"><History size={16} />My borrowings &amp; fines</Link>
+                <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>
             </nav>
             <div className="discover-sidebar-bottom">
                 <Link to="/profile" className="discover-nav-item"><User size={16} />My Profile</Link>

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NotificationService.Controllers;
 using NotificationService.Data;
 using NotificationService.Services;
 
@@ -37,6 +38,11 @@ public static class TestFactory
             HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")) }
         };
     }
+
+    public static NotificationsController CustomerController(NotificationDbContext db) => new(db, new NotificationReadStore(db));
+
+    public static AdminNotificationsController AdminController(NotificationDbContext db, ICustomerDirectory directory) =>
+        new(db, directory, new NotificationReadStore(db));
 
     public static CatalogEventHandler CreateCatalogHandler(NotificationDbContext db) =>
         new(db, NullLogger<CatalogEventHandler>.Instance);

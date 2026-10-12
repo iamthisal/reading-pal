@@ -13,6 +13,8 @@ import AdminBooksPage from './pages/AdminBooksPage';
 import AdminReservationsPage from './pages/AdminReservationsPage';
 import AdminBorrowedBooksPage from './pages/AdminBorrowedBooksPage';
 import AdminReservationHistoryPage from './pages/AdminReservationHistoryPage';
+import MyNotificationsPage from './pages/MyNotificationsPage';
+import AdminNotificationsPage from './pages/AdminNotificationsPage';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -36,6 +38,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/my-borrowings" element={<MyBorrowingsPage />} />
+            <Route path="/notifications" element={<MyNotificationsPage />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
@@ -46,6 +49,7 @@ function App() {
             <Route path="/admin/reservations/pending" element={<AdminReservationsPage />} />
             <Route path="/admin/borrowed" element={<AdminBorrowedBooksPage />} />
             <Route path="/admin/reservations/history" element={<AdminReservationHistoryPage />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

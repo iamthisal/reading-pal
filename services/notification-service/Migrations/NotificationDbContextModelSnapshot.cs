@@ -99,12 +99,14 @@ namespace NotificationService.Migrations
                     b.Property<DateTime>("ReadAtUtc")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("RecipientKey")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NotificationId", "UserId")
+                    b.HasIndex("NotificationId", "RecipientKey")
                         .IsUnique();
 
                     b.ToTable("NotificationReads");

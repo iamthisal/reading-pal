@@ -2,10 +2,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
+    Bell,
     BookMarked,
     BookOpen,
-    ChevronDown,
     Check,
+    ChevronDown,
     Filter,
     Heart,
     History,
@@ -276,6 +277,7 @@ const HomePage = () => {
                         Favorite
                     </a>
                     {user?.role === 'User' && <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>}
+                    {user?.role === 'User' && <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>}
                 </nav>
 
                 <aside className="discover-filter-rail" aria-label="Book filters">

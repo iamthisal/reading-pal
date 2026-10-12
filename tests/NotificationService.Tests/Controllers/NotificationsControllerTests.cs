@@ -11,7 +11,7 @@ public class NotificationsControllerTests
 {
     private static NotificationsController CreateController(NotificationDbContext db, string userId = "7")
     {
-        var controller = new NotificationsController(db);
+        var controller = TestFactory.CustomerController(db);
         TestFactory.AttachUser(controller, userId);
         return controller;
     }
