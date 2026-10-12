@@ -1,0 +1,362 @@
+/* App shell: top bar + side navigation.
+   Colours live in these variables so the theme can change in one place. Text is a soft
+   grey-green rather than near-black. */
+.app-shell {
+  --shell-surface: #ffffff;
+  --shell-page: #f6f4ed;
+  --shell-control: #f3f2ec;
+  --shell-border: #ebe7db;
+  --shell-text: #3f4b46;
+  --shell-muted: #7b847f;
+  --shell-accent: #1f4d44;
+  --shell-accent-soft: #e6efe9;
+  --shell-topbar-height: 68px;
+  --shell-nav-width: 256px;
+
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: var(--shell-nav-width) minmax(0, 1fr);
+  grid-template-rows: var(--shell-topbar-height) 1fr;
+  background: var(--shell-surface);
+  color: var(--shell-text);
+}
+
+/* ---------- Top bar ---------- */
+.app-topbar {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-right: 1.5rem;
+  background: var(--shell-surface);
+}
+
+.app-brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: var(--shell-nav-width);
+  box-sizing: border-box;
+  padding-left: 1.5rem;
+  color: var(--shell-text);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.app-brand-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--shell-accent);
+  color: #f5e9c8;
+}
+
+.app-search {
+  position: relative;
+  flex: 0 1 340px;
+  min-width: 0;
+}
+
+.app-search svg {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  transform: translateY(-50%);
+  color: var(--shell-muted);
+  pointer-events: none;
+}
+
+.app-search input {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 1rem 0 2.45rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--shell-control);
+  color: var(--shell-text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.app-search input::placeholder {
+  color: var(--shell-muted);
+}
+
+.app-search input:focus-visible {
+  outline: none;
+  border-color: var(--shell-accent);
+  background: var(--shell-surface);
+}
+
+.app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+/* The bell is the shared component; here it sits on white, so give it the control tint. */
+.app-topbar .notification-bell-button {
+  width: 40px;
+  height: 40px;
+  background: var(--shell-control);
+  color: var(--shell-text);
+}
+
+.app-user {
+  position: relative;
+}
+
+.app-user-button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.5rem 0.2rem 0.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--shell-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.app-user-button:hover,
+.app-user-button[aria-expanded='true'] {
+  background: var(--shell-control);
+}
+
+.app-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--shell-accent-soft);
+  color: var(--shell-accent);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.app-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: min(250px, calc(100vw - 32px));
+  padding: 0.4rem;
+  border: 1px solid var(--shell-border);
+  border-radius: 14px;
+  background: var(--shell-surface);
+  box-shadow: 0 14px 34px rgba(47, 61, 56, 0.14);
+}
+
+.app-user-identity {
+  padding: 0.6rem 0.75rem 0.7rem;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.app-user-identity small {
+  display: block;
+  color: var(--shell-muted);
+  font-size: 0.72rem;
+}
+
+.app-user-identity span {
+  display: block;
+  overflow: hidden;
+  color: var(--shell-text);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--shell-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.app-user-menu-item:hover {
+  background: var(--shell-control);
+}
+
+.app-user-menu-item svg {
+  flex: none;
+  color: var(--shell-muted);
+}
+
+/* ---------- Side navigation ---------- */
+.app-sidenav {
+  position: sticky;
+  top: var(--shell-topbar-height);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: calc(100vh - var(--shell-topbar-height));
+  box-sizing: border-box;
+  padding: 0.75rem 1rem 1.5rem;
+  overflow-y: auto;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.app-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  color: var(--shell-muted);
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.app-nav-item svg {
+  flex: none;
+}
+
+.app-nav-item:hover {
+  background: var(--shell-control);
+  color: var(--shell-text);
+}
+
+.app-nav-item-active,
+.app-nav-item-active:hover {
+  background: var(--shell-accent-soft);
+  color: var(--shell-accent);
+}
+
+.app-sidenav .discover-filter-rail {
+  margin-top: 0;
+}
+
+/* ---------- Main area ---------- */
+.app-main {
+  min-width: 0;
+  border-top-left-radius: 22px;
+  background: var(--shell-page);
+}
+
+/* The hero's strip now holds only the refresh button (the user chip and bell moved to the top bar),
+   so pin it to the corner instead of leaving an empty row above the heading. */
+.app-main .discover-hero {
+  padding-top: 2rem;
+}
+
+.app-main .discover-user-strip {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 1;
+  margin: 0;
+}
+
+/* Links to sections on the page should not land underneath the sticky top bar. */
+.app-main [id] {
+  scroll-margin-top: calc(var(--shell-topbar-height) + 16px);
+}
+
+.app-shell :is(a, button, input):focus-visible {
+  outline: 3px solid var(--shell-accent);
+  outline-offset: 2px;
+}
+
+.app-search input:focus-visible {
+  outline: none;
+}
+
+/* ---------- Tablet and phone ---------- */
+@media (max-width: 980px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .app-topbar {
+    min-height: var(--shell-topbar-height);
+    padding: 0 1rem;
+  }
+
+  .app-brand {
+    width: auto;
+    padding-left: 0;
+  }
+
+  .app-search {
+    flex: 1 1 200px;
+  }
+
+  .app-sidenav {
+    position: static;
+    height: auto;
+    gap: 0.75rem;
+    padding: 0.25rem 1rem 1rem;
+    overflow: visible;
+  }
+
+  .app-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+  }
+
+  .app-nav-item {
+    min-height: 38px;
+    gap: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  .app-main {
+    border-top-left-radius: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Brand and actions on the first row, search full width below. */
+  .app-topbar {
+    flex-wrap: wrap;
+    gap: 0.6rem 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .app-search {
+    order: 3;
+    flex: 1 1 100%;
+  }
+}

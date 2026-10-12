@@ -1,0 +1,254 @@
+/* Poster slider: wide banners that slide sideways, with arrows, dots and an optional button. */
+.poster-slider {
+  position: relative;
+  margin-bottom: 1.5rem;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.poster-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.poster-track::-webkit-scrollbar {
+  display: none;
+}
+
+.poster {
+  position: relative;
+  flex: 0 0 100%;
+  display: flex;
+  align-items: center;
+  min-height: clamp(220px, 21vw, 300px);
+  box-sizing: border-box;
+  padding: 2rem clamp(3.5rem, 6vw, 5rem);
+  overflow: hidden;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  background-size: cover;
+  background-position: center;
+}
+
+.poster-forest {
+  --poster-bg: linear-gradient(120deg, #1f4d44 0%, #2f6a5c 100%);
+  --poster-ink: #f6f1df;
+  --poster-soft: #c9dbd1;
+  --poster-button: #f3d66b;
+  --poster-button-ink: #1f4d44;
+}
+
+.poster-clay {
+  --poster-bg: linear-gradient(120deg, #b9573f 0%, #d27a55 100%);
+  --poster-ink: #fff6ea;
+  --poster-soft: #f8dccb;
+  --poster-button: #fff6ea;
+  --poster-button-ink: #9a4630;
+}
+
+.poster-sand {
+  --poster-bg: linear-gradient(120deg, #efe3b4 0%, #e6d8a0 100%);
+  --poster-ink: #2f5a50;
+  --poster-soft: #5d7068;
+  --poster-button: #1f4d44;
+  --poster-button-ink: #f6f1df;
+}
+
+.poster:not(.poster-has-image) {
+  background-image: var(--poster-bg);
+}
+
+/* Pictures get a tint on the text side so the words stay readable. */
+.poster-has-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(31, 77, 68, 0.82) 0%, rgba(31, 77, 68, 0.35) 55%, rgba(31, 77, 68, 0) 80%);
+}
+
+.poster-copy {
+  position: relative;
+  z-index: 1;
+  max-width: min(520px, 62%);
+  color: var(--poster-ink, #f6f1df);
+}
+
+.poster-eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--poster-soft, #c9dbd1);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.poster h2 {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.poster-text {
+  margin: 0.7rem 0 0;
+  color: var(--poster-soft, #c9dbd1);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.poster-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.2rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 999px;
+  background: var(--poster-button, #f3d66b);
+  color: var(--poster-button-ink, #1f4d44);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+.poster-action:hover {
+  transform: translateX(2px);
+}
+
+.poster-action:focus-visible,
+.poster-arrow:focus-visible,
+.poster-dot:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Drawn book covers for posters without a picture. */
+.poster-art {
+  position: absolute;
+  top: 50%;
+  right: clamp(4rem, 9vw, 8rem);
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  transform: translateY(-50%) rotate(-7deg);
+}
+
+.poster-art span {
+  width: clamp(64px, 7.5vw, 104px);
+  aspect-ratio: 2 / 3;
+  border-radius: 6px 10px 10px 6px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 7px 0 0 rgba(255, 255, 255, 0.16), 0 14px 26px rgba(0, 0, 0, 0.14);
+}
+
+.poster-art span:nth-child(2) {
+  margin-bottom: 26px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.poster-art span:nth-child(3) {
+  margin-bottom: -12px;
+  background: rgba(243, 214, 107, 0.7);
+}
+
+.poster-art span:nth-child(4) {
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.poster-sand .poster-art span {
+  background: rgba(31, 77, 68, 0.2);
+  box-shadow: inset 7px 0 0 rgba(31, 77, 68, 0.12), 0 14px 26px rgba(74, 62, 20, 0.12);
+}
+
+.poster-sand .poster-art span:nth-child(2) { background: rgba(185, 87, 63, 0.6); }
+.poster-sand .poster-art span:nth-child(3) { background: rgba(31, 77, 68, 0.55); }
+
+.poster-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: #1f4d44;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background 0.15s ease;
+}
+
+.poster-arrow:hover {
+  background: #ffffff;
+}
+
+.poster-arrow-prev { left: 0.85rem; }
+.poster-arrow-next { right: 0.85rem; }
+
+.poster-dots {
+  position: absolute;
+  bottom: 0.85rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+}
+
+.poster-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(31, 77, 68, 0.18);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.poster-dot-active {
+  width: 24px;
+  background: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .poster {
+    align-items: flex-start;
+    min-height: 250px;
+    padding: 1.5rem 1.25rem 3rem;
+  }
+
+  .poster-copy {
+    max-width: 100%;
+  }
+
+  /* No room beside the text: swiping and the dots do the job of the arrows. */
+  .poster-arrow {
+    display: none;
+  }
+
+  .poster-art {
+    top: auto;
+    right: -10px;
+    bottom: -34px;
+    opacity: 0.45;
+    transform: rotate(-7deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-action,
+  .poster-dot {
+    transition: none;
+  }
+}

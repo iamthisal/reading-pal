@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Bell, BookMarked, BookOpen, Clock3, Heart, History, Library, LogOut, RefreshCw, User, Wallet } from 'lucide-react';
+import { BookOpen, Clock3, History, RefreshCw, Wallet } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
+import AppTopbar from '../components/layout/AppTopbar';
+import LibrarySidenav from '../components/layout/LibrarySidenav';
 import './MyBorrowingsPage.css';
 
 interface Loan {
@@ -19,7 +20,7 @@ const date = (value: string) => new Intl.DateTimeFormat('en-LK', {
 const money = (value: number) => `Rs. ${value.toFixed(2)}`;
 
 export default function MyBorrowingsPage() {
-    const { token, user, logout } = useAuth();
+    const { token } = useAuth();
     const [data, setData] = useState<Borrowings | null>(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -74,24 +75,10 @@ export default function MyBorrowingsPage() {
         </tr>)}</tbody>
     </table></div>;
 
-    return <div className="discover-shell my-loans-shell">
-        <aside className="discover-sidebar">
-            <Link to="/home" className="discover-brand"><BookMarked size={24} /><span>Reading Pal</span></Link>
-            <nav className="discover-nav" aria-label="Library navigation">
-                <span className="discover-nav-label">Menu</span>
-                <Link to="/home" className="discover-nav-item"><BookOpen size={16} />Discover</Link>
-                <Link to="/home#recommendations" className="discover-nav-item"><Library size={16} />My Library</Link>
-                <Link to="/home#recommendations" className="discover-nav-item"><Heart size={16} />Favorite</Link>
-                <Link to="/my-borrowings" className="discover-nav-item discover-nav-item-active" aria-current="page"><History size={16} />My borrowings &amp; fines</Link>
-                <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>
-            </nav>
-            <div className="discover-sidebar-bottom">
-                <Link to="/profile" className="discover-nav-item"><User size={16} />My Profile</Link>
-                <button type="button" onClick={logout} className="discover-nav-item discover-nav-button"><LogOut size={16} />Log out</button>
-            </div>
-        </aside>
-        <main className="discover-main profile-main my-loans-page">
-        <header className="profile-topbar"><div className="profile-user-chip"><span className="discover-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'R'}</span><span>{user?.email || 'Reader'}</span></div><NotificationBell /></header>
+    return <div className="app-shell my-loans-shell">
+        <AppTopbar />
+        <LibrarySidenav active="borrowings" />
+        <main className="app-main discover-main profile-main my-loans-page">
         <section className="profile-hero my-loans-hero">
             <div><p className="discover-eyebrow">Your reading journey</p><h1>My borrowings<br />&amp; fines</h1><p>Keep track of your next return and look back at the books you’ve borrowed.</p></div>
             <div className="profile-hero-mark" aria-hidden="true"><BookOpen size={38} /></div>
