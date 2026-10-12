@@ -65,6 +65,78 @@ namespace InventoryService.Tests
             Assert.Equal(0, bookEvent.Book.AvailableCopies);
         }
 
+        [Fact]
+        public async Task Create_RecordsTheActingAdminAndAction()
+        {
+            using var context = CreateDbContext();
+            var publisher = new RecordingBookEventPublisher();
+            var controller = new BooksController(context, publisher, NullLogger<BooksController>.Instance);
+            AttachAdmin(controller, "12", "admin2@library.test");
+
+            await controller.Create(new CreateBookRequest
+            {
+                Title = "Who Added This", Author = "A. Developer", ISBN = "EVENT-003", Genre = "Technology", TotalCopies = 1
+            });
+
+            var bookEvent = Assert.Single(publisher.Events);
+            Assert.Equal("created", bookEvent.Action);
+            Assert.Equal("12", bookEvent.PerformedBy);
+            Assert.Equal("admin2@library.test", bookEvent.PerformedByEmail);
+        }
+
+        [Theory]
+        [InlineData("update", "updated")]
+        [InlineData("unavailable", "marked-unavailable")]
+        [InlineData("available", "marked-available")]
+        public async Task BookUpdatedEvents_CarryTheSpecificAction(string operation, string expectedAction)
+        {
+            using var context = CreateDbContext();
+            var book = new Models.Book
+            {
+                Title = "Action Event", Author = "A. Developer", ISBN = "EVENT-004", Genre = "Technology",
+                TotalCopies = 2, AvailableCopies = operation == "available" ? 0 : 2,
+                CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
+            };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+            var publisher = new RecordingBookEventPublisher();
+            var controller = new BooksController(context, publisher, NullLogger<BooksController>.Instance);
+            AttachAdmin(controller, "admin-id", "admin@library.com");
+
+            switch (operation)
+            {
+                case "update":
+                    await controller.Update(book.Id, new UpdateBookRequest
+                    {
+                        Title = "Action Event (2nd ed.)", Author = "A. Developer", ISBN = "EVENT-004", Genre = "Technology", TotalCopies = 2
+                    });
+                    break;
+                case "unavailable": await controller.MarkUnavailable(book.Id); break;
+                default: await controller.MarkAvailable(book.Id); break;
+            }
+
+            var bookEvent = Assert.Single(publisher.Events);
+            Assert.Equal("book-updated", bookEvent.EventType);
+            Assert.Equal(expectedAction, bookEvent.Action);
+            Assert.Equal("admin-id", bookEvent.PerformedBy);
+        }
+
+        private static void AttachAdmin(BooksController controller, string subject, string email)
+        {
+            controller.ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
+            {
+                HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+                {
+                    User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(new[]
+                    {
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, subject),
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, email),
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Admin")
+                    }, "Test"))
+                }
+            };
+        }
+
         private static InventoryDbContext CreateDbContext()
         {
             var options = new DbContextOptionsBuilder<InventoryDbContext>()

@@ -19,6 +19,9 @@ public sealed class Notification
     public DateTime? ReservationDate { get; set; }
     public DateTime? DueDate { get; set; }
     public DateTime? ReturnDate { get; set; }
+    // For admin notifications about another admin's action: the acting admin's token subject. That admin
+    // does not see the notification; every other admin does.
+    public string? PerformedBy { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? ReadAtUtc { get; set; }
@@ -41,6 +44,10 @@ public static class NotificationTypes
     public const string DueDateReminder = "DueDateReminder";
     public const string NewBook = "NewBook";
     public const string BookDeleted = "BookDeleted";
+    // Admin notifications about catalogue changes made by another admin.
+    public const string AdminBookCreated = "AdminBookCreated";
+    public const string AdminBookUpdated = "AdminBookUpdated";
+    public const string AdminBookDeleted = "AdminBookDeleted";
     public const string NewReservation = "NewReservation";
     public const string CustomerCancelledReservation = "CustomerCancelledReservation";
 }

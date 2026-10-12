@@ -116,6 +116,38 @@ public static class NotificationFactory
         };
     }
 
+    /// <summary>
+    /// An admin notification about a catalogue change, for every admin except the one who made it.
+    /// The title is saved from the event, so it stays visible after the book is deleted.
+    /// </summary>
+    public static Notification? CreateAdminCatalogNotice(CatalogEvent evt)
+    {
+        var title = CatalogTitle(evt);
+        var who = string.IsNullOrWhiteSpace(evt.PerformedByEmail) ? "Another admin" : evt.PerformedByEmail.Trim();
+        var (type, message) = (evt.EventType, evt.Action) switch
+        {
+            (CatalogEventTypes.BookCreated, _) => (NotificationTypes.AdminBookCreated, $"{who} added '{title}' to the catalogue."),
+            (CatalogEventTypes.BookUpdated, "marked-unavailable") => (NotificationTypes.AdminBookUpdated, $"{who} marked '{title}' as unavailable."),
+            (CatalogEventTypes.BookUpdated, "marked-available") => (NotificationTypes.AdminBookUpdated, $"{who} marked '{title}' as available."),
+            (CatalogEventTypes.BookUpdated, _) => (NotificationTypes.AdminBookUpdated, $"{who} updated '{title}'."),
+            (CatalogEventTypes.BookDeleted, _) => (NotificationTypes.AdminBookDeleted, $"{who} deleted '{title}' from the catalogue."),
+            _ => (null, null)
+        };
+        if (type == null) return null;
+        return new Notification
+        {
+            EventId = evt.EventId,
+            Audience = NotificationAudiences.Admin,
+            UserId = 0,
+            Type = type,
+            BookId = evt.BookId,
+            BookTitle = title,
+            Message = message!,
+            PerformedBy = string.IsNullOrWhiteSpace(evt.PerformedBy) ? null : evt.PerformedBy.Trim(),
+            CreatedAtUtc = evt.TimestampUtc == default ? DateTime.UtcNow : AsUtc(evt.TimestampUtc)
+        };
+    }
+
     private static string CatalogTitle(CatalogEvent evt) =>
         string.IsNullOrWhiteSpace(evt.Book?.Title) ? FallbackTitle(evt.BookId) : evt.Book.Title.Trim();
 

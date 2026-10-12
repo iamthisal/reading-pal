@@ -43,7 +43,7 @@ public sealed class NotificationConsumerWorker(
         .Build();
 
         consumer.Subscribe(new[] { settings.Topics.ReservationCreated, settings.Topics.ReservationAccepted, settings.Topics.ReservationCancelled, settings.Topics.BookReturned, settings.Topics.FineRecorded, settings.Topics.BookDueSoon, settings.Topics.ReservationSnapshot,
-            settings.Topics.BookCreated, settings.Topics.BookDeleted });
+            settings.Topics.BookCreated, settings.Topics.BookUpdated, settings.Topics.BookDeleted });
         logger.LogInformation("Notification consumer subscribed as group {GroupId}.", settings.GroupId);
 
         try
@@ -58,7 +58,9 @@ public sealed class NotificationConsumerWorker(
 
                     using var scope = scopeFactory.CreateScope();
                     // Inventory's catalogue topics have a different event shape from Lending's.
-                    var outcome = result.Topic == settings.Topics.BookCreated || result.Topic == settings.Topics.BookDeleted
+                    var isCatalogTopic = result.Topic == settings.Topics.BookCreated || result.Topic == settings.Topics.BookUpdated
+                        || result.Topic == settings.Topics.BookDeleted;
+                    var outcome = isCatalogTopic
                         ? await scope.ServiceProvider.GetRequiredService<CatalogEventHandler>().HandleAsync(result.Message.Value, stoppingToken)
                         : await scope.ServiceProvider.GetRequiredService<LendingEventHandler>().HandleAsync(result.Message.Value, stoppingToken);
                     consumer.Commit(result);

@@ -54,7 +54,7 @@ public class ReservationStateReviewTests
         var outcome = await TestFactory.CreateCatalogHandler(db).HandleAsync(BookDeleted(), CancellationToken.None);
 
         Assert.Equal(HandleOutcome.Created, outcome);
-        Assert.Equal(7, Assert.Single(db.Notifications).UserId);
+        Assert.Equal(7, Assert.Single(db.Notifications, n => n.Audience == NotificationAudiences.User).UserId);
     }
 
     [Fact]

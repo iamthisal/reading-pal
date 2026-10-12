@@ -73,12 +73,18 @@ public sealed class AdminNotificationsController(NotificationDbContext db, ICust
         return Ok(new { updated });
     }
 
-    private IQueryable<Notification> AdminNotifications() =>
-        db.Notifications.AsNoTracking().Where(n => n.Audience == NotificationAudiences.Admin);
+    // Admin notifications for this admin: everything except changes they made themselves.
+    private IQueryable<Notification> AdminNotifications()
+    {
+        var subject = AdminSubject();
+        return db.Notifications.AsNoTracking()
+            .Where(n => n.Audience == NotificationAudiences.Admin && (n.PerformedBy == null || n.PerformedBy != subject));
+    }
 
     // The hardcoded admin's subject is "admin-id"; admins stored in the User Service use their numeric ID.
-    private string RecipientKey() =>
-        RecipientKeys.Admin(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? "admin");
+    private string AdminSubject() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub") ?? "admin";
+
+    private string RecipientKey() => RecipientKeys.Admin(AdminSubject());
 
     private static AdminNotificationResponse ToResponse(Notification n, bool isRead, IReadOnlyDictionary<int, string> names)
     {
@@ -95,6 +101,7 @@ public sealed class AdminNotificationsController(NotificationDbContext db, ICust
             // MySQL datetime values have no Kind; notifications are written in UTC.
             ReservationDate = n.ReservationDate is { } reserved ? DateTime.SpecifyKind(reserved, DateTimeKind.Utc) : null,
             Message = n.Message.Replace(NotificationFactory.CustomerPlaceholder, customerName),
+            Link = AdminNotificationResponse.LinkFor(n.Type),
             IsRead = isRead,
             CreatedAtUtc = DateTime.SpecifyKind(n.CreatedAtUtc, DateTimeKind.Utc)
         };

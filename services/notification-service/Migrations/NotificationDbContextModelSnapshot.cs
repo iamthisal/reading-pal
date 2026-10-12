@@ -55,6 +55,10 @@ namespace NotificationService.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
+                    b.Property<string>("PerformedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
                     b.Property<DateTime?>("ReadAtUtc")
                         .HasColumnType("datetime(6)");
 

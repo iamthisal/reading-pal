@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NOTIFICATION_API_BASE_URL } from '../config/api';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
-import { announceNotificationsChanged, isWarningType, notificationApiPath, notificationIcon, NOTIFICATIONS_CHANGED_EVENT } from './notificationTypes';
+import { announceNotificationsChanged, isWarningType, notificationApiPath, notificationIcon, notificationLinkLabel, NOTIFICATIONS_CHANGED_EVENT } from './notificationTypes';
 import type { NotificationItem } from './notificationTypes';
 import './NotificationBell.css';
 
@@ -131,7 +131,7 @@ const NotificationBell = () => {
     };
 
     const emptyText = isAdmin
-        ? 'No notifications yet. New and cancelled customer reservations will appear here.'
+        ? 'No notifications yet. New and cancelled customer reservations and other admins’ catalogue changes will appear here.'
         : 'No notifications yet. Updates about your reservations and returns will appear here.';
 
     return (
@@ -158,7 +158,7 @@ const NotificationBell = () => {
                                         <span className="notification-text">
                                             <span>{item.message}</span>
                                             <time dateTime={item.createdAtUtc}>{formatTime(item.createdAtUtc)}</time>
-                                            {item.link && <span className="notification-cta">View pending reservations →</span>}
+                                            {item.link && <span className="notification-cta">{notificationLinkLabel(item.link)}</span>}
                                         </span>
                                         {!item.isRead && <span className="notification-dot" aria-label="Unread" />}
                                     </button>

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -136,7 +137,7 @@ namespace InventoryService.Controllers
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
 
-            if (!await PublishEventAsync("book-deleted", deletedBook))
+            if (!await PublishEventAsync("book-deleted", deletedBook, "deleted"))
             {
                 return KafkaFailure(deletedBook.Id);
             }
@@ -178,7 +179,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-created", response))
+            if (!await PublishEventAsync("book-created", response, "created"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -226,7 +227,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "updated"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -252,7 +253,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "marked-unavailable"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -278,7 +279,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "marked-available"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -286,14 +287,18 @@ namespace InventoryService.Controllers
             return Ok(response);
         }
 
-        private async Task<bool> PublishEventAsync(string eventType, BookResponse book)
+        private async Task<bool> PublishEventAsync(string eventType, BookResponse book, string action)
         {
             var bookEvent = new BookEvent
             {
                 EventType = eventType,
                 BookId = book.Id,
                 Book = book,
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow,
+                Action = action,
+                // The admin making the change, from their token (the built-in admin's subject is "admin-id").
+                PerformedBy = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? User?.FindFirstValue("sub"),
+                PerformedByEmail = User?.FindFirstValue(ClaimTypes.Email) ?? User?.FindFirstValue("email")
             };
 
             try

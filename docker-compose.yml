@@ -109,6 +109,7 @@ services:
       Kafka__Topics__BookDueSoon: book-due-soon
       Kafka__Topics__ReservationSnapshot: reservation-snapshot
       Kafka__Topics__BookCreated: book-created
+      Kafka__Topics__BookUpdated: book-updated
       Kafka__Topics__BookDeleted: book-deleted
       Frontend__Url: http://localhost:5173
     ports:

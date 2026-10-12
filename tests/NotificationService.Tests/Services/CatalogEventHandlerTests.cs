@@ -40,8 +40,7 @@ public class CatalogEventHandlerTests
         var outcome = await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-created"), CancellationToken.None);
 
         Assert.Equal(HandleOutcome.Created, outcome);
-        var announcement = Assert.Single(db.Notifications);
-        Assert.Equal(NotificationAudiences.Customers, announcement.Audience);
+        var announcement = Assert.Single(db.Notifications, n => n.Audience == NotificationAudiences.Customers);
         Assert.Equal(NotificationTypes.NewBook, announcement.Type);
         Assert.Equal("New in the catalogue: 'Clean Code' by Robert C. Martin.", announcement.Message);
         Assert.Equal("Clean Code", announcement.BookTitle);
@@ -57,7 +56,8 @@ public class CatalogEventHandlerTests
 
         await handler.HandleAsync(json, CancellationToken.None);
         Assert.Equal(HandleOutcome.Duplicate, await handler.HandleAsync(json, CancellationToken.None));
-        Assert.Single(db.Notifications);
+        Assert.Single(db.Notifications, n => n.Audience == NotificationAudiences.Customers);
+        Assert.Single(db.Notifications, n => n.Audience == NotificationAudiences.Admin);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class CatalogEventHandlerTests
         var outcome = await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-deleted", title: "Clean Code"), CancellationToken.None);
 
         Assert.Equal(HandleOutcome.Created, outcome);
-        var notices = db.Notifications.Where(n => !before.Contains(n.Id)).ToList();
+        var notices = db.Notifications.Where(n => !before.Contains(n.Id) && n.Audience == NotificationAudiences.User).ToList();
         Assert.Equal(new[] { 7, 8 }, notices.Select(n => n.UserId).OrderBy(id => id));
         Assert.All(notices, n =>
         {
@@ -97,12 +97,12 @@ public class CatalogEventHandlerTests
     {
         using var db = TestFactory.CreateDbContext();
         await ApplyAsync(db, ReservationEvent("reservation-created", 1, userId: 7, bookId: 99));
-        var before = db.Notifications.Count();
+        var before = db.Notifications.Count(n => n.Audience == NotificationAudiences.User);
 
-        var outcome = await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-deleted", bookId: 12), CancellationToken.None);
+        await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-deleted", bookId: 12), CancellationToken.None);
 
-        Assert.Equal(HandleOutcome.Skipped, outcome);
-        Assert.Equal(before, db.Notifications.Count());
+        // No customer is told; only the admin notice about the deletion is created.
+        Assert.Equal(before, db.Notifications.Count(n => n.Audience == NotificationAudiences.User));
     }
 
     [Fact]
@@ -129,8 +129,8 @@ public class CatalogEventHandlerTests
             ReservationEvent("reservation-created", 1, userId: 7, bookId: 12));
 
         Assert.Equal(ReservationStatuses.Closed, Assert.Single(db.ReservationStates).Status);
-        Assert.Equal(HandleOutcome.Skipped,
-            await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-deleted"), CancellationToken.None));
+        await TestFactory.CreateCatalogHandler(db).HandleAsync(BookEvent("book-deleted"), CancellationToken.None);
+        Assert.DoesNotContain(db.Notifications, n => n.Type == NotificationTypes.BookDeleted);
     }
 
     [Fact]
