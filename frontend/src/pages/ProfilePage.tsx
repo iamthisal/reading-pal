@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Bell, BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Save, User } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
+import AppTopbar from '../components/layout/AppTopbar';
+import LibrarySidenav from '../components/layout/LibrarySidenav';
 
 const ProfilePage = () => {
-    const { logout, token, user } = useAuth();
+    const { token } = useAuth();
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -74,59 +74,11 @@ const ProfilePage = () => {
     }
 
     return (
-        <div className="profile-shell discover-shell">
-            <aside className="discover-sidebar">
-                <Link to="/home" className="discover-brand">
-                    <BookMarked size={24} />
-                    <span>Reading Pal</span>
-                </Link>
+        <div className="app-shell">
+            <AppTopbar />
+        <LibrarySidenav active="profile" />
 
-                <nav className="discover-nav" aria-label="Library navigation">
-                    <span className="discover-nav-label">Menu</span>
-                    <Link to="/home" className="discover-nav-item">
-                        <BookOpen size={16} />
-                        Discover
-                    </Link>
-                    <Link to="/home#recommendations" className="discover-nav-item">
-                        <Library size={16} />
-                        My Library
-                    </Link>
-                    <Link to="/home#recommendations" className="discover-nav-item">
-                        <Heart size={16} />
-                        Favorite
-                    </Link>
-                    <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>
-                    <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>
-                </nav>
-
-                <div className="discover-sidebar-bottom">
-                    {user?.role === 'Admin' ? (
-                        <Link to="/admin/dashboard" className="discover-nav-item">
-                            <LayoutDashboard size={16} />
-                            Dashboard
-                        </Link>
-                    ) : (
-                        <Link to="/profile" className="discover-nav-item discover-nav-item-active">
-                            <User size={16} />
-                            My Profile
-                        </Link>
-                    )}
-                    <button type="button" onClick={logout} className="discover-nav-item discover-nav-button">
-                        <LogOut size={16} />
-                        Log out
-                    </button>
-                </div>
-            </aside>
-
-            <main className="profile-main discover-main">
-                <header className="profile-topbar">
-                    <div className="profile-user-chip">
-                        <span className="discover-avatar">{email?.slice(0, 1).toUpperCase() || 'R'}</span>
-                        <span>{email || 'Reader'}</span>
-                    </div>
-                    <NotificationBell />
-                </header>
-
+            <main className="app-main profile-main discover-main">
                 <section className="profile-hero">
                     <div>
                         <p className="discover-eyebrow">Your reading identity</p>
@@ -194,7 +146,7 @@ const ProfilePage = () => {
                                 className="form-input"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Leave blank to keep current password"
+                                placeholder="Leave blank to keep current"
                                 minLength={6}
                             />
                         </div>

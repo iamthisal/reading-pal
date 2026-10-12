@@ -626,7 +626,7 @@ const AdminBooksPage = () => {
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-cover">Cover Image URL</label>
-                                    <input id="edit-book-cover" type="url" className="form-input" value={editCoverImageUrl} onChange={e => setEditCoverImageUrl(e.target.value)} maxLength={500} placeholder="https://example.com/book-cover.jpg" />
+                                    <input id="edit-book-cover" type="url" className="form-input" value={editCoverImageUrl} onChange={e => setEditCoverImageUrl(e.target.value)} maxLength={500} placeholder="https://example.com/cover.jpg" />
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <label className="form-label" htmlFor="edit-book-copies">Total Copies</label>
@@ -680,7 +680,7 @@ const AdminBooksPage = () => {
                                     id="book-author"
                                     type="text"
                                     className="form-input"
-                                    placeholder="e.g. Andrew Hunt, David Thomas"
+                                    placeholder="e.g. Andrew Hunt"
                                     value={author}
                                     onChange={e => setAuthor(e.target.value)}
                                     required
@@ -718,7 +718,7 @@ const AdminBooksPage = () => {
                                     id="book-cover"
                                     type="url"
                                     className="form-input"
-                                    placeholder="https://example.com/book-cover.jpg"
+                                    placeholder="https://example.com/cover.jpg"
                                     value={coverImageUrl}
                                     onChange={e => setCoverImageUrl(e.target.value)}
                                     maxLength={500}

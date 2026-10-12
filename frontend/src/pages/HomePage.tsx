@@ -2,24 +2,18 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import {
-    Bell,
-    BookMarked,
-    BookOpen,
     Check,
-    ChevronDown,
     Filter,
-    Heart,
-    History,
-    LayoutDashboard,
-    Library,
-    LogOut,
     RefreshCw,
     Search,
-    User,
 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { INVENTORY_API_BASE_URL, LENDING_API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
+import AppTopbar from '../components/layout/AppTopbar';
+import LibrarySidenav from '../components/layout/LibrarySidenav';
+import PosterSlider from '../components/PosterSlider/PosterSlider';
+import type { Poster } from '../components/PosterSlider/PosterSlider';
+import RecommendedBooks from '../components/RecommendedBooks/RecommendedBooks';
 
 interface Book {
     id: number;
@@ -105,7 +99,7 @@ const HomePage = () => {
             document.getElementById(target)?.scrollIntoView({ block: 'start' });
         }
     }, [location.hash, location.key]);
-    const { logout, user, token } = useAuth();
+    const { user, token } = useAuth();
     const [books, setBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
@@ -178,6 +172,11 @@ const HomePage = () => {
         const fillers = mockBooks.filter(book => !titles.has(book.title.toLowerCase()));
         return books.length >= 5 ? books : [...books, ...fillers].slice(0, 8);
     }, [books]);
+
+    // Six picks for the shelf under the posters: books that can be reserved now come first.
+    const recommendedForYou = useMemo(() => [...displayBooks]
+        .sort((a, b) => Number(b.availableCopies > 0) - Number(a.availableCopies > 0))
+        .slice(0, 6), [displayBooks]);
 
     const genreOptions = useMemo(() => {
         const counts = new Map<string, number>();
@@ -254,106 +253,78 @@ const HomePage = () => {
         );
     };
 
+    const posters: Poster[] = [
+        { id: 'new', theme: 'forest', eyebrow: 'Fresh on the shelves', title: 'New arrivals', text: 'See the latest books added to the catalogue and reserve yours before they go.', action: { label: 'Browse books', to: '#recommendations' } },
+        ...(user?.role === 'Admin' ? [
+            { id: 'manage', theme: 'clay' as const, eyebrow: 'For librarians', title: 'Keep the catalogue up to date', text: 'Add new titles, adjust copies and review what is out on loan.', action: { label: 'Manage books', to: '/admin/books' } },
+        ] : [
+            { id: 'loans', theme: 'clay' as const, eyebrow: 'Your reading journey', title: 'Know when your books are due', text: 'Check due dates, pending reservations and any fines in one place.', action: { label: 'My borrowings', to: '/my-borrowings' } },
+            { id: 'updates', theme: 'sand' as const, eyebrow: 'Stay up to date', title: 'Never miss a pickup', text: 'We let you know when a reservation is ready or a return is coming up.', action: { label: 'View notifications', to: '/notifications' } },
+        ]),
+    ];
+
     return (
-        <div className="discover-shell">
-            <aside className="discover-sidebar">
-                <div className="discover-brand">
-                    <BookMarked size={24} />
-                    <span>Reading Pal</span>
-                </div>
+        <div className="app-shell">
+            <AppTopbar
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSearchSubmit={showSearchResults}
+                searchPlaceholder="Search books"
+            />
 
-                <nav className="discover-nav" aria-label="Library navigation">
-                    <span className="discover-nav-label">Menu</span>
-                    <a className="discover-nav-item discover-nav-item-active" href="#discover">
-                        <BookOpen size={16} />
-                        Discover
-                    </a>
-                    <a className="discover-nav-item" href="#recommendations">
-                        <Library size={16} />
-                        My Library
-                    </a>
-                    <a className="discover-nav-item" href="#recommendations">
-                        <Heart size={16} />
-                        Favorite
-                    </a>
-                    {user?.role === 'User' && <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>}
-                    {user?.role === 'User' && <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>}
-                </nav>
+            <LibrarySidenav active="discover">
+                    <aside className="discover-filter-rail" aria-label="Book filters">
+                        <div className="discover-filter-heading">
+                            <Filter size={16} />
+                            <span>Filters</span>
+                            {(selectedGenres.length > 0 || selectedStatus === 'Available') && (
+                                <button type="button" className="discover-filter-reset" onClick={resetFilters}>Clear</button>
+                            )}
+                        </div>
 
-                <aside className="discover-filter-rail" aria-label="Book filters">
-                    <div className="discover-filter-heading">
-                        <Filter size={16} />
-                        <span>Filters</span>
-                        {(selectedGenres.length > 0 || selectedStatus === 'Available') && (
-                            <button type="button" className="discover-filter-reset" onClick={resetFilters}>Clear</button>
-                        )}
-                    </div>
-
-                    <fieldset className="discover-filter-group">
-                        <legend>Stock status</legend>
-                        <label className="discover-check-row">
-                            <input
-                                type="checkbox"
-                                checked={selectedStatus === 'Available'}
-                                onChange={e => setSelectedStatus(e.target.checked ? 'Available' : 'All Statuses')}
-                            />
-                            <span className="discover-custom-checkbox"><Check size={12} /></span>
-                            <span>Available</span>
-                            <small>{availableCount}</small>
-                        </label>
-                    </fieldset>
-
-                    <fieldset className="discover-filter-group">
-                        <legend>Categories</legend>
-                        {genreOptions.map(option => (
-                            <label className="discover-check-row" key={option.name}>
+                        <fieldset className="discover-filter-group">
+                            <legend>Stock status</legend>
+                            <label className="discover-check-row">
                                 <input
                                     type="checkbox"
-                                    checked={selectedGenres.includes(option.name)}
-                                    onChange={e => setSelectedGenres(current => e.target.checked
-                                        ? [...current, option.name]
-                                        : current.filter(genre => genre !== option.name))}
+                                    checked={selectedStatus === 'Available'}
+                                    onChange={e => setSelectedStatus(e.target.checked ? 'Available' : 'All Statuses')}
                                 />
                                 <span className="discover-custom-checkbox"><Check size={12} /></span>
-                                <span>{option.name}</span>
-                                <small>{option.count}</small>
+                                <span>Available</span>
+                                <small>{availableCount}</small>
                             </label>
-                        ))}
-                        {genreOptions.length === 0 && <p className="discover-filter-empty">No categories yet</p>}
-                    </fieldset>
-                </aside>
+                        </fieldset>
 
-                <div className="discover-sidebar-bottom">
-                    {user?.role === 'Admin' ? (
-                        <Link to="/admin/dashboard" className="discover-nav-item">
-                            <LayoutDashboard size={16} />
-                            Dashboard
-                        </Link>
-                    ) : (
-                        <Link to="/profile" className="discover-nav-item">
-                            <User size={16} />
-                            My Profile
-                        </Link>
-                    )}
-                    <button type="button" onClick={logout} className="discover-nav-item discover-nav-button">
-                        <LogOut size={16} />
-                        Log out
-                    </button>
-                </div>
-            </aside>
+                        <fieldset className="discover-filter-group">
+                            <legend>Categories</legend>
+                            {genreOptions.map(option => (
+                                <label className="discover-check-row" key={option.name}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedGenres.includes(option.name)}
+                                        onChange={e => setSelectedGenres(current => e.target.checked
+                                            ? [...current, option.name]
+                                            : current.filter(genre => genre !== option.name))}
+                                    />
+                                    <span className="discover-custom-checkbox"><Check size={12} /></span>
+                                    <span>{option.name}</span>
+                                    <small>{option.count}</small>
+                                </label>
+                            ))}
+                            {genreOptions.length === 0 && <p className="discover-filter-empty">No categories yet</p>}
+                        </fieldset>
+                    </aside>
+            </LibrarySidenav>
 
-            <main id="discover" className="discover-main">
+            <main id="discover" className="app-main discover-main">
+                <PosterSlider posters={posters} label="Library highlights" />
+                <RecommendedBooks books={recommendedForYou} />
                 <section className="discover-hero">
                     <div className="discover-user-strip">
-                        <div className="discover-user-chip">
-                            <span className="discover-avatar">{user?.email?.slice(0, 1).toUpperCase() || 'R'}</span>
-                            <span>{user?.email || 'Reader'}</span>
-                            <ChevronDown size={14} />
-                        </div>
-                        <button type="button" className="discover-icon-button" title="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
+                        <button type="button" className="discover-icon-button" title="Refresh books" aria-label="Refresh books" onClick={() => void fetchBooks()} disabled={isLoading}>
                             <RefreshCw size={17} />
                         </button>
-                        <NotificationBell />
                     </div>
 
                     <div className="discover-copy">
@@ -452,16 +423,18 @@ const HomePage = () => {
                                         <div className="discover-book-meta">
                                             <h3>{book.title}</h3>
                                             <p>{book.author}</p>
-                                            <span>{book.availableCopies} of {book.totalCopies} copies</span>
-                                            <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
-                                                {statusText}
-                                            </span>
+                                            <div className="discover-book-stock">
+                                                <span>{book.availableCopies} of {book.totalCopies} copies</span>
+                                                <span className={isAvailable ? 'discover-status-available' : 'discover-status-unavailable'}>
+                                                    {statusText}
+                                                </span>
+                                            </div>
                                             {user?.isValidated && isAvailable && (
                                                 <button
                                                     onClick={() => handleReserve(book.id)}
                                                     disabled={isReserving[book.id]}
+                                                    className="discover-reserve-button"
                                                     style={{
-                                                        marginTop: '12px',
                                                         padding: '8px 12px',
                                                         background: 'var(--primary-color, #2563eb)',
                                                         color: 'white',
