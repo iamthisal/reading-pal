@@ -58,6 +58,31 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Creates the ten topics the services use, on every start, if they are missing.
+  # Automatic topic creation is off in the broker, so a fresh setup would otherwise have none.
+  # It runs once and exits; existing topics and their messages are left alone.
+  kafka-init:
+    image: apache/kafka:4.1.2
+    restart: "no"
+
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+    volumes:
+      - ./create-topics.sh:/create-topics.sh:ro
+
+    entrypoint: ["/bin/sh", "/create-topics.sh"]
+
+    networks:
+      - events
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "1"
+
   kafka-ui:
     image: ghcr.io/kafbat/kafka-ui:v1.5.0
     profiles: ["tools"]
