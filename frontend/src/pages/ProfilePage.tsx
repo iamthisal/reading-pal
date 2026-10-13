@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
-import { Bell, BookMarked, BookOpen, Heart, History, LayoutDashboard, Library, LogOut, Save, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Save, User } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
-import NotificationBell from '../components/NotificationBell';
+import PageBanner from '../components/layout/PageBanner';
+import '../components/Skeleton/Skeleton.css';
+import AppTopbar from '../components/layout/AppTopbar';
+import LibrarySidenav from '../components/layout/LibrarySidenav';
 
 const ProfilePage = () => {
-    const { logout, token, user } = useAuth();
+    const { token } = useAuth();
     
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -65,76 +67,14 @@ const ProfilePage = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="profile-shell profile-loading">
-                <p>Loading profile...</p>
-            </div>
-        );
-    }
-
     return (
-        <div className="profile-shell discover-shell">
-            <aside className="discover-sidebar">
-                <Link to="/home" className="discover-brand">
-                    <BookMarked size={24} />
-                    <span>Reading Pal</span>
-                </Link>
+        <div className="app-shell">
+            <AppTopbar />
+        <LibrarySidenav active="profile" />
 
-                <nav className="discover-nav" aria-label="Library navigation">
-                    <span className="discover-nav-label">Menu</span>
-                    <Link to="/home" className="discover-nav-item">
-                        <BookOpen size={16} />
-                        Discover
-                    </Link>
-                    <Link to="/home#recommendations" className="discover-nav-item">
-                        <Library size={16} />
-                        My Library
-                    </Link>
-                    <Link to="/home#recommendations" className="discover-nav-item">
-                        <Heart size={16} />
-                        Favorite
-                    </Link>
-                    <Link to="/my-borrowings" className="discover-nav-item"><History size={16} />My borrowings &amp; fines</Link>
-                    <Link to="/notifications" className="discover-nav-item"><Bell size={16} />My notifications</Link>
-                </nav>
-
-                <div className="discover-sidebar-bottom">
-                    {user?.role === 'Admin' ? (
-                        <Link to="/admin/dashboard" className="discover-nav-item">
-                            <LayoutDashboard size={16} />
-                            Dashboard
-                        </Link>
-                    ) : (
-                        <Link to="/profile" className="discover-nav-item discover-nav-item-active">
-                            <User size={16} />
-                            My Profile
-                        </Link>
-                    )}
-                    <button type="button" onClick={logout} className="discover-nav-item discover-nav-button">
-                        <LogOut size={16} />
-                        Log out
-                    </button>
-                </div>
-            </aside>
-
-            <main className="profile-main discover-main">
-                <header className="profile-topbar">
-                    <div className="profile-user-chip">
-                        <span className="discover-avatar">{email?.slice(0, 1).toUpperCase() || 'R'}</span>
-                        <span>{email || 'Reader'}</span>
-                    </div>
-                    <NotificationBell />
-                </header>
-
-                <section className="profile-hero">
-                    <div>
-                        <p className="discover-eyebrow">Your reading identity</p>
-                        <h1>My profile</h1>
-                        <p>Keep your details current so your Reading Pal experience stays personal.</p>
-                    </div>
-                    <div className="profile-hero-mark"><User size={38} /></div>
-                </section>
+            <main className="app-main app-main-banner profile-main discover-main">
+                <PageBanner eyebrow="Your reading identity" title="My profile" icon={<User size={38} />}
+                    text="Keep your details current so your Reading Pal experience stays personal." />
 
                 <section className="profile-form-panel">
                     <div className="profile-panel-heading">
@@ -148,7 +88,9 @@ const ProfilePage = () => {
                     {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
                     {successMsg && <div style={{ padding: '1rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', marginBottom: '1rem' }}>{successMsg}</div>}
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} aria-busy={isLoading}>
+                        {/* While the details are loading the fields are greyed placeholders that cannot be typed in. */}
+                        <fieldset className={`profile-fieldset${isLoading ? ' skeleton-fields' : ''}`} disabled={isLoading}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div className="form-group">
                                 <label className="form-label" htmlFor="firstName">First Name</label>
@@ -194,7 +136,7 @@ const ProfilePage = () => {
                                 className="form-input"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Leave blank to keep current password"
+                                placeholder="Leave blank to keep current"
                                 minLength={6}
                             />
                         </div>
@@ -207,6 +149,7 @@ const ProfilePage = () => {
                                 </div>
                             </button>
                         </div>
+                        </fieldset>
                     </form>
                 </section>
             </main>

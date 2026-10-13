@@ -115,6 +115,20 @@ catch (Exception ex)
     app.Logger.LogWarning(ex, "Could not run database migration on startup.");
 }
 
+try
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
+    if (db.Database.IsRelational())
+    {
+        await CatalogueSeeder.SeedAsync(db);
+    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Could not seed the starter authors and lists on startup.");
+}
+
 app.Run();
 
 // Needed for WebApplicationFactory in integration tests

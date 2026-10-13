@@ -1,0 +1,41 @@
+/* Favourites: the reader's saved books as a list. */
+.favourites-main {
+  padding: 2rem clamp(1.25rem, 4vw, 4rem) 3rem;
+}
+
+.favourites-empty {
+  max-width: 560px;
+  padding: 2.5rem 2rem;
+  border: 1px dashed #d8d1c0;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #7b847f;
+  text-align: center;
+}
+
+.favourites-empty svg {
+  color: #c9684c;
+}
+
+.favourites-empty h2 {
+  margin: 0.75rem 0 0.4rem;
+  color: #3f4b46;
+  font-size: 1.15rem;
+}
+
+.favourites-empty p {
+  margin: 0 0 1.25rem;
+}
+
+.favourites-empty a {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.favourites-error {
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: #fbeae6;
+  color: #9a3a26;
+  font-weight: 600;
+}

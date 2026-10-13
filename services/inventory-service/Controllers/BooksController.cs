@@ -169,6 +169,7 @@ namespace InventoryService.Controllers
                 ISBN = trimmedIsbn,
                 Genre = request.Genre.Trim(),
                 CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl),
+                Description = NormalizeOptionalText(request.Description),
                 TotalCopies = request.TotalCopies,
                 AvailableCopies = request.TotalCopies,
                 CreatedAt = now,
@@ -220,6 +221,11 @@ namespace InventoryService.Controllers
             book.ISBN = trimmedIsbn;
             book.Genre = request.Genre.Trim();
             book.CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl);
+            // A request that leaves the description out keeps the current one; an empty one clears it.
+            if (request.Description != null)
+            {
+                book.Description = NormalizeOptionalText(request.Description);
+            }
             book.AvailableCopies = request.TotalCopies - borrowedCopies;
             book.TotalCopies = request.TotalCopies;
             book.UpdatedAt = DateTime.UtcNow;
@@ -323,23 +329,11 @@ namespace InventoryService.Controllers
             });
         }
 
-        private static BookResponse ToBookResponse(Book book)
+        private static BookResponse ToBookResponse(Book book) => BookResponse.FromBook(book);
+
+        private static string? NormalizeOptionalText(string? text)
         {
-            return new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ISBN = book.ISBN,
-                Genre = book.Genre,
-                CoverImageUrl = book.CoverImageUrl,
-                TotalCopies = book.TotalCopies,
-                AvailableCopies = book.AvailableCopies,
-                IsAvailable = book.AvailableCopies > 0,
-                AvailabilityStatus = book.AvailableCopies > 0 ? "Available" : "Not available now",
-                CreatedAt = book.CreatedAt,
-                UpdatedAt = book.UpdatedAt
-            };
+            return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         }
 
         private static string? NormalizeOptionalUrl(string? url)

@@ -24,6 +24,9 @@ namespace InventoryService.DTOs
         [Url(ErrorMessage = "Cover image URL must be a valid URL")]
         public string? CoverImageUrl { get; set; }
 
+        [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
+        public string? Description { get; set; }
+
         [Required(ErrorMessage = "Total copies is required")]
         [Range(0, 100000, ErrorMessage = "Total copies cannot be negative")]
         public int TotalCopies { get; set; }
