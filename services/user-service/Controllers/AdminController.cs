@@ -72,6 +72,7 @@ namespace UserService.Controllers
             }
 
             user.IsValidated = true;
+            user.ApprovedAtUtc = DateTime.UtcNow;
             _context.SaveChanges();
 
             return Ok(new { message = "User accepted successfully." });
@@ -102,6 +103,7 @@ namespace UserService.Controllers
             }
 
             user.IsValidated = false;
+            user.ApprovedAtUtc = null;
             _context.SaveChanges();
 
             return Ok(new { message = "User access revoked successfully." });

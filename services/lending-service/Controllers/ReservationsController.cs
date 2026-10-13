@@ -244,7 +244,9 @@ namespace LendingService.Controllers
                 ReservationId = reservation.Id,
                 UserId = reservation.UserId,
                 BookId = reservation.BookId,
-                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc),
+                CheckoutDate = checkoutDate,
+                DueDate = dueDate
             };
             reservation.Status = "Borrowed";
             reservation.CheckoutDate = checkoutDate;
@@ -305,7 +307,8 @@ namespace LendingService.Controllers
                 ReservationId = reservation.Id,
                 UserId = reservation.UserId,
                 BookId = reservation.BookId,
-                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc),
+                CancelledBy = "Admin"
             };
             _context.ReservationEvents.Add(new ReservationEventOutbox
             {
@@ -363,6 +366,21 @@ namespace LendingService.Controllers
                 return Unauthorized(new { message = $"Invalid user token format. Expected integer, got: {userIdClaim}" });
             }
 
+            // The sign-in token says the member was approved when they signed in. Access can be revoked
+            // while that token is still valid, so ask the User Service for the member's status right now.
+            if (await CheckMemberIsApprovedAsync(HttpContext.RequestAborted) is { } notApproved)
+            {
+                return notApproved;
+            }
+
+            // One open request per member and book: a second click must not add another to the admin queue.
+            var alreadyPending = await _context.Reservations.AnyAsync(r =>
+                r.UserId == userId && r.BookId == request.BookId && (r.Status == "Pending" || r.Status == "Accepting"));
+            if (alreadyPending)
+            {
+                return Conflict(new { message = "You already have a pending reservation for this book." });
+            }
+
             // Sync call to Inventory Service
             var inventoryBaseUrl = _configuration["InventoryService:BaseUrl"];
             if (string.IsNullOrEmpty(inventoryBaseUrl))
@@ -413,8 +431,32 @@ namespace LendingService.Controllers
                 ReservationDate = DateTime.UtcNow
             };
 
+            // The outbox row needs the generated reservation ID, so both saves share one transaction:
+            // a Pending reservation never exists without its reservation-created event.
+            // (The in-memory test provider has no transactions.)
+            await using var transaction = _context.Database.IsRelational()
+                ? await _context.Database.BeginTransactionAsync()
+                : null;
             _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
+
+            var createdEvent = new ReservationCreatedEvent
+            {
+                ReservationId = reservation.Id,
+                UserId = reservation.UserId,
+                BookId = reservation.BookId,
+                ReservationDate = DateTime.SpecifyKind(reservation.ReservationDate, DateTimeKind.Utc)
+            };
+            _context.ReservationEvents.Add(new ReservationEventOutbox
+            {
+                Id = createdEvent.EventId,
+                EventType = createdEvent.EventType,
+                ReservationId = reservation.Id,
+                CreatedAtUtc = createdEvent.TimestampUtc,
+                Payload = JsonSerializer.Serialize(createdEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            });
+            await _context.SaveChangesAsync();
+            if (transaction != null) await transaction.CommitAsync();
 
             var result = new ReservationResponse
             {
@@ -426,6 +468,50 @@ namespace LendingService.Controllers
             };
 
             return CreatedAtAction(nameof(ReserveBook), new { id = result.Id }, result);
+        }
+
+        /// <summary>
+        /// Returns null when the member may reserve, otherwise the response to send back.
+        /// It fails closed: if the User Service cannot confirm the member, nothing is reserved.
+        /// </summary>
+        private async Task<ActionResult?> CheckMemberIsApprovedAsync(CancellationToken cancellationToken)
+        {
+            if (!Uri.TryCreate(_configuration["UserService:BaseUrl"], UriKind.Absolute, out var userBaseUrl))
+            {
+                return StatusCode(500, new { message = "User Service configuration is missing." });
+            }
+
+            try
+            {
+                using var client = _httpClientFactory.CreateClient();
+                using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(userBaseUrl, "/api/user/profile"));
+                request.Headers.TryAddWithoutValidation("Authorization", Request.Headers.Authorization.ToString());
+                using var response = await client.SendAsync(request, cancellationToken);
+
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.NotFound)
+                {
+                    return StatusCode(403, new { message = "Your account could not be verified. Please sign in again." });
+                }
+                response.EnsureSuccessStatusCode();
+
+                var profile = await response.Content.ReadFromJsonAsync<MemberStatusResponse>(cancellationToken);
+                // A User Service from before this check does not report the status; only an explicit "no" blocks.
+                if (profile?.IsValidated == false)
+                {
+                    return StatusCode(403, new { message = "Your account is not approved to reserve books. Please contact the library." });
+                }
+                return null;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or JsonException
+                || (ex is OperationCanceledException && !cancellationToken.IsCancellationRequested))
+            {
+                return StatusCode(503, new { message = "Your account could not be verified right now. Please try again." });
+            }
+        }
+
+        private sealed class MemberStatusResponse
+        {
+            public bool? IsValidated { get; set; }
         }
 
         // Helper class to deserialize inventory response

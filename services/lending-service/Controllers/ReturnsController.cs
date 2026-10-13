@@ -57,8 +57,20 @@ public sealed class ReturnsController(LendingDbContext db, IHttpClientFactory cl
         reservation.Status = "Returned";
         var days = ReturnFineCalculator.DaysOverdue(loan.DueDate, loan.ReturnDate.Value);
         if (days > 0)
-            db.Fines.Add(new Fine { BorrowRecordId = loan.Id, DaysOverdue = days,
-                DailyRate = ReturnFineCalculator.DailyRate, Amount = days * ReturnFineCalculator.DailyRate });
+        {
+            var fine = new Fine { BorrowRecordId = loan.Id, DaysOverdue = days,
+                DailyRate = ReturnFineCalculator.DailyRate, Amount = days * ReturnFineCalculator.DailyRate };
+            db.Fines.Add(fine);
+            // Queued in the same save as the fine, so a recorded fine always produces exactly one event.
+            var fineEvent = new FineRecordedEvent { ReservationId = reservation.Id, BorrowRecordId = loan.Id,
+                BookId = loan.BookId, UserId = loan.UserId, DaysOverdue = fine.DaysOverdue, DailyRate = fine.DailyRate,
+                Amount = fine.Amount, FineStatus = fine.Status,
+                ReturnDate = DateTime.SpecifyKind(loan.ReturnDate.Value, DateTimeKind.Utc) };
+            db.ReservationEvents.Add(new ReservationEventOutbox { Id = fineEvent.EventId,
+                ReservationId = reservation.Id, EventType = fineEvent.EventType,
+                CreatedAtUtc = fineEvent.TimestampUtc,
+                Payload = JsonSerializer.Serialize(fineEvent, new JsonSerializerOptions(JsonSerializerDefaults.Web)) });
+        }
         var returnedEvent = new BookReturnedEvent { ReservationId = reservation.Id,
             BorrowRecordId = loan.Id, BookId = loan.BookId, UserId = loan.UserId,
             ReturnDate = DateTime.SpecifyKind(loan.ReturnDate.Value, DateTimeKind.Utc) };

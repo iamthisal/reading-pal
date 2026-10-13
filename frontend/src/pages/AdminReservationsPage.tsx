@@ -1,8 +1,12 @@
+import { BookMarked as BookMarkedIcon } from 'lucide-react';
+import AppTopbar from '../components/layout/AppTopbar';
+import PageBanner from '../components/layout/PageBanner';
+import DateTime from '../components/DateTime';
+import AdminSidebar from '../components/layout/AdminSidebar';
 import { refreshWhileVisible } from '../utils/refreshWhileVisible';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { BookMarked, BookOpen, BookPlus, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LENDING_API_BASE_URL } from '../config/api';
 
@@ -14,17 +18,14 @@ interface PendingReservation {
     status: string;
 }
 
-const timestampFormat = new Intl.DateTimeFormat(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
-});
-
 export default function AdminReservationsPage() {
-    const { token, logout } = useAuth();
+    const { token } = useAuth();
     const [reservations, setReservations] = useState<PendingReservation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [refresh, setRefresh] = useState(0);
+    // A new location key (e.g. following a notification link to this page) reloads the current queue.
+    const location = useLocation();
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [processingAction, setProcessingAction] = useState<'accept' | 'reject' | null>(null);
     const [actionError, setActionError] = useState('');
@@ -84,38 +85,18 @@ export default function AdminReservationsPage() {
         if (token) void fetchReservations();
         const stopRefresh = refreshWhileVisible(() => token ? fetchReservations(true) : Promise.resolve());
         return () => { stopRefresh(); controller.abort(); };
-    }, [token, refresh]);
+    }, [token, refresh, location.key]);
 
     return (
-        <div className="admin-shell">
-            <aside className="admin-sidebar">
-                <Link to="/admin/dashboard" className="admin-brand"><BookMarked size={23} /><span>Reading Pal</span></Link>
-                <nav className="admin-nav" aria-label="Administration navigation">
-                    <span className="admin-nav-label">Workspace</span>
-                    <Link to="/admin/dashboard" className="admin-nav-item"><LayoutDashboard size={16} />Overview</Link>
-                    <Link to="/admin/users/pending" className="admin-nav-item"><Users size={16} />User approvals</Link>
-                    <Link to="/admin/users/active" className="admin-nav-item"><Users size={16} />Active users</Link>
-                    <Link to="/admin/books" className="admin-nav-item"><BookPlus size={16} />Book inventory</Link>
-                    <Link to="/admin/reservations/pending" className="admin-nav-item admin-nav-item-active" aria-current="page"><BookMarked size={16} />Pending reservations</Link>
-                    <Link to="/admin/borrowed" className="admin-nav-item"><BookOpen size={16} />Borrowed books</Link>
-                    <Link to="/admin/reservations/history" className="admin-nav-item"><BookOpen size={16} />Reservation history</Link>
-                    <Link to="/home" className="admin-nav-item"><BookOpen size={16} />Public catalogue</Link>
-                </nav>
-                <div className="admin-sidebar-bottom">
-                    <button type="button" onClick={logout} className="admin-nav-item admin-nav-button"><LogOut size={16} />Log out</button>
-                </div>
-            </aside>
-            <main className="admin-main admin-users-main">
-                <header className="admin-topbar admin-users-topbar">
-                    <div>
-                        <p className="admin-eyebrow">Counter operations</p>
-                        <h1>Pending reservations</h1>
-                        <p className="admin-users-subtitle">Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</p>
-                    </div>
-                    <button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
-                        {isLoading ? 'Loading…' : 'Refresh'}
-                    </button>
-                </header>
+        <div className="app-shell">
+        <AppTopbar />
+            <AdminSidebar active="reservations-pending" />
+            <main className="app-main app-main-banner admin-main admin-users-main">
+                <PageBanner eyebrow="Counter operations" title="Pending reservations" icon={<BookMarkedIcon size={38} />} text={<>Reservations awaiting pickup, oldest first. Times are shown in your local timezone.</>}>
+                    <div className="page-banner-actions"><button type="button" className="btn-outline" disabled={isLoading || processingId !== null} onClick={() => setRefresh(value => value + 1)}>
+                            {isLoading ? 'Loading…' : 'Refresh'}
+                        </button></div>
+                </PageBanner>
                 <section className="admin-users-panel glass-panel" aria-label="Pending reservation queue" aria-busy={isLoading}>
                     <div className="admin-users-panel-heading">
                         <h2>Awaiting pickup</h2>
@@ -133,7 +114,7 @@ export default function AdminReservationsPage() {
                                     <tr key={reservation.id}>
                                         <td>{reservation.userName}</td>
                                         <td>{reservation.bookTitle}</td>
-                                        <td><time dateTime={reservation.reservationDate}>{timestampFormat.format(new Date(reservation.reservationDate))}</time></td>
+                                        <td><DateTime value={reservation.reservationDate} /></td>
                                         <td><div className="reservation-actions"><button type="button" className="reservation-accept-button" disabled={processingId !== null}
                                             aria-label={`Accept ${reservation.bookTitle} for ${reservation.userName}`}
                                             onClick={() => void processReservation(reservation, 'accept')}>

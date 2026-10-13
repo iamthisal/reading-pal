@@ -34,6 +34,9 @@ namespace LendingService.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DueReminderSentAtUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("ReservationId")
                         .HasColumnType("int");
 

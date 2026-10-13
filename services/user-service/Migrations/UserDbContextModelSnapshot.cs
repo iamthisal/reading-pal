@@ -30,6 +30,9 @@ namespace UserService.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ApprovedAtUtc")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 

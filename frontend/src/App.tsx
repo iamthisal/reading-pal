@@ -13,6 +13,15 @@ import AdminBooksPage from './pages/AdminBooksPage';
 import AdminReservationsPage from './pages/AdminReservationsPage';
 import AdminBorrowedBooksPage from './pages/AdminBorrowedBooksPage';
 import AdminReservationHistoryPage from './pages/AdminReservationHistoryPage';
+import MyNotificationsPage from './pages/MyNotificationsPage';
+import AdminNotificationsPage from './pages/AdminNotificationsPage';
+import AdminAuthorsPage from './pages/AdminAuthorsPage';
+import AdminListsPage from './pages/AdminListsPage';
+import FavouritesPage from './pages/FavouritesPage';
+import SearchPage from './pages/SearchPage';
+import BookPage from './pages/BookPage';
+import AuthorPage from './pages/AuthorPage';
+import { FavouritesProvider } from './contexts/FavouritesContext';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -23,6 +32,7 @@ const RootRedirect = () => {
 function App() {
   return (
     <AuthProvider>
+      <FavouritesProvider>
       <Router>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
@@ -31,11 +41,16 @@ function App() {
           
           <Route element={<ProtectedRoute allowedRoles={['User', 'Admin']} />}>
             <Route path="/home" element={<HomePage />} />
+            <Route path="/favourites" element={<FavouritesPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/books/:bookId" element={<BookPage />} />
+            <Route path="/authors/:name" element={<AuthorPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['User']} />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/my-borrowings" element={<MyBorrowingsPage />} />
+            <Route path="/notifications" element={<MyNotificationsPage />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
@@ -46,11 +61,15 @@ function App() {
             <Route path="/admin/reservations/pending" element={<AdminReservationsPage />} />
             <Route path="/admin/borrowed" element={<AdminBorrowedBooksPage />} />
             <Route path="/admin/reservations/history" element={<AdminReservationHistoryPage />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+            <Route path="/admin/authors" element={<AdminAuthorsPage />} />
+            <Route path="/admin/lists" element={<AdminListsPage />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </FavouritesProvider>
     </AuthProvider>
   );
 }

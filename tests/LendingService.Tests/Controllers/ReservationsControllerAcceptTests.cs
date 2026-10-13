@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LendingService.Controllers;
 using LendingService.Data;
 using LendingService.Models;
@@ -136,6 +137,10 @@ public class ReservationsControllerAcceptTests
 
         var borrowRecord = await context.BorrowRecords.SingleAsync(b => b.ReservationId == 1);
         Assert.Equal(checkoutDate, borrowRecord.CheckoutDate);
-        Assert.Single(context.ReservationEvents);
+        var message = Assert.Single(context.ReservationEvents);
+        using var payload = JsonDocument.Parse(message.Payload);
+        Assert.Equal(2, payload.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(checkoutDate, payload.RootElement.GetProperty("checkoutDate").GetDateTime().ToUniversalTime());
+        Assert.Equal(checkoutDate.AddDays(14), payload.RootElement.GetProperty("dueDate").GetDateTime().ToUniversalTime());
     }
 }

@@ -29,6 +29,29 @@ namespace InventoryService.Controllers
             return Ok(genres);
         }
 
+        /// <summary>The books in one category, newest first.</summary>
+        [HttpGet("{id:int}/books")]
+        public async Task<ActionResult<IEnumerable<BookResponse>>> GetBooks(int id, [FromQuery] int? limit = null)
+        {
+            var genre = await _context.Genres.FindAsync(id);
+            if (genre == null)
+            {
+                return NotFound(new { message = $"Genre with ID {id} not found." });
+            }
+
+            var name = genre.Name.ToLower();
+            IQueryable<Book> query = _context.Books
+                .Where(book => book.Genre.ToLower() == name)
+                .OrderByDescending(book => book.CreatedAt);
+            if (limit is > 0)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            var books = await query.ToListAsync();
+            return Ok(books.Select(BookResponse.FromBook));
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenreResponse>> Create([FromBody] CreateGenreRequest request)

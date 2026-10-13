@@ -739,6 +739,7 @@ body {
   justify-content: flex-end;
   align-items: center;
   margin-bottom: 1.5rem;
+  gap: 0.75rem;
 }
 
 .profile-user-chip {
@@ -2565,4 +2566,327 @@ body {
 .reservation-accept-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+/* ==========================================================================
+   UI cleanup: alignment, clipping and visibility fixes.
+   Each rule fixes one audited problem; the theme pass can fold these into the
+   base rules above.
+   ========================================================================== */
+
+/* Sidebar icons shrank when a label wrapped to two lines. */
+.discover-nav-item svg,
+.admin-nav-item svg {
+  flex: none;
+}
+
+.discover-nav-item,
+.admin-nav-item {
+  line-height: 1.25;
+}
+
+/* Section labels and filter counts were too faint to read (contrast below 3:1). */
+.discover-nav-label,
+.admin-nav-label,
+.discover-check-row small {
+  color: #6f6b62;
+}
+
+/* The two-tone page background put a hard vertical edge behind cards, tables and buttons. */
+.discover-main,
+.admin-main {
+  background: #f6f4ed;
+}
+
+/* The sidebar scrolled away on long pages, leaving an empty column beside the content. */
+@media (min-width: 981px) {
+  .discover-sidebar,
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+/* .btn-outline was styled for the old dark theme: white text on these light pages. */
+.discover-main .btn-outline,
+.admin-main .btn-outline {
+  border-color: #d8d1c0;
+  background: #ffffff;
+  color: #123f38;
+  font-weight: 700;
+}
+
+.discover-main .btn-outline:hover:not(:disabled),
+.admin-main .btn-outline:hover:not(:disabled) {
+  background: #f3f0e7;
+}
+
+.discover-main .btn-outline:disabled,
+.admin-main .btn-outline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Book cards: buttons sat at different heights when one title wrapped and its neighbour did not,
+   and the copies text ran into the availability badge. */
+.discover-book-row {
+  align-items: stretch;
+}
+
+.discover-featured-book {
+  display: flex;
+  flex-direction: column;
+}
+
+.discover-book-meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.discover-book-stock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin: 0.55rem 0 0.75rem;
+}
+
+.discover-book-meta .discover-book-stock span {
+  margin-top: 0;
+}
+
+.discover-reserve-button {
+  margin-top: auto;
+}
+
+/* ".discover-book-meta span" overrode the badge colours: dark green text on the red badge. */
+.discover-book-meta .discover-status-available {
+  color: #0f6b47;
+}
+
+.discover-book-meta .discover-status-unavailable {
+  color: #ffffff;
+}
+
+/* Table buttons and badges that wrapped mid-label ("Retry Return", "DevOps Test"). */
+.reservation-accept-button,
+.admin-inventory-table td span,
+.admin-inventory-table td:last-child .btn-outline {
+  white-space: nowrap;
+}
+
+/* Inventory row actions wrapped unevenly (two buttons, then one on its own line). */
+.admin-inventory-table td:last-child {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* The inventory search placeholder was cut off: the toolbar's flex layout shrank the box. */
+.admin-inventory-tools {
+  flex: none;
+  max-width: 100%;
+}
+
+.admin-inventory-search {
+  flex: none;
+  width: min(300px, 100%) !important;
+}
+
+/* ...and when the title and tools no longer fit on one line, the tools wrap below instead of overflowing. */
+.admin-inventory-toolbar {
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+/* The login card's decorations reached past the screen edge and made the page scroll sideways. */
+.auth-page {
+  overflow-x: hidden;
+}
+
+/* Tablet and phone: the menus scrolled sideways with no scrollbar, so most items were unreachable.
+   They now wrap, and the Home filters take the full width instead of leaving a blank block. */
+@media (max-width: 980px) {
+  .discover-sidebar,
+  .admin-sidebar {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0.75rem;
+    overflow-x: visible;
+  }
+
+  .discover-nav,
+  .admin-nav,
+  .discover-sidebar-bottom,
+  .admin-sidebar-bottom {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+    width: 100%;
+    margin-top: 0;
+    overflow-x: visible;
+  }
+
+  .discover-nav-item,
+  .admin-nav-item {
+    min-height: 38px;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    white-space: nowrap;
+  }
+
+  /* Admin items are full width in the sidebar; in the wrapped menu they size to their label. */
+  .admin-nav-item,
+  .discover-nav-button,
+  .admin-nav-button {
+    width: auto;
+  }
+
+  .discover-filter-rail {
+    flex: none;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* The refresh button stretched into a wide empty box. */
+  .admin-inventory-tools .admin-refresh-button {
+    align-self: flex-start;
+  }
+
+  /* Register: the card touched both screen edges. */
+  .app-container {
+    padding: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .login-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  /* Login: the illustration covered the headline, the footer line overlapped the paragraph, and the
+     card's decorations poked past the screen edge. */
+  .auth-reading-object,
+  .auth-book-stack,
+  .auth-ink-bottle,
+  .auth-pen {
+    display: none;
+  }
+
+  .auth-showcase {
+    min-height: 0;
+  }
+
+  .auth-showcase-copy {
+    margin-top: 2rem;
+  }
+
+  .auth-showcase-footer {
+    position: static;
+    margin-top: 1.25rem;
+  }
+
+  .auth-form-area {
+    min-height: 0;
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+
+  .auth-form-card {
+    transform: none;
+  }
+
+  .auth-form-card::after,
+  .auth-wax-seal {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Catalogue page: larger books and the borrow result toast
+   ========================================================================== */
+.discover-main .discover-book-row {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem 1.5rem;
+}
+
+.discover-main .discover-book-meta h3 {
+  color: #3f4b46;
+  font-size: 1rem;
+}
+
+.discover-main .discover-book-meta p {
+  font-size: 0.84rem;
+}
+
+.discover-main .discover-reserve-button {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .discover-main .discover-book-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+}
+
+/* Borrow buttons sit all down the page, so the result is shown in a corner where it is always visible. */
+.discover-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: min(420px, calc(100vw - 2.5rem));
+  padding: 0.9rem 1rem;
+  border: 1px solid #ceead6;
+  border-radius: 14px;
+  background: #e6f4ea;
+  color: #14613a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: 0 14px 34px rgba(47, 61, 56, 0.18);
+}
+
+.discover-toast-error {
+  border-color: #f2c9c0;
+  background: #fbeae6;
+  color: #9a3a26;
+}
+
+.discover-toast button {
+  flex: none;
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.discover-main .discover-book-meta :is(h3, p) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.discover-main .discover-book-meta :is(h3, p) a:hover {
+  color: #1f4d44;
+  text-decoration: underline;
+}
+
+.admin-book-description {
+  height: auto;
+  min-height: 84px;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  line-height: 1.45;
+  resize: vertical;
 }

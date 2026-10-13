@@ -26,6 +26,10 @@ namespace InventoryService.Models
         [MaxLength(500)]
         public string? CoverImageUrl { get; set; }
 
+        /// <summary>A short summary of what the book is about.</summary>
+        [MaxLength(2000)]
+        public string? Description { get; set; }
+
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Total copies cannot be negative")]
         public int TotalCopies { get; set; }

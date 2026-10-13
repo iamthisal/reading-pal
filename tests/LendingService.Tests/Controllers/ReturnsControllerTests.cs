@@ -1,3 +1,4 @@
+using System.Text.Json;
 using LendingService.Controllers;
 using LendingService.Models;
 using LendingService.Tests.TestSupport;
@@ -154,6 +155,43 @@ public class ReturnsControllerTests
 
         Assert.Equal(1, calls);
         Assert.Single(context.Fines);
-        Assert.Single(context.ReservationEvents);
+        // One book-returned and one fine-recorded event; the retry adds neither again.
+        Assert.Single(context.ReservationEvents, e => e.EventType == "book-returned");
+        Assert.Single(context.ReservationEvents, e => e.EventType == "fine-recorded");
+        Assert.Equal(2, context.ReservationEvents.Count());
+    }
+
+    [Fact]
+    public async Task Return_WhenOverdue_QueuesFineRecordedEventWithAmountAndDays()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        await SeedLoan(context, dueDate: DateTime.UtcNow.AddDays(-3));
+        var controller = CreateController(context, new FakeHttpMessageHandler(_ => JsonResponse.Ok(new { })));
+
+        Assert.IsType<OkObjectResult>(await controller.Return(40, CancellationToken.None));
+
+        var fine = Assert.Single(context.Fines);
+        var message = Assert.Single(context.ReservationEvents, e => e.EventType == "fine-recorded");
+        Assert.Equal(10, message.ReservationId);
+        using var payload = JsonDocument.Parse(message.Payload);
+        var root = payload.RootElement;
+        Assert.Equal(40, root.GetProperty("borrowRecordId").GetInt32());
+        Assert.Equal(20, root.GetProperty("bookId").GetInt32());
+        Assert.Equal(fine.DaysOverdue, root.GetProperty("daysOverdue").GetInt32());
+        Assert.Equal(fine.Amount, root.GetProperty("amount").GetDecimal());
+        Assert.Equal("Unpaid", root.GetProperty("fineStatus").GetString());
+        Assert.Equal(message.Id, root.GetProperty("eventId").GetGuid());
+    }
+
+    [Fact]
+    public async Task Return_WhenOnTime_QueuesNoFineRecordedEvent()
+    {
+        using var context = ControllerTestFactory.CreateDbContext();
+        await SeedLoan(context, dueDate: DateTime.UtcNow.AddDays(1));
+        var controller = CreateController(context, new FakeHttpMessageHandler(_ => JsonResponse.Ok(new { })));
+
+        Assert.IsType<OkObjectResult>(await controller.Return(40, CancellationToken.None));
+
+        Assert.DoesNotContain(context.ReservationEvents, e => e.EventType == "fine-recorded");
     }
 }

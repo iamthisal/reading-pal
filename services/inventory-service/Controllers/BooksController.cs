@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -136,7 +137,7 @@ namespace InventoryService.Controllers
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
 
-            if (!await PublishEventAsync("book-deleted", deletedBook))
+            if (!await PublishEventAsync("book-deleted", deletedBook, "deleted"))
             {
                 return KafkaFailure(deletedBook.Id);
             }
@@ -168,6 +169,7 @@ namespace InventoryService.Controllers
                 ISBN = trimmedIsbn,
                 Genre = request.Genre.Trim(),
                 CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl),
+                Description = NormalizeOptionalText(request.Description),
                 TotalCopies = request.TotalCopies,
                 AvailableCopies = request.TotalCopies,
                 CreatedAt = now,
@@ -178,7 +180,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-created", response))
+            if (!await PublishEventAsync("book-created", response, "created"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -219,6 +221,11 @@ namespace InventoryService.Controllers
             book.ISBN = trimmedIsbn;
             book.Genre = request.Genre.Trim();
             book.CoverImageUrl = NormalizeOptionalUrl(request.CoverImageUrl);
+            // A request that leaves the description out keeps the current one; an empty one clears it.
+            if (request.Description != null)
+            {
+                book.Description = NormalizeOptionalText(request.Description);
+            }
             book.AvailableCopies = request.TotalCopies - borrowedCopies;
             book.TotalCopies = request.TotalCopies;
             book.UpdatedAt = DateTime.UtcNow;
@@ -226,7 +233,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "updated"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -252,7 +259,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "marked-unavailable"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -278,7 +285,7 @@ namespace InventoryService.Controllers
             await _context.SaveChangesAsync();
 
             var response = ToBookResponse(book);
-            if (!await PublishEventAsync("book-updated", response))
+            if (!await PublishEventAsync("book-updated", response, "marked-available"))
             {
                 return KafkaFailure(book.Id);
             }
@@ -286,14 +293,18 @@ namespace InventoryService.Controllers
             return Ok(response);
         }
 
-        private async Task<bool> PublishEventAsync(string eventType, BookResponse book)
+        private async Task<bool> PublishEventAsync(string eventType, BookResponse book, string action)
         {
             var bookEvent = new BookEvent
             {
                 EventType = eventType,
                 BookId = book.Id,
                 Book = book,
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow,
+                Action = action,
+                // The admin making the change, from their token (the built-in admin's subject is "admin-id").
+                PerformedBy = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? User?.FindFirstValue("sub"),
+                PerformedByEmail = User?.FindFirstValue(ClaimTypes.Email) ?? User?.FindFirstValue("email")
             };
 
             try
@@ -318,23 +329,11 @@ namespace InventoryService.Controllers
             });
         }
 
-        private static BookResponse ToBookResponse(Book book)
+        private static BookResponse ToBookResponse(Book book) => BookResponse.FromBook(book);
+
+        private static string? NormalizeOptionalText(string? text)
         {
-            return new BookResponse
-            {
-                Id = book.Id,
-                Title = book.Title,
-                Author = book.Author,
-                ISBN = book.ISBN,
-                Genre = book.Genre,
-                CoverImageUrl = book.CoverImageUrl,
-                TotalCopies = book.TotalCopies,
-                AvailableCopies = book.AvailableCopies,
-                IsAvailable = book.AvailableCopies > 0,
-                AvailabilityStatus = book.AvailableCopies > 0 ? "Available" : "Not available now",
-                CreatedAt = book.CreatedAt,
-                UpdatedAt = book.UpdatedAt
-            };
+            return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         }
 
         private static string? NormalizeOptionalUrl(string? url)

@@ -10,4 +10,6 @@ public class BorrowRecord
     public DateTime DueDate { get; set; }
     public DateTime? ReturnDate { get; set; }
     public DateTime? ReturnRequestedAtUtc { get; set; }
+    // Set when the due-date reminder is queued, so each loan is reminded at most once.
+    public DateTime? DueReminderSentAtUtc { get; set; }
 }

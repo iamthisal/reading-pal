@@ -19,6 +19,13 @@ public sealed class FakeHttpMessageHandler : HttpMessageHandler
     public static FakeHttpMessageHandler ThrowingRequestException() =>
         new(_ => throw new HttpRequestException("Simulated network failure."));
 
+    /// <summary>
+    /// The same handler, except that calls to the User Service's profile endpoint (the approval check made
+    /// before a reservation) are answered here, so each test's own responder only has to play Inventory.
+    /// </summary>
+    public FakeHttpMessageHandler AnsweringProfileWith(Func<HttpResponseMessage> profileResponse) =>
+        new(request => request.RequestUri?.AbsolutePath == "/api/user/profile" ? profileResponse() : _responder(request));
+
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         return Task.FromResult(_responder(request));

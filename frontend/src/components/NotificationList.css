@@ -1,0 +1,149 @@
+/* Same look as the book lists: a white card with a hairline border, rows divided by thin lines. */
+.notification-list-card {
+  padding: 0.5rem 1.25rem 1rem;
+  border: 1px solid #ebe7db;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #3f4b46;
+}
+
+.notification-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.75rem 0.9rem;
+  border-bottom: 1px solid #f0ece1;
+  font-weight: 700;
+}
+
+.notification-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.notification-list-actions .btn-outline,
+.notification-list-card > .btn-outline,
+.notification-list-more .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.notification-list-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #f0ece1;
+}
+
+.notification-list-item:last-child {
+  border-bottom: 0;
+}
+
+/* Unread rows are told apart by the tag and slightly stronger text, not by a coloured background. */
+.notification-list-item-unread .notification-list-body p {
+  font-weight: 600;
+}
+
+.notification-list-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-list-body p {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.notification-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  color: #6b6b6b;
+  font-size: 0.78rem;
+}
+
+.notification-list-status {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #ece8da;
+  color: #4a4a4a;
+  font-weight: 700;
+}
+
+.notification-list-status-unread {
+  background: #fbe9e3;
+  color: #b0492c;
+}
+
+.notification-list-link {
+  color: #153f38;
+  font-weight: 700;
+}
+
+.notification-list-state {
+  margin: 0;
+  padding: 1.5rem 0;
+  color: #5f5f5f;
+}
+
+.notification-list-error {
+  margin: 0.75rem 0;
+  color: #b23a12;
+  font-weight: 600;
+}
+
+.notification-list-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+/* The global .btn-outline targets the old dark theme; match the light pages' buttons here. */
+.notification-list-card .btn-outline {
+  border-color: #d8d3c2;
+  background: #ffffff;
+  color: #153f38;
+  font-weight: 700;
+}
+
+.notification-list-card .btn-outline:hover:not(:disabled) {
+  background: #f3f0e6;
+}
+
+.notification-list-card .btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Phone: "Mark as read" beside the text squeezed the message into a narrow column. */
+@media (max-width: 640px) {
+  .notification-list-item {
+    flex-wrap: wrap;
+  }
+
+  .notification-list-body {
+    flex: 1 1 calc(100% - 3rem);
+  }
+
+  .notification-list-item > .notification-link {
+    margin-left: calc(30px + 0.8rem);
+  }
+
+  .notification-list-actions {
+    width: 100%;
+  }
+}
