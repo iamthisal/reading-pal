@@ -11,6 +11,7 @@ import AppTopbar from '../components/layout/AppTopbar';
 import LibrarySidenav from '../components/layout/LibrarySidenav';
 import BackButton from '../components/BackButton';
 import BorrowToast from '../components/BorrowToast';
+import BorrowButton from '../components/BorrowButton';
 import { BookShelf } from '../components/BookShelf/BookShelf';
 import { DetailSkeleton, LazyImage } from '../components/Skeleton/Skeleton';
 import './DetailPage.css';
@@ -99,11 +100,7 @@ const BookPage = () => {
                             </div>
 
                             <div className="detail-actions">
-                                {borrowing.canBorrow && available && (
-                                    <button type="button" className="shelf-borrow" disabled={busy} onClick={() => void borrowing.borrow(book.id)}>
-                                        {busy ? 'Borrowing…' : 'Borrow'}
-                                    </button>
-                                )}
+                                <BorrowButton book={book} canBorrow={borrowing.canBorrow} busy={busy} onBorrow={id => void borrowing.borrow(id)} />
                                 <button type="button" className="detail-favourite" aria-pressed={favourite} onClick={() => void toggle(book.id)}>
                                     <Heart size={18} fill={favourite ? 'currentColor' : 'none'} aria-hidden="true" />
                                     {favourite ? 'In your favourites' : 'Add to favourites'}
