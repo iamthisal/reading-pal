@@ -311,8 +311,9 @@
   color: var(--shell-text);
 }
 
-/* Clicking into the banner's search box highlights the whole box, not a ring inside it. */
-.app-main .discover-search-input input:focus-visible {
+/* Clicking into the banner's search box highlights the whole box, not a ring inside it.
+   Scoped under .app-shell so it outranks the shell-wide focus ring in Theme.css, which loads later. */
+.app-shell .app-main .discover-search-input input:focus-visible {
   outline: none;
 }
 

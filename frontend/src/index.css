@@ -2890,3 +2890,35 @@ body {
   line-height: 1.45;
   resize: vertical;
 }
+
+/* Registration uses the sign-in page's card: first and last name share a row, and the success
+   message replaces the form inside the same card. */
+.auth-name-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.auth-register-success {
+  margin-bottom: 0;
+}
+
+.auth-register-success > p:last-of-type {
+  margin-bottom: 1.5rem;
+  line-height: 1.55;
+}
+
+a.auth-submit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+@media (max-width: 420px) {
+  .auth-name-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}

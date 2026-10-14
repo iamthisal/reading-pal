@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { authorPath, bookPath } from '../../utils/links';
 import FavouriteButton from '../Favourites/FavouriteButton';
 import { LazyImage } from '../Skeleton/Skeleton';
+import BorrowButton from '../BorrowButton';
 import '../BookShelf/BookShelf.css';
 import './BookList.css';
 
@@ -41,10 +42,7 @@ export const BookListRow = ({ book, canBorrow, pending, onBorrow }: BookListRowP
                 </div>
             </div>
             <div className="book-list-actions">
-                {canBorrow && available && (
-                    <button type="button" className="shelf-borrow" disabled={busy} aria-label={`Borrow ${book.title}`}
-                        onClick={() => onBorrow(book.id)}>{busy ? 'Borrowing…' : 'Borrow'}</button>
-                )}
+                <BorrowButton book={book} canBorrow={canBorrow} busy={busy} onBorrow={onBorrow} />
                 <FavouriteButton bookId={book.id} title={book.title} variant="plain" />
             </div>
         </li>
