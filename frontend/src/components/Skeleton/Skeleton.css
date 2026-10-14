@@ -26,6 +26,34 @@ img.skeleton {
   color: transparent;
 }
 
+/* Pictures get their own, gentler effect: a pane of glass gliding across, then a pause before the next pass.
+   The extra [class] matters: cover and portrait styles set their own background, and without it they
+   would win and the picture would sit there as a flat grey block. */
+img.skeleton[class] {
+  background-color: #e4dfd1;
+  background-image: linear-gradient(115deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.38) 46%,
+    rgba(255, 255, 255, 0.14) 52%,
+    rgba(255, 255, 255, 0) 60%);
+  background-size: 260% 100%;
+  background-repeat: no-repeat;
+  background-position: 135% 0;
+  animation: image-glass 2.4s cubic-bezier(0.45, 0.05, 0.35, 1) infinite;
+}
+
+@keyframes image-glass {
+  0% { background-position: 135% 0; }
+  65%, 100% { background-position: -35% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  img.skeleton[class] {
+    animation: none;
+    background-image: none;
+  }
+}
+
 .skeleton-line {
   display: block;
   height: 0.85rem;
