@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { LENDING_API_BASE_URL } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useBorrowStatus } from '../contexts/BorrowStatusContext';
 
 // Borrowing a book (a reservation that an admin then approves), with the progress and result
 // the page needs to show. Shared by every page that has Borrow buttons.
 export const useBorrow = (onBorrowed?: () => void) => {
     const { user, token } = useAuth();
+    const status = useBorrowStatus();
     const [pending, setPending] = useState<Record<number, boolean>>({});
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
@@ -26,6 +28,9 @@ export const useBorrow = (onBorrowed?: () => void) => {
         try {
             await axios.post(`${LENDING_API_BASE_URL}/api/Reservations`, { bookId }, { headers: { Authorization: `Bearer ${token}` } });
             setSuccess('Book reserved successfully! It is now pending admin approval.');
+            // The button changes to Pending at once; the refresh confirms it from the server.
+            status.markPending(bookId);
+            void status.refresh();
             onBorrowed?.();
         } catch (err) {
             console.error('Failed to reserve book:', err);

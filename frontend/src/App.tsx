@@ -22,6 +22,7 @@ import SearchPage from './pages/SearchPage';
 import BookPage from './pages/BookPage';
 import AuthorPage from './pages/AuthorPage';
 import { FavouritesProvider } from './contexts/FavouritesContext';
+import { BorrowStatusProvider } from './contexts/BorrowStatusContext';
 
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -33,6 +34,7 @@ function App() {
   return (
     <AuthProvider>
       <FavouritesProvider>
+      <BorrowStatusProvider>
       <Router>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
@@ -69,6 +71,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      </BorrowStatusProvider>
       </FavouritesProvider>
     </AuthProvider>
   );

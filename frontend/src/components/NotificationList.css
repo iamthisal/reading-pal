@@ -94,9 +94,10 @@
   font-weight: 700;
 }
 
+/* Lines up with the notification rows' text, which sit 0.75rem in from the card's edge. */
 .notification-list-state {
   margin: 0;
-  padding: 1.5rem 0;
+  padding: 1.5rem 0.75rem;
   color: #5f5f5f;
 }
 
@@ -110,6 +111,23 @@
   display: flex;
   justify-content: center;
   padding-top: 1rem;
+}
+
+/* Read notifications sit under their own small heading once the reader asks for them. */
+.app-shell .app-main .notification-list-history-heading {
+  margin: 0.5rem 0 0;
+  padding: 1rem 0.75rem 0.6rem;
+  border-top: 1px solid #f0ece1;
+  border-bottom: 1px solid #f0ece1;
+  color: #6b6b6b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.notification-list-history .notification-list-body p {
+  color: #5f6a65;
 }
 
 /* The global .btn-outline targets the old dark theme; match the light pages' buttons here. */

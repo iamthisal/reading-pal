@@ -122,7 +122,7 @@ const SearchPage = () => {
             <LibrarySidenav active="search" />
             <BorrowToast success={borrowing.success} error={borrowing.error} onDismiss={borrowing.dismiss} />
             <main className="app-main app-main-banner search-main">
-                <PageBanner eyebrow="Catalogue search" title={query ? 'Search' : 'Browse All'} icon={<SearchIcon size={38} />}
+                <PageBanner eyebrow="Catalogue search" title={query ? 'Search' : 'Browse all'} icon={<SearchIcon size={38} />}
                     text={query ? <>Results for <q>{query}</q></> : 'Every book in the catalogue. Search by title, author, category or ISBN.'}>
                     <BannerSearch query={query} />
                 </PageBanner>

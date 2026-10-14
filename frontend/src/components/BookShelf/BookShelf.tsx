@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { authorPath, bookPath } from '../../utils/links';
 import FavouriteButton from '../Favourites/FavouriteButton';
 import { LazyImage } from '../Skeleton/Skeleton';
+import BorrowButton from '../BorrowButton';
 import './BookShelf.css';
 
 export type ShelfBook = {
@@ -102,17 +103,10 @@ const Cover = ({ book }: { book: ShelfBook }) => (
         fallback={<div className="shelf-cover shelf-cover-fallback" aria-hidden="true"><span>{book.title}</span></div>} />
 );
 
-const BorrowButton = ({ book, borrow }: { book: ShelfBook; borrow?: BorrowControls }) => {
-    if (!borrow?.canBorrow || book.availableCopies <= 0) return null;
-    const busy = Boolean(borrow.pending[book.id]);
-    return (
-        <button type="button" className="shelf-borrow" disabled={busy} onClick={() => borrow.onBorrow(book.id)}
-            aria-label={`Borrow ${book.title}`}>
-            {busy ? 'Borrowing…' : 'Borrow'}
-        </button>
-    );
-};
-
+const ShelfBorrowButton = ({ book, borrow }: { book: ShelfBook; borrow?: BorrowControls }) => (
+    <BorrowButton book={book} canBorrow={Boolean(borrow?.canBorrow)} busy={Boolean(borrow?.pending[book.id])}
+        onBorrow={bookId => borrow?.onBorrow(bookId)} />
+);
 type BookShelfProps = {
     title: string;
     books: ShelfBook[];
@@ -138,7 +132,7 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow, action }: B
                             <p className="shelf-byline"><Link to={authorPath(book.author)}>{book.author}</Link>{book.genre && <><span aria-hidden="true"> • </span>{book.genre}</>}</p>
                             {status}
                             <p className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'} on the shelf</p>
-                            <BorrowButton book={book} borrow={borrow} />
+                            <ShelfBorrowButton book={book} borrow={borrow} />
                         </div>
                     </article>
                 ) : (
@@ -153,7 +147,7 @@ export const BookShelf = ({ title, books, variant = 'cover', borrow, action }: B
                             <span className="shelf-copies">{book.availableCopies} of {book.totalCopies} {book.totalCopies === 1 ? 'copy' : 'copies'}</span>
                             {status}
                         </div>
-                        <BorrowButton book={book} borrow={borrow} />
+                        <ShelfBorrowButton book={book} borrow={borrow} />
                     </article>
                 );
             })}

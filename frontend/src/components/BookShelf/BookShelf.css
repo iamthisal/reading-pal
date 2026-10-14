@@ -393,3 +393,31 @@ a.shelf-card-link:focus-visible {
   object-fit: cover;
   object-position: center 20%;
 }
+
+/* Borrow button states: waiting for approval, already borrowed, nothing on the shelf. They read as
+   statuses rather than actions, so they are calm and cannot be pressed. */
+.app-shell .shelf-borrow.shelf-borrow-pending:disabled,
+.app-shell .shelf-borrow.shelf-borrow-done:disabled,
+.app-shell .shelf-borrow.shelf-borrow-unavailable:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.app-shell .shelf-borrow.shelf-borrow-pending {
+  background: #fbf1d0;
+  color: #7a5a08;
+}
+
+.app-shell .shelf-borrow.shelf-borrow-done {
+  background: #e6efe9;
+  color: #1f5a47;
+}
+
+.app-shell .shelf-borrow.shelf-borrow-unavailable {
+  background: #ece9e1;
+  color: #a3a8a4;
+}
+
+.app-shell .shelf-borrow.shelf-borrow-unavailable:disabled {
+  cursor: not-allowed;
+}
