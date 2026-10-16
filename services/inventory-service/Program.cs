@@ -1,3 +1,4 @@
+using InventoryService.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -29,8 +30,11 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
-// Add JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsAVerySecretKeyThatShouldBeStoredSecurelyAndLongEnough";
+// Add JWT Authentication. The signing key is never stored in appsettings.json: it comes from
+// appsettings.Development.json locally and from the Jwt__Key setting everywhere else.
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("Jwt:Key is not configured. Set the Jwt__Key environment variable or app setting (at least 32 bytes).");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "ReadingPal.UserService";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "ReadingPal.Frontend";
 
@@ -51,7 +55,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection("Kafka"));
 builder.Services.AddSingleton<IProducer<string, string>>(serviceProvider =>
 {
@@ -88,10 +92,9 @@ if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Public, interactive API docs at /swagger (the endpoints themselves stay JWT-protected).
+app.MapOpenApi();
+app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Reading Pal Inventory Service v1"));
 
 app.UseCors("AllowFrontend");
 
