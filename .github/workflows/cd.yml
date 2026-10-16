@@ -25,6 +25,10 @@ jobs:
   build-and-deploy-userservice:
     name: Build and Deploy User Service
     runs-on: ubuntu-latest
+    # Required reviewers on the "production" environment (repo Settings → Environments) gate this deploy.
+    environment:
+      name: production
+      url: https://reading-pal-userservice-bwh5bfc0agcvguf6.uaenorth-01.azurewebsites.net
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     steps:
       - name: Checkout repository

@@ -15,7 +15,14 @@ This directory contains the GitHub Actions workflows that handle Continuous Inte
 ## Deployment Environments
 
 - `development` (Local testing via Docker Compose)
+- `preview` (Azure Static Web Apps creates one per pull request into `main`; it calls the production APIs)
 - `production` (Azure App Services, Azure Static Web Apps, and Azure Container Instances)
+
+### Production approval gate
+
+Every backend CD job (`cd.yml`, `cd_inventry.yml`, `cd_lending.yml`, `cd_notification.yml`) runs in the GitHub **`production`** environment. With required reviewers set on that environment, a deployment to Azure pauses after CI passes until a team member approves it. To approve, open the workflow run in the **Actions** tab, then choose **Review deployments → Approve and deploy**. Each deployment is also listed under the repository's **Environments**, linked to the service's live URL.
+
+One-time setup, which needs a repository admin: **Settings → Environments → production → Required reviewers**. Add the team members, and optionally tick **Prevent self-review**. Also set **Deployment branches** to `main` only.
 
 ## Configured Repository Secrets
 
