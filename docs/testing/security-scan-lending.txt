@@ -1,0 +1,14 @@
+  Determining projects to restore...
+C:\Computer_Science_Local_Files\Year_3\Semester_01\Case_Study_Project\Assignment\reading-pal\services\lending-service\LendingService.csproj : warning NU1902: Package 'Microsoft.IdentityModel.JsonWebTokens' 7.0.3 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-59j7-ghrg-fj52
+C:\Computer_Science_Local_Files\Year_3\Semester_01\Case_Study_Project\Assignment\reading-pal\services\lending-service\LendingService.csproj : warning NU1902: Package 'System.IdentityModel.Tokens.Jwt' 7.0.3 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-59j7-ghrg-fj52
+  All projects are up-to-date for restore.
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+
+Project `LendingService` has the following vulnerable packages
+   [net10.0]: 
+   Transitive Package                           Resolved   Severity   Advisory URL                                     
+   > Microsoft.IdentityModel.JsonWebTokens      7.0.3      Moderate   https://github.com/advisories/GHSA-59j7-ghrg-fj52
+   > System.IdentityModel.Tokens.Jwt            7.0.3      Moderate   https://github.com/advisories/GHSA-59j7-ghrg-fj52
+

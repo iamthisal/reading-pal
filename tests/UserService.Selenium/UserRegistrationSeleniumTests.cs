@@ -47,32 +47,30 @@ namespace UserService.SeleniumTests
         }
 
         // TC_REG_002 - Duplicate Email
+        // Self-contained: registers a fresh address first, so the test also works on an empty
+        // database (as in CI), then registers the same address again and expects the error.
         [Fact]
         public void TC_REG_002_DuplicateEmail()
         {
             using var driver = CreateDriver();
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            var email = $"duplicate.{Guid.NewGuid():N}@example.com";
 
-            driver.Navigate().GoToUrl("http://localhost:5173/register");
+            void SubmitRegistration()
+            {
+                driver.Navigate().GoToUrl("http://localhost:5173/register");
+                wait.Until(d => d.FindElement(By.Id("firstName"))).SendKeys("Dahamya");
+                driver.FindElement(By.Id("lastName")).SendKeys("Wickramasinghe");
+                driver.FindElement(By.Id("email")).SendKeys(email);
+                driver.FindElement(By.Id("password")).SendKeys("Password123*");
+                driver.FindElement(By.CssSelector("button[type='submit']")).Click();
+            }
 
-            driver.FindElement(By.Id("firstName"))
-                .SendKeys("Dahamya");
+            SubmitRegistration();
+            wait.Until(d => d.FindElements(By.CssSelector(".auth-register-success")).Any() || d.Url.Contains("/login"));
 
-            driver.FindElement(By.Id("lastName"))
-                .SendKeys("Wickramasinghe");
-
-            driver.FindElement(By.Id("email"))
-                .SendKeys("dahamwicky@gmail.com");
-
-            driver.FindElement(By.Id("password"))
-                .SendKeys("Password123*");
-
-            driver.FindElement(By.CssSelector("button[type='submit']"))
-                .Click();
-
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
-
-            var errorMessage =
-                wait.Until(d => d.FindElement(By.ClassName("error-message")));
+            SubmitRegistration();
+            var errorMessage = wait.Until(d => d.FindElement(By.ClassName("error-message")));
 
             Assert.NotEmpty(errorMessage.Text);
         }
