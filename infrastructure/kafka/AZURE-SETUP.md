@@ -138,7 +138,26 @@ Lending and Inventory publish events that the Notification Service consumes:
 | `book-updated` | Inventory (admin edits a book or changes its availability) | Notification Service (notice for the other admins) |
 | `book-deleted` | Inventory (admin deletes a book) | Notification Service (customers with a pending reservation or active borrowing for it; notice for the other admins) |
 
-The broker has no persistent storage, so these topics also disappear when the container restarts. Create them from any machine with the Kafka command-line tools (or from the container console with `localhost:19092`):
+The broker has no persistent storage, so every container restart starts it empty — no topics. Because auto-creation is off, that silently stops all notifications: publishers get "Unknown topic or partition" and the Notification consumer has nothing to read, while every `/health` endpoint still reports healthy. This happened on 12 October 2026 (the container restarted at 15:32 UTC) and went unnoticed until 14 October.
+
+**Topics are now recreated automatically on every start.** The container's startup command is [`aci-start-with-topics.sh`](./aci-start-with-topics.sh): it starts Kafka exactly as the image normally does, waits for the broker to answer, creates the ten topics with `--if-not-exists`, and then stays attached to the broker process, so ACI's `Always` restart policy still applies if Kafka stops. It is the Azure counterpart of the local `kafka-init` service ([`create-topics.sh`](./create-topics.sh)); **keep the two topic lists identical**.
+
+Apply or re-apply it with [`deploy-aci-kafka.ps1`](./deploy-aci-kafka.ps1). The script reads the live container group and changes only the startup command; everything else (image, the 22 environment variables, size, DNS label, ports, Log Analytics logging) is kept. It saves a backup of the current definition first.
+
+```powershell
+# Preview the exact definition without changing anything:
+powershell -ExecutionPolicy Bypass -File infrastructure/kafka/deploy-aci-kafka.ps1 -DryRun kafka-preview.json
+# Apply (restarts the broker: about a minute of downtime, topics and messages are wiped and the topics recreated):
+powershell -ExecutionPolicy Bypass -File infrastructure/kafka/deploy-aci-kafka.ps1
+# Undo (back to the image's default startup command):
+powershell -ExecutionPolicy Bypass -File infrastructure/kafka/deploy-aci-kafka.ps1 -Restore
+```
+
+A successful start logs `topic-init: done - 10 application topics present.` (**Containers → Logs**, or `az container logs -g reading-pal-v3 -n readingpal-kafka`).
+
+**Why not persistent storage instead?** The only persistent volume ACI offers is an Azure Files share over SMB, and Kafka's guidance is not to put `log.dirs` on network or shared file systems (risk of index and segment failures). Recreating the topics on startup fixes the outage without that risk. What it does not do is keep *messages* across a restart: Lending's outbox resends anything it had not delivered, but events already in the broker and not yet consumed — and Inventory events sent while the broker is down — are lost. Durable messages would need a managed service (e.g. Azure Event Hubs with its Kafka endpoint) rather than ACI.
+
+To create the topics by hand (e.g. before the startup script is applied), from any machine with the Kafka command-line tools, or from the container console with `localhost:19092`:
 
 ```bash
 for topic in reservation-created reservation-accepted reservation-cancelled book-returned fine-recorded book-due-soon reservation-snapshot book-created book-updated book-deleted; do
@@ -147,7 +166,7 @@ for topic in reservation-created reservation-accepted reservation-cancelled book
 done
 ```
 
-Until a topic exists, Lending keeps its events in the database outbox and retries every few seconds, so creating a missing topic later loses nothing.
+Until a topic exists, Lending keeps its events in the database outbox and retries every few seconds, so creating a missing topic later loses nothing from Lending.
 
 ## Next check: public endpoint
 
@@ -238,10 +257,9 @@ Closing or disconnecting the container's Bash console does not stop Kafka. ACI c
 To resume:
 
 1. Select **Start** in ACI Overview.
-2. Check **Containers -> Logs** for successful startup and recurring errors.
-3. Verify the FQDN and list topics internally.
-4. Recreate missing topics, then repeat the public endpoint check.
-5. Generate fresh test events.
+2. Check **Containers -> Logs** for successful startup, the `topic-init: done - 10 application topics present.` line, and recurring errors.
+3. Verify the FQDN and repeat the public endpoint check. The topics are recreated by the startup command; only if that line is missing, create them by hand (see above).
+4. Generate fresh test events.
 
 Stopping ACI does not preserve container state. This setup has no persistent broker volume, so assume events, topics and consumer offsets can be lost. MySQL book records are separate and are not deleted by stopping Kafka. With direct publishing, do not assume events are queued safely while Kafka is stopped.
 
@@ -254,7 +272,7 @@ When permanently finished, delete only the Kafka container instance and remove i
 | Provider registration denied | Subscription owner may need to register `Microsoft.ContainerInstance`; resource-group access does not grant provider registration |
 | Container repeatedly restarts | Startup logs, environment variable spelling, loopback controller address, memory and CPU pressure |
 | Internal topic listing works but public listing fails | Actual FQDN, exposed TCP 9092, advertised external listener, and client network access |
-| Topic not found | Auto-creation is disabled; rerun the explicit topic creation command |
+| Topic not found / no notifications while every `/health` is fine | Broker restarted without its topics. Check the container log for `topic-init: done`; if missing, re-apply `deploy-aci-kafka.ps1` or create the topics by hand |
 | No events after CRUD | Producer deployment/configuration, awaited publishing, topic names and application logs |
 | No Portal edit button for ACI environment variables | Changes generally require an updated container-group deployment; inspect/export configuration before changing it and assume temporary data may be lost |
 
