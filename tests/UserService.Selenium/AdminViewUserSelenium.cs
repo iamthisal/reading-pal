@@ -82,7 +82,9 @@ public class AdminViewUserSelenium : IDisposable
         ClickDashboardLink("/admin/users/active");
         WaitForUserListToResolve("Active Users");
 
-        Assert.DoesNotContain(AdminEmail, driver.PageSource, StringComparison.OrdinalIgnoreCase);
+        // Only the user table matters: the page header shows the signed-in admin's own email.
+        var table = driver.FindElements(By.CssSelector("table.admin-users-table")).FirstOrDefault();
+        Assert.DoesNotContain(AdminEmail, table?.Text ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
