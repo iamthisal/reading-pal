@@ -1,3 +1,4 @@
+using UserService.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +21,12 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigin).AllowAnyHeader().AllowAnyMethod());
 });
 
-// Add JWT Authentication
+// Add JWT Authentication. The signing key is never stored in appsettings.json: it comes from
+// appsettings.Development.json locally and from the Jwt__Key setting everywhere else.
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("Jwt:Key is not configured. Set the Jwt__Key environment variable or app setting (at least 32 bytes).");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -32,12 +38,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 var appInsightsConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"] 
     ?? builder.Configuration["ApplicationInsights:ConnectionString"];
 if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
@@ -47,11 +53,9 @@ if (!string.IsNullOrWhiteSpace(appInsightsConnectionString))
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Public, interactive API docs at /swagger (the endpoints themselves stay JWT-protected).
+app.MapOpenApi();
+app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Reading Pal User Service v1"));
 
 app.UseCors("AllowFrontend");
 
@@ -67,7 +71,8 @@ try
     var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
     db.Database.Migrate();
 
-    if (!db.Users.Any(u => u.Email == "dahamyakulandi21@gmail.com"))
+    // Demo accounts with a known password: only ever create them in local development.
+    if (app.Environment.IsDevelopment() && !db.Users.Any(u => u.Email == "dahamyakulandi21@gmail.com"))
     {
         db.Users.Add(new User
         {
@@ -81,7 +86,7 @@ try
         });
     }
 
-    if (!db.Users.Any(u => u.Email == "dahamku@gmail.com"))
+    if (app.Environment.IsDevelopment() && !db.Users.Any(u => u.Email == "dahamku@gmail.com"))
     {
         db.Users.Add(new User
         {

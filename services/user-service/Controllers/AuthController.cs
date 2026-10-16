@@ -31,7 +31,8 @@ namespace UserService.Controllers
             var adminEmail = _configuration["AdminCredentials:Email"];
             var adminPassword = _configuration["AdminCredentials:Password"];
 
-            if (request.Email == adminEmail && request.Password == adminPassword)
+            if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword)
+                && request.Email == adminEmail && request.Password == adminPassword)
             {
                 var token = GenerateJwtToken("admin-id", request.Email, "Admin", true);
                 return Ok(new AuthResponse { Token = token, Role = "Admin", IsValidated = true });
