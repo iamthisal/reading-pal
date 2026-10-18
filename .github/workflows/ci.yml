@@ -175,8 +175,8 @@ jobs:
         run: |
           dotnet restore services/user-service/UserService.csproj
           dotnet build services/user-service/UserService.csproj --configuration Release
-          dotnet restore tests/UserService.Selenium/UserService.Selenium.Tests.csproj
-          dotnet build tests/UserService.Selenium/UserService.Selenium.Tests.csproj --configuration Release
+          dotnet restore tests/selenium-tests/UserService.Selenium/UserService.Selenium.Tests.csproj
+          dotnet build tests/selenium-tests/UserService.Selenium/UserService.Selenium.Tests.csproj --configuration Release
 
       - name: Build Frontend for Testing
         env:

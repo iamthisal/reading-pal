@@ -37,16 +37,16 @@ jobs:
       - name: Restore dependencies
         run: |
           dotnet restore services/inventory-service/InventoryService.csproj
-          dotnet restore tests/InventoryService.Tests/InventoryService.Tests.csproj
+          dotnet restore tests/unit-tests/InventoryService.Tests/InventoryService.Tests.csproj
 
       - name: Build Inventory Service
         run: dotnet build services/inventory-service/InventoryService.csproj --configuration Release --no-restore
 
       - name: Build Test Projects
-        run: dotnet build tests/InventoryService.Tests/InventoryService.Tests.csproj --configuration Release --no-restore
+        run: dotnet build tests/unit-tests/InventoryService.Tests/InventoryService.Tests.csproj --configuration Release --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test tests/InventoryService.Tests/InventoryService.Tests.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test tests/unit-tests/InventoryService.Tests/InventoryService.Tests.csproj --configuration Release --no-build --verbosity normal
 
   build-docker-image:
     name: Build Docker Image

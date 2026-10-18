@@ -1,0 +1,9 @@
+﻿{
+    "service":  "UserService",
+    "run":  "2026-10-18.17-47-06",
+    "killed":  78,
+    "timeout":  0,
+    "survived":  56,
+    "noCoverage":  25,
+    "score":  49.06
+}

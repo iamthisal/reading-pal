@@ -4,7 +4,7 @@ namespace LendingService.SeleniumTests;
 
 /// <summary>
 /// The UI-level counterpart to the 401/403 role-boundary checks already covered by the
-/// integration test suite (see tests/LendingService.IntegrationTests) — those prove the API
+/// integration test suite (see tests/integration-tests/LendingService.IntegrationTests) — those prove the API
 /// rejects the wrong role; these prove the browser never actually renders the other role's page
 /// for someone who pastes/bookmarks its URL directly, regardless of what the API alone would do.
 /// </summary>

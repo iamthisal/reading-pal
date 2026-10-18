@@ -12,7 +12,7 @@ The suite was updated for the UI overhaul (PR #96) before this run:
 - **TC_RESERVE_EDGE_001:** the book is made unavailable with the admin "mark unavailable" action. The member then sees a disabled "no copies" Borrow button.
 - **Defaults:** the suite now targets `http://localhost:5173` by default, and has no built-in member credentials. Every run creates books, so it should not be pointed at production.
 
-The lending integration suite (`tests/LendingService.IntegrationTests`) was updated at the same time. It now answers the member-approval check that reserving performs (#92), and adds integration tests for that check (403) and for duplicate reservations (409). **42/42 passed.**
+The lending integration suite (`tests/integration-tests/LendingService.IntegrationTests`) was updated at the same time. It now answers the member-approval check that reserving performs (#92), and adds integration tests for that check (403) and for duplicate reservations (409). **42/42 passed.**
 
 The rest of this document is the original Sprint 3 record (30 Sep 2026).
 
@@ -21,7 +21,7 @@ The rest of this document is the original Sprint 3 record (30 Sep 2026).
 **Service under test:** `services/lending-service` (plus the parts of `inventory-service`, `user-service`, and the frontend it depends on)
 **Branch:** `develop`
 **Date:** 2026-09-30
-**Scope:** the complete Selenium suite in `tests/LendingService.Selenium` — the original 8 tests (documented in `test_results.md` §6) plus 7 new tests added to close coverage gaps identified by reviewing that suite against the full set of Lending Service features.
+**Scope:** the complete Selenium suite in `tests/selenium-tests/LendingService.Selenium` — the original 8 tests (documented in `test_results.md` §6) plus 7 new tests added to close coverage gaps identified by reviewing that suite against the full set of Lending Service features.
 
 ---
 
@@ -33,7 +33,7 @@ The rest of this document is the original Sprint 3 record (30 Sep 2026).
 | New suite (role boundary, edge cases, fine display, user's own loan views) | 7 | ✅ 7/7 passed | Local docker-compose stack |
 | **Combined full run** (all 15 together, one process) | 15 | ✅ **15/15 passed** in 1m53s | Local docker-compose stack |
 
-Artifact: `tests/LendingService.Selenium/TestResults/lending-selenium-local-full.trx` (the combined 15/15 run).
+Artifact: `tests/selenium-tests/LendingService.Selenium/TestResults/lending-selenium-local-full.trx` (the combined 15/15 run).
 
 **Why the new 7 run locally instead of against the deployed site:** `TC_FINE_001` needs to backdate a loan's due date directly in the database to produce an overdue fine without waiting 14 real days — the deployed Azure database isn't reachable from outside its own network, so that test (and the rest of the new batch, kept together for consistency) runs against the local docker-compose stack instead, which exposes MySQL on `localhost:3307`. The original 8 remain verified against the deployed site as documented in `test_results.md` §6; this file doesn't repeat that run.
 
@@ -103,7 +103,7 @@ This is now written up as **§8.4** in `test_results.md`, alongside the other ap
 ## 5. Full combined run
 
 ```
-dotnet test tests/LendingService.Selenium --logger "trx;LogFileName=lending-selenium-local-full.trx" --results-directory tests/LendingService.Selenium/TestResults
+dotnet test tests/selenium-tests/LendingService.Selenium --logger "trx;LogFileName=lending-selenium-local-full.trx" --results-directory tests/selenium-tests/LendingService.Selenium/TestResults
 ```
 
 All 15 tests (8 original + 7 new) run together against the local docker-compose stack, in one process, with no shared state between them — every test creates its own uniquely-named book via the real Admin UI, so none of the new tests depend on or interfere with the original ones.
@@ -130,6 +130,6 @@ Total tests: 15   Passed: 15   Failed: 0   Total time: 1.9 minutes
 
 ## 6. What changed to support this
 
-- `tests/LendingService.Selenium/LendingSeleniumTestBase.cs` — added three helper methods used only by the new tests: `GetAdminApiTokenAsync` (real login via the Auth API, not the browser), `GetBookIdByIsbnAsync` (resolves a book's numeric inventory id, which the UI never surfaces directly), and `BackdateActiveLoanDueDateAsync` (the direct DB write behind `TC_FINE_001`). Also added `UserServiceUrl`/`InventoryServiceUrl`/`LendingDbConnectionString`, all env-var overridable and defaulted to the local stack — explicitly documented as local-only, since there's no exposed DB port or equivalent access on the deployed site.
-- `tests/LendingService.Selenium/LendingService.Selenium.Tests.csproj` — added the `MySqlConnector` package reference for the backdate helper.
+- `tests/selenium-tests/LendingService.Selenium/LendingSeleniumTestBase.cs` — added three helper methods used only by the new tests: `GetAdminApiTokenAsync` (real login via the Auth API, not the browser), `GetBookIdByIsbnAsync` (resolves a book's numeric inventory id, which the UI never surfaces directly), and `BackdateActiveLoanDueDateAsync` (the direct DB write behind `TC_FINE_001`). Also added `UserServiceUrl`/`InventoryServiceUrl`/`LendingDbConnectionString`, all env-var overridable and defaulted to the local stack — explicitly documented as local-only, since there's no exposed DB port or equivalent access on the deployed site.
+- `tests/selenium-tests/LendingService.Selenium/LendingService.Selenium.Tests.csproj` — added the `MySqlConnector` package reference for the backdate helper.
 - `test_results.md` — §1 and §6 updated to the combined 15/15 total; new §8.4 documenting the duplicate-reservation defect; §8.1 cross-referenced with the `ProtectedRoute`-bug recurrence found while writing `TC_FINE_001`; §9 artifacts index updated.

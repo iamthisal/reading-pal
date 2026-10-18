@@ -32,7 +32,7 @@ jobs:
           required_files=(
             "services/lending-service/Dockerfile"
             "services/lending-service/LendingService.csproj"
-            "tests/LendingService.Tests/LendingService.Tests.csproj"
+            "tests/unit-tests/LendingService.Tests/LendingService.Tests.csproj"
             "infrastructure/mysql/init-databases.sh"
           )
           for file in "${required_files[@]}"; do
@@ -65,16 +65,16 @@ jobs:
       - name: Restore dependencies
         run: |
           dotnet restore services/lending-service/LendingService.csproj
-          dotnet restore tests/LendingService.Tests/LendingService.Tests.csproj
+          dotnet restore tests/unit-tests/LendingService.Tests/LendingService.Tests.csproj
 
       - name: Build Lending Service
         run: dotnet build services/lending-service/LendingService.csproj --configuration Release --no-restore
 
       - name: Build Test Project
-        run: dotnet build tests/LendingService.Tests/LendingService.Tests.csproj --configuration Release --no-restore
+        run: dotnet build tests/unit-tests/LendingService.Tests/LendingService.Tests.csproj --configuration Release --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test tests/LendingService.Tests/LendingService.Tests.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test tests/unit-tests/LendingService.Tests/LendingService.Tests.csproj --configuration Release --no-build --verbosity normal
 
   build-docker-image:
     name: Build Docker Image

@@ -1,0 +1,56 @@
+# Mutation testing (Stryker.NET) of all four microservices' unit tests, run after code is merged into develop or main.
+name: Mutation Testing
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mutation-test:
+    name: Mutation Test (Stryker.NET)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore Stryker tool
+        run: dotnet tool restore
+
+      - name: Run mutation tests
+        shell: pwsh
+        run: ./run-mutation.ps1
+        working-directory: "tests/ASE Assignment/Mutation_Testing"
+
+      - name: Publish score summary
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = "tests/ASE Assignment/Mutation_Testing/reports/summary.md"
+          if (Test-Path $summary) { Get-Content $summary | Add-Content $env:GITHUB_STEP_SUMMARY }
+
+      - name: Upload mutation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-reports-${{ github.ref_name }}-${{ github.sha }}
+          path: tests/ASE Assignment/Mutation_Testing/reports/
+          if-no-files-found: warn
+          retention-days: 30

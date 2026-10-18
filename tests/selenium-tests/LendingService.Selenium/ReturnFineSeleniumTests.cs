@@ -4,7 +4,7 @@ using Xunit;
 namespace LendingService.SeleniumTests;
 
 /// <summary>
-/// Only ReturnFineCalculator itself is unit-tested (tests/LendingService.Tests) and the on-time
+/// Only ReturnFineCalculator itself is unit-tested (tests/unit-tests/LendingService.Tests) and the on-time
 /// path is Selenium-tested (AdminReturnSeleniumTests, "No fine is due") — nothing ever actually
 /// looks at a fine rendered on screen. The due date is hardcoded to checkout + 14 days
 /// (ReservationsController.cs:232) with no admin override, so the only way to reach an overdue

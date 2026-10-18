@@ -1,0 +1,9 @@
+﻿{
+    "service":  "NotificationService",
+    "run":  "2026-10-18.18-09-40",
+    "killed":  237,
+    "timeout":  0,
+    "survived":  90,
+    "noCoverage":  87,
+    "score":  57.25
+}

@@ -183,7 +183,7 @@ Moving to OIDC/federated-credential deployment would be more secure, but it woul
 
 - `ci_lending.yml` / `cd_lending.yml` (Lending)
 - `ci_notification.yml` / `cd_notification.yml` (Notification, added in commit `c259cfe`). These mirror the Lending pair:
-  - **CI** runs on pushes and PRs to `main`/`develop`. It validates required files and the compose config, builds, runs `tests/NotificationService.Tests`, and builds the Docker image from `services/notification-service`.
+  - **CI** runs on pushes and PRs to `main`/`develop`. It validates required files and the compose config, builds, runs `tests/unit-tests/NotificationService.Tests`, and builds the Docker image from `services/notification-service`.
   - **CD** runs after CI succeeds on a push to `main`, or manually. It builds and pushes `ghcr.io/iamthisal/reading-pal-notificationservice:<sha>`, deploys it with the publish profile, then polls `/health` when `NOTIFICATION_SERVICE_URL` is set.
 - Before merging, the commands each CI workflow runs were reproduced locally on `develop`. All 295 unit tests passed (User 44, Inventory 63, Lending 89, Notification 99), along with compose validation and the frontend lint and build. New tests added since then live in the existing test projects, so CI picks them up without workflow changes.
 
@@ -301,7 +301,7 @@ The Selenium E2E suite had been run against the deployed site during Sprint 3 QA
 | Notifications created from events | ✅ User reminders; admin new-reservation and cancellation notices with customer names |
 | Catalogue for a regular user | ✅ All catalogue endpoints return data; displays correctly |
 | Full reserve → accept → return through the live UI | ⏳ Not run as a scripted test after the fixes; admin "new reservation" notifications from real use on 14 Oct show the reserve path working end to end |
-| JMeter plan (`tests/lending-load-test.jmx`) against the deployed Lending URL | ⏳ Not yet run (local-vs-deployed comparison required by `CLAUDE.md`) |
+| JMeter plan (`tests/performance-tests/lending/lending-load-test.jmx`) against the deployed Lending URL | ⏳ Not yet run (local-vs-deployed comparison required by `CLAUDE.md`) |
 
 ## Tooling used
 

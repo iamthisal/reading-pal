@@ -41,7 +41,7 @@ Apply the current migrations rather than manually adding tables. AddReservationE
 
 ### Verification
 
-Local checks previously completed: 52 tests in tests/LendingService.Tests, frontend production build, and targeted Inventory return/checkout tests. These local test files have been excluded from the requested feature commits, so a fresh clone may not contain them. Check the tests actually committed and configured in CI. Existing package vulnerability and lint warnings remain.
+Local checks previously completed: 52 tests in tests/unit-tests/LendingService.Tests, frontend production build, and targeted Inventory return/checkout tests. These local test files have been excluded from the requested feature commits, so a fresh clone may not contain them. Check the tests actually committed and configured in CI. Existing package vulnerability and lint warnings remain.
 
 Automated tests do not verify every live integration. Reserve, cancel, accept, and return fresh records to verify transitions and inspect Kafka topics; notifications are not expected until the consumer exists.
 

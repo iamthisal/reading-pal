@@ -1,0 +1,9 @@
+﻿{
+    "service":  "InventoryService",
+    "run":  "2026-10-18.18-04-15",
+    "killed":  341,
+    "timeout":  0,
+    "survived":  153,
+    "noCoverage":  53,
+    "score":  62.34
+}

@@ -32,7 +32,7 @@ jobs:
           required_files=(
             "services/notification-service/Dockerfile"
             "services/notification-service/NotificationService.csproj"
-            "tests/NotificationService.Tests/NotificationService.Tests.csproj"
+            "tests/unit-tests/NotificationService.Tests/NotificationService.Tests.csproj"
             "infrastructure/mysql/init-databases.sh"
           )
           for file in "${required_files[@]}"; do
@@ -65,16 +65,16 @@ jobs:
       - name: Restore dependencies
         run: |
           dotnet restore services/notification-service/NotificationService.csproj
-          dotnet restore tests/NotificationService.Tests/NotificationService.Tests.csproj
+          dotnet restore tests/unit-tests/NotificationService.Tests/NotificationService.Tests.csproj
 
       - name: Build Notification Service
         run: dotnet build services/notification-service/NotificationService.csproj --configuration Release --no-restore
 
       - name: Build Test Project
-        run: dotnet build tests/NotificationService.Tests/NotificationService.Tests.csproj --configuration Release --no-restore
+        run: dotnet build tests/unit-tests/NotificationService.Tests/NotificationService.Tests.csproj --configuration Release --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test tests/NotificationService.Tests/NotificationService.Tests.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test tests/unit-tests/NotificationService.Tests/NotificationService.Tests.csproj --configuration Release --no-build --verbosity normal
 
   build-docker-image:
     name: Build Docker Image

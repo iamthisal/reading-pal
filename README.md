@@ -101,11 +101,21 @@ ReadingPal/
 |   |-- package.json
 |   `-- vite.config.ts
 |-- tests/
-|   |-- UserService.Tests/
-|   |-- UserService.Selenium/
-|   |-- InventoryService.Tests/
-|   |-- LendingService.Tests/
-|   `-- InventoryService.Selenium/
+|   |-- unit-tests/
+|   |   |-- UserService.Tests/
+|   |   |-- InventoryService.Tests/
+|   |   |-- LendingService.Tests/
+|   |   `-- NotificationService.Tests/
+|   |-- integration-tests/
+|   |   `-- LendingService.IntegrationTests/
+|   |-- selenium-tests/
+|   |   |-- UserService.Selenium/
+|   |   |-- InventoryService.Selenium/
+|   |   `-- LendingService.Selenium/
+|   |-- performance-tests/
+|   |   `-- lending/          (JMeter plan + results dashboard)
+|   `-- ASE Assignment/
+|       `-- Load Testing (Jmeter)/   (JMeter suite for all four services)
 |-- deploy/
 |   |-- README.md
 |   |-- docker/

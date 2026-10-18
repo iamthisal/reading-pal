@@ -17,8 +17,8 @@ How to run (recommended branch workflow)
 
 ```bash
 git checkout -b test/inventory-admin-addbook
-git add tests/UserService.Selenium/AdminAddBookSelenium.cs
-git add tests/UserService.Selenium/README-AdminAddBookTests.md
+git add tests/selenium-tests/UserService.Selenium/AdminAddBookSelenium.cs
+git add tests/selenium-tests/UserService.Selenium/README-AdminAddBookTests.md
 git commit -m "tests: add Selenium UI tests for Admin Add Book story"
 ```
 
@@ -38,7 +38,7 @@ dotnet run
 3. Run the Selenium tests:
 
 ```bash
-cd tests/UserService.Selenium
+cd tests/selenium-tests/UserService.Selenium
 dotnet test
 ```
 
