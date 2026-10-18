@@ -31,10 +31,10 @@ Use your own unused branch name in place of ase-my-contribution. Add your suite'
 | --- | --- | --- |
 | Unit testing and mocking | Unit Testing (xUnit-Moq) | Connected: all four projects run and produce TRX results. |
 | Mutation testing | Mutation Testing (Stryker) | Pending: teammate adds the suite and run-ci.ps1. |
-| UI/E2E testing | UI Testing (Selenium) | Pending: teammate adds the suite and run-ci.ps1. |
+| UI/E2E testing | E2E Testing (Selenium) | Connected: Linux CI runner provisions the local stack and executes four Selenium projects. |
 | Load/performance testing | Load Testing (Jmeter) | Local JMeter suite exists; CI environment/fixture adapter run-ci.ps1 is pending. |
 
-The Mutation-Testing-ASE branch currently contains the same load-testing commit as Load-Testing-ASE; its name alone does not establish a mutation implementation. Existing Selenium projects elsewhere in tests are not automatically treated as the assignment contribution.
+The Mutation-Testing-ASE branch currently contains the same load-testing commit as Load-Testing-ASE; its name alone does not establish a mutation implementation. PR #106 supplies the assignment Selenium suite; existing Selenium projects elsewhere in tests remain separate.
 
 Add each student's name and student ID to their suite README before submission. The [unit README](Unit%20Testing%20%28xUnit-Moq%29/README.md) documents the 120 locally passing cases and demo examples. This group workflow is new and still needs a successful GitHub Actions run; local execution is not evidence of a remote workflow pass.
 
@@ -55,7 +55,7 @@ The manual Run workflow screen supports **require_all**:
 
 GitHub normally exposes a newly added workflow's manual Run workflow control after the workflow file is present on the default branch. Until then, a qualifying push or pull request can trigger it.
 
-The existing application CI/CD files are unchanged. This file coordinates the ASE assignment only. The existing ci.yml project loops split paths at spaces and need a separate fix before those loops can reliably include the new assignment folders.
+The ASE workflow coordinates the assignment. The application ci.yml also discovers unit projects; its loops now use null-delimited paths so assignment folders containing spaces are passed intact to dotnet.
 
 ## Local commands
 
@@ -89,16 +89,16 @@ param(
 
 This is a parameter contract, not a complete runner. The script must actually run the tests, enforce the suite's pass/fail criteria, and write reports to ResultsDirectory. It must throw or exit nonzero on setup/test/threshold failures. A zero exit with no report files is rejected by the shared runner.
 
-Each job uses a fresh **windows-latest** GitHub runner and PowerShell 7. The repository is checked out, .NET 10 is installed, the UI job also installs Node 22, and the load job installs Java 17. No backend, frontend, database, Kafka broker, Stryker tool, JMeter installation or fixture data is automatically started/provided. Each teammate entry point must provision its own disposable local test environment and tools, wait for readiness, execute the suite, and clean up its own processes in a finally block.
+Each job uses PowerShell 7. Unit, mutation and load jobs use fresh Windows runners. The connected UI job uses **ubuntu-24.04** with Linux Docker, Chrome and .NET 10; Node 22 is installed by its setup step. Its entry point builds the frontend, starts the repository's MySQL/Kafka/API stack, waits for readiness, runs the four projects sequentially, saves TRX/log artifacts, and cleans up its disposable environment. A completed runner is not proof that every E2E assertion passes; consult its results.
 
 - **Mutation owner:** pin Stryker through a committed tool manifest, restore it, target the relevant unit projects, configure a meaningful mutation threshold, propagate its exit code and save the mutation report.
-- **UI owner:** install/restore browser test dependencies, start the frontend/backends/test infrastructure, run headless Selenium tests and retain results/screenshots. Do not assume a developer's localhost is reachable from GitHub.
+- **UI owner:** the connected run-ci.ps1 handles CI infrastructure and test execution. Maintain the Selenium cases and inspect reports for genuine failures. Local runs can explicitly use -UseExistingStack with a prepared local environment; they do not reset local containers or volumes.
 - **Load owner:** install/pin JMeter, provision local MySQL/Kafka/services, create fresh private CI credentials and fixtures, wait for notification delivery, then invoke the existing prepare/run/report scripts. Pass ApplicationCommit to the load runner. The current runner deliberately permits local hosts only. Copy public reports to ResultsDirectory; never upload private account manifests, credentials, tokens or HTTP headers.
 
-GitHub-hosted Windows runners cannot run this repository's Linux Docker Compose stack directly. Teammates must either provision compatible local infrastructure or adapt their job to a supported runner/environment. Merely adding test files or a run-ci.ps1 placeholder does not complete infrastructure integration.
+The load adapter is still pending. Its Windows job must either provision compatible infrastructure or switch to a suitable Linux runner and adapt its Windows-specific JMeter lookup. Merely adding test files or a run-ci.ps1 placeholder does not complete infrastructure integration.
 
 Use disposable CI data rather than production or a developer's persistent database. The workflow has read-only repository permissions and does not deploy or push code. No shared secrets are wired in yet; arrange any required CI secrets explicitly when the owning suite is connected.
 
 ## Before the presentation
 
-Complete all three pending adapters and the team ownership details. Run the workflow with require_all=true, confirm all four jobs execute and pass, download the artifacts, and rehearse the two-minute group introduction and four individual demonstrations. Until then this is a working unit-test workflow with integration entry points, not a finished four-suite pipeline.
+Complete the pending mutation/load adapters and team ownership details. Run the workflow with require_all=true, confirm all four jobs execute and pass, download the artifacts, and rehearse the two-minute group introduction and four individual demonstrations. Until then this is not a finished four-suite pipeline.

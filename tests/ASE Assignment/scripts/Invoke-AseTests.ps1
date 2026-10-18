@@ -16,7 +16,7 @@ if (!$ResultsDirectory) {
 $ResultsDirectory = [System.IO.Path]::GetFullPath($ResultsDirectory)
 $entryPoints = [ordered]@{
     Mutation = Join-Path $assignmentRoot 'Mutation Testing (Stryker)/run-ci.ps1'
-    Ui = Join-Path $assignmentRoot 'UI Testing (Selenium)/run-ci.ps1'
+    Ui = Join-Path $assignmentRoot 'E2E Testing (Selenium)/run-ci.ps1'
     Load = Join-Path $assignmentRoot 'Load Testing (Jmeter)/run-ci.ps1'
 }
 

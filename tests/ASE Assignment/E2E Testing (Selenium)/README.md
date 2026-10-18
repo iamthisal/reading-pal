@@ -66,6 +66,26 @@ Two fixtures are kept between runs on purpose: the genre `E2E Testing` and a sec
 
 ## Run the tests
 
+### GitHub Actions
+
+The shared **ASE Assignment Tests** workflow detects this folder's run-ci.ps1 and runs the UI job on
+ubuntu-24.04. The entry point builds all four projects, starts a disposable local MySQL/Kafka/four-API
+stack using the repository Compose files, builds and serves the frontend, waits for readiness and runs
+the projects sequentially. Each project's TRX file and infrastructure logs are uploaded as
+ase-ui-results. An assertion failure fails the job; remaining projects still run so their results are saved.
+
+CI uses User Service port 5000 and explicitly sets all four frontend/API addresses. The local defaults
+below remain unchanged. The existing documented application findings are not suppressed or excluded.
+The CI runner cleans up its own containers and volumes in a finally block. A developer run must use
+an existing prepared stack explicitly:
+
+~~~powershell
+pwsh -NoProfile -File "tests/ASE Assignment/E2E Testing (Selenium)/run-ci.ps1" -ResultsDirectory ".ase-results/ui" -ApplicationCommit "$(git rev-parse HEAD)" -UseExistingStack
+~~~
+
+Existing-stack mode builds/runs the tests but does not provision/reset infrastructure. The tests themselves
+still exercise outages and modify test data, so this mode must target a local test stack as described below.
+
 Start the local stack first (see TEST-PLAN.md §2): Kafka, MySQL and the four services in Docker with
 `ASPNETCORE_ENVIRONMENT=Development`, and the frontend with `npm run dev` pointed at the local services by
 `frontend/.env.local`. Chrome must be installed.

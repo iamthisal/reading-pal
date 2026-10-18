@@ -103,8 +103,9 @@ jobs:
     name: UI and E2E testing
     needs: discover
     if: needs.discover.outputs.ui == 'true'
-    runs-on: windows-latest
-    timeout-minutes: 30
+    # The E2E outage cases stop Linux Docker containers; Windows runners cannot host this stack.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -113,6 +114,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - name: Run teammate Selenium entry point
         run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui'
       - name: Upload UI reports and screenshots
