@@ -109,4 +109,71 @@ boundaries, Kafka delivery latency and browser rendering are outside this plan's
 Cleanup targets only recorded owned resources; history and failed-workflow leftovers may
 need manual reconciliation. Keep private files out of Git. Commit the plan, scripts,
 non-secret configuration, examples and documentation. The group can call the runner from
-its unified automation; nonzero exit means failure. The shared workflow now calls the CI adapter.
+
+its unified automation; nonzero exit means failure. The shared workflow calls the CI adapter
+to run against disposable services on the GitHub runner. Azure testing is run manually
+and is not included in the GitHub Actions workflow.
+
+## Azure runs (separate from local)
+
+Backend URLs are configured in config/azure.properties. No frontend server is required
+for JMeter API tests.
+
+Create config/azure.private.json using config/azure.private.example.json and enter the
+deployed admin credentials. The private file is ignored by Git and must never be committed.
+
+### Prepare fixtures once
+
+For 20 customer threads, the suite requires 33 fixture accounts: 20 customer accounts
+plus 13 supporting accounts. Reuse existing complete fixtures rather than preparing
+new accounts before every run.
+
+Only run preparation when an Azure fixture manifest does not already exist:
+
+```powershell
+.\scripts\prepare-data.ps1 -Environment azure -Users 33 -SeedNotifications
+```
+
+Wait for seeded notifications to arrive before running the test.
+
+### Run the test manually
+
+```powershell
+.\scripts\run-azure.ps1 -Preview -Customers 20
+.\scripts\run-azure.ps1 -AllowWrites -Customers 20 -DurationSeconds 60
+```
+
+Azure runs use 20 customer threads, plus two admin threads and separate workflow checks.
+The traffic duration is 60 seconds; setup, in-flight requests and reporting add to total
+execution time. Local and Azure tests run separately.
+
+### Data and results
+
+Azure fixtures are stored in data/azure/ and generated reports in results/azure/.
+Bulk fixture preparation happens outside the timed workload. Individual workflows
+still create and modify records to exercise endpoints.
+
+Tests modify deployed data. Most write operations target owned test records, but the
+admin mark-all-as-read operation affects the shared admin notification inbox, including
+existing notifications.
+
+A local pass does not guarantee an Azure pass. Record timeouts, response-time failures
+and incomplete coverage accurately. An endpoint with no samples was not exercised;
+it must not be reported as passing.
+
+### Optional cleanup
+
+```powershell
+.\scripts\cleanup-data.ps1 -Environment azure -ConfirmFixtureCleanup
+```
+
+Cleanup targets recorded test resources. History and failed-workflow leftovers may
+require manual reconciliation.
+
+### GitHub Actions scope
+
+GitHub Actions runs the local-environment suite against services started on its own
+runner. It does not run the Azure suite. Reports are uploaded even when performance
+checks fail, while failed checks remain visible in the test results.
+
+Never upload private credentials or account manifests as artifacts.
