@@ -5,10 +5,10 @@ on:
     branches:
       - main
       - develop
-      - ase-test-automation
       - unit-testing-ASE
       - Mutation-Testing-ASE
       - Load-Testing-ASE
+      - E2E-Testing-ASE
     paths:
       - .github/workflows/ase-testing.yml
       - tests/ASE Assignment/**
@@ -17,7 +17,6 @@ on:
   pull_request:
     branches:
       - develop
-      - ase-test-automation
     paths:
       - .github/workflows/ase-testing.yml
       - tests/ASE Assignment/**

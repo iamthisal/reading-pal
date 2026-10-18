@@ -2,28 +2,28 @@
 
 The group has selected four areas: unit testing/mocking, mutation testing, UI/E2E testing and load/performance testing. The shared workflow is **.github/workflows/ase-testing.yml**, named **ASE Assignment Tests**.
 
-## Shared branch and pull requests
+## Contribution branches and pull requests
 
-**ase-test-automation** is the group integration branch, created from develop. It includes unit-testing-ASE (which already contains the load-testing contribution). The shared workflow and group runner live on this integration branch.
+Each contributor opens their PR **directly into develop**. The unit-testing-ASE PR includes the unit tests, shared workflow and group runner, plus the already-merged load-testing contribution. No separate integration branch is required.
 
-Each teammate opens their contribution PR **into ase-test-automation**. Keep the integration branch's PR **into develop** as a draft while the other suites are being connected. Mark it ready for review only after all four suites execute and pass with require_all=true.
+The unit tests and workflow foundation can be reviewed and merged first. The other suites remain visibly pending. Teammates then add their tests and CI entry points through their own PRs into develop. Before final submission, all four suites must execute and pass with require_all=true.
 
-To bring the shared setup into an existing contribution branch, first commit or stash your unfinished work, then run:
+After the foundation PR is merged into develop, bring the shared setup into an existing contribution branch. First commit or stash your unfinished work, then run:
 
 ~~~bash
 git fetch origin
 git switch your-contribution-branch
-git merge origin/ase-test-automation
+git merge origin/develop
 ~~~
 
 Replace your-contribution-branch with your actual branch name. Resolve any conflicts before committing and pushing. To start a new contribution branch instead:
 
 ~~~bash
 git fetch origin
-git switch --no-track -c ase-my-contribution origin/ase-test-automation
+git switch --no-track -c ase-my-contribution origin/develop
 ~~~
 
-Use your own unused branch name in place of ase-my-contribution. Add your suite's folder and run-ci.ps1, push your contribution branch, and choose **ase-test-automation** as the PR base.
+Use your own unused branch name in place of ase-my-contribution. Add your suite's folder and run-ci.ps1, push your contribution branch, and choose **develop** as the PR base.
 
 ## Current readiness
 
@@ -46,7 +46,7 @@ Add each student's name and student ID to their suite README before submission. 
 4. Each connected suite uploads reports even when its execution fails.
 5. The final summary distinguishes success, failure and missing contributions. Missing suites are **PENDING**, not passing tests.
 
-The workflow runs on relevant pushes to main, develop, ase-test-automation and the three current ASE contribution branches; on pull requests targeting develop or ase-test-automation with relevant changes; and manually through Actions. Other contributor branches can use a pull request or be added to the push branch list.
+The workflow runs on relevant pushes to main, develop and the four current ASE contribution branches; on pull requests targeting develop with relevant changes; and manually through Actions. Other contributor branches can use a pull request or be added to the push branch list.
 
 The manual Run workflow screen supports **require_all**:
 
