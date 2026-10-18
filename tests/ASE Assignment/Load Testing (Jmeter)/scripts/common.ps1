@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 function Read-Properties([string]$Path) {
     if (!(Test-Path -LiteralPath $Path)) { throw "Missing properties: $Path" }
@@ -41,10 +41,28 @@ function Get-BaseUrl([hashtable]$Config,[string]$Service) {
 function Invoke-LocalApi([hashtable]$Config,[string]$Service,[string]$Method,[string]$Path,$Body=$null,[string]$Token='') {
     $headers=@{}
     if($Token){$headers.Authorization="Bearer $Token"}
-    $requestArgs=@{Uri=((Get-BaseUrl $Config $Service)+$Path);Method=$Method;Headers=$headers;TimeoutSec=30;ErrorAction='Stop'}
+
+    $timeoutSeconds = 30
+    if ($Config.ContainsKey('api.timeout.seconds') -and $Config['api.timeout.seconds']) {
+        $timeoutSeconds = [int]$Config['api.timeout.seconds']
+    }   
+    $requestArgs=@{Uri=((Get-BaseUrl $Config $Service)+$Path);Method=$Method;Headers=$headers;TimeoutSec=$timeoutSeconds;ErrorAction='Stop'}
+    #$requestArgs=@{Uri=((Get-BaseUrl $Config $Service)+$Path);Method=$Method;Headers=$headers;TimeoutSec=30;ErrorAction='Stop'}
     if($null -ne $Body){$requestArgs.Body=($Body | ConvertTo-Json -Depth 8 -Compress);$requestArgs.ContentType='application/json'}
     try { $result = Invoke-RestMethod @requestArgs; return $result }
     catch { throw "$Service $Method $Path failed. Check service logs; request bodies and credentials are intentionally not printed." }
 }
 
 
+
+function Assert-Environment([hashtable]$Config,[string]$Environment) {
+ if($Environment -eq "local"){ Assert-Local $Config; return }
+ if($Config["protocol"] -ne "https"){throw "Azure tests require HTTPS."}
+ $allowed=@{
+  user='reading-pal-userservice-bwh5bfc0agcvguf6.uaenorth-01.azurewebsites.net'
+  inventory='reading-pal-inventoryservice-dnamc3bufybsa8ah.uaenorth-01.azurewebsites.net'
+  lending='reading-pal-lendingservice-a6dybkatfsahfkha.uaenorth-01.azurewebsites.net'
+  notification='reading-pal-notificationservice-b4gmcqhxgvhxfebu.uaenorth-01.azurewebsites.net'
+ }
+ foreach($service in $allowed.Keys){if($Config["$service.host"] -ne $allowed[$service] -or $Config["$service.port"] -ne "443"){throw "Azure target must match the documented Reading Pal host and port."}}
+}

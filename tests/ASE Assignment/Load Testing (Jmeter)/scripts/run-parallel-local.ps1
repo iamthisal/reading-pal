@@ -1,4 +1,4 @@
-param([switch]$AllowWrites,[switch]$Preview,[string]$JMeterPath,[string]$ApplicationCommit='UNVERIFIED',[ValidateRange(20,100)][int]$Customers=20,[ValidateRange(30,3600)][int]$DurationSeconds=60)
+﻿param([ValidateSet('local','azure')][string]$Environment='local',[switch]$AllowWrites,[switch]$Preview,[string]$JMeterPath,[string]$ApplicationCommit='UNVERIFIED',[ValidateRange(20,100)][int]$Customers=20,[ValidateRange(30,3600)][int]$DurationSeconds=60)
 . "$PSScriptRoot/common.ps1"
 $root=Split-Path $PSScriptRoot -Parent
 $definition=Get-Content (Join-Path $root 'config/scenarios.json') -Raw|ConvertFrom-Json
@@ -6,8 +6,8 @@ $definition.requiredAccounts=$Customers+13
 foreach($job in $definition.groups){if($job.group -eq 'customer-pool'){$job.users=$Customers}}
 if($Preview){$definition.groups|Format-Table plan,scenario,users,setup -AutoSize;Write-Host "Required distinct fixture accounts: $($definition.requiredAccounts)";return}
 if(!$AllowWrites){throw 'This plan runs existing business workflows. Pass -AllowWrites for the intended local test environment.'}
-$config=Read-Properties (Join-Path $root 'config/local.properties');Assert-Local $config
-$accounts=Join-Path $root 'data/local/accounts.private.json';$secrets=Join-Path $root 'config/local.private.json'
+$config=Read-Properties (Join-Path $root "config/$Environment.properties");Assert-Environment $config $Environment
+$accounts=Join-Path $root "data/$Environment/accounts.private.json";$secrets=Join-Path $root "config/$Environment.private.json"
 $data=Get-Content $accounts -Raw|ConvertFrom-Json
 if(!$data.complete -or @($data.accounts).Count -lt $definition.requiredAccounts){throw "Need $($definition.requiredAccounts) complete fixture accounts. Existing preparation script can create these."}
 $rows=@($data.accounts|Select-Object -First $definition.requiredAccounts)
@@ -21,13 +21,13 @@ if(!$credentials.adminEmail -or !$credentials.adminPassword -or $credentials.adm
 if(@($planXml.SelectNodes('//ThreadGroup[@testname="customer-pool"]')).Count -ne 1){throw 'Expected one shared customer pool in the combined plan.'}
 foreach($service in @('user','inventory','lending','notification')){$health=Invoke-LocalApi $config $service GET '/health';if($health.status -ne 'healthy'){throw "$service health failed"}}
 $jm=Find-JMeter $JMeterPath
-$batch=Join-Path $root ('results/local/parallel-'+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'));New-Item -ItemType Directory $batch|Out-Null
+$batch=Join-Path $root ("results/$Environment/parallel-"+(Get-Date -Format 'yyyyMMdd-HHmmss-fff'));New-Item -ItemType Directory $batch|Out-Null
 $plan=Join-Path $root 'test-plans/all-services.jmx';$jtl=Join-Path $batch 'results.jtl'
 Write-Host "ONE JMETER RUN | $Customers shared customers + 2 shared admins | 21 scenarios" -ForegroundColor Cyan
 Write-Host 'Notification read actions run first to avoid collisions with event-producing workflows.'
 Write-Host "Repeated traffic: $DurationSeconds seconds including ramp. Bounded workflows: once, up to 90 seconds."
-Write-Host "Results: $batch"
-& $jm -n -t $plan -q (Join-Path $root 'config/local.properties') -q (Join-Path $root 'config/load.properties') "-Jcustomer.users=$Customers" "-Jduration.seconds=$DurationSeconds" "-Jaccounts.file=$accounts" "-Jsecrets.file=$secrets" -l $jtl -j (Join-Path $batch 'jmeter.log') '-Jjmeter.save.saveservice.output_format=csv' '-Jjmeter.save.saveservice.print_field_names=true' '-Jjmeter.save.saveservice.timestamp_format=ms' '-Jjmeter.save.saveservice.assertion_results_failure_message=true'
+Write-Host "Target environment: $Environment | Results: $batch"
+& $jm -n -t $plan -q (Join-Path $root "config/$Environment.properties") -q (Join-Path $root 'config/load.properties') "-Jcustomer.users=$Customers" "-Jduration.seconds=$DurationSeconds" "-Jaccounts.file=$accounts" "-Jsecrets.file=$secrets" -l $jtl -j (Join-Path $batch 'jmeter.log') '-Jjmeter.save.saveservice.output_format=csv' '-Jjmeter.save.saveservice.print_field_names=true' '-Jjmeter.save.saveservice.timestamp_format=ms' '-Jjmeter.save.saveservice.assertion_results_failure_message=true'
 $exitCode=$LASTEXITCODE
 if(!(Test-Path $jtl)){throw "JMeter produced no results. Exit: $exitCode. Inspect $batch"}
 Write-Host "`nFINAL EVALUATION | all traffic has finished" -ForegroundColor Cyan
@@ -61,7 +61,7 @@ $performance=@($http|Where-Object {$_.label -like 'LOAD |*' -and ($_.threadName 
 $start=[long](($http|ForEach-Object{[long]$_.timeStamp}|Measure-Object -Minimum).Minimum)
 $end=[long](($http|ForEach-Object{[long]$_.timeStamp+[long]$_.elapsed}|Measure-Object -Maximum).Maximum)
 $seconds=($end-$start)/1000.0
-$overall=[ordered]@{customers=$Customers;adminThreads=2;workflowThreads=9;setupThreads=2;configuredTrafficSeconds=$DurationSeconds;observedHttpSeconds=$seconds;httpRequests=$http.Count;internalSamples=$all.Count-$http.Count;httpFailures=@($http|Where-Object success -ne 'true').Count;httpRequestsPerSecond=$(if($seconds -gt 0){[Math]::Round($http.Count/$seconds,2)}else{0});applicationCommit=$ApplicationCommit;measurement='Local, includes ramp and setup; not maximum capacity'}
+$overall=[ordered]@{customers=$Customers;adminThreads=2;workflowThreads=9;setupThreads=2;configuredTrafficSeconds=$DurationSeconds;observedHttpSeconds=$seconds;httpRequests=$http.Count;internalSamples=$all.Count-$http.Count;httpFailures=@($http|Where-Object success -ne 'true').Count;httpRequestsPerSecond=$(if($seconds -gt 0){[Math]::Round($http.Count/$seconds,2)}else{0});applicationCommit=$ApplicationCommit;environment=$Environment;measurement='Includes ramp and setup; not maximum capacity'}
 $overall|ConvertTo-Json|Set-Content (Join-Path $batch 'run-overview.json') -Encoding UTF8
 Write-Host "`nACTUAL RUN TOTALS (counted once from raw results)" -ForegroundColor Cyan
 [pscustomobject]$overall|Format-List|Out-Host
@@ -79,6 +79,7 @@ $html=Get-Content (Join-Path $batch 'index.html') -Raw
 $html=$html.Replace('Performance summaries exclude setup and ramp/warm-up.','This short concurrent run excludes setup samples but includes ramp-up; Repeated load checks require at least 20 samples per expected label; one-off workflow checks require one. Small samples do not establish reliable tail latency.')
 $html=$html.Replace('Local service performance and workflow verification','Short concurrent load and workflow verification (not a baseline/stress/soak campaign)')
 $html=$html.Replace('<main>', "<main><aside><strong>Shared pools:</strong> $Customers customers and 2 admin browsing threads. Scenario user counts refer to these same pools; do not add them together. Nine independent one-off workflows also run. Two notification setup threads run first.</aside>")
+$html=$html.Replace('Local service performance', "$Environment service performance")
 $html=$html.Replace('</nav>','<a href="html-report/index.html">Full JMeter dashboard</a></nav>')
 $html|Set-Content (Join-Path $batch 'index.html') -Encoding UTF8
 & $jm -g $jtl -o (Join-Path $batch 'html-report') -j (Join-Path $batch 'report.log')

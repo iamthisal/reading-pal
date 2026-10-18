@@ -1,11 +1,11 @@
-param([ValidateRange(1,100)][int]$Users=2,[switch]$SeedNotifications)
+﻿param([ValidateSet('local','azure')][string]$Environment='local',[ValidateRange(1,100)][int]$Users=2,[switch]$SeedNotifications)
 . "$PSScriptRoot/common.ps1"
-$root=Split-Path $PSScriptRoot -Parent;$config=Read-Properties (Join-Path $root 'config/local.properties');Assert-Local $config
-$private=Join-Path $root 'config/local.private.json'
+$root=Split-Path $PSScriptRoot -Parent;$config=Read-Properties (Join-Path $root "config/$Environment.properties");Assert-Environment $config $Environment
+$private=Join-Path $root "config/$Environment.private.json"
 if(!(Test-Path -LiteralPath $private)){throw 'Copy config/local.private.example.json to local.private.json and fill local admin credentials.'}
 $secrets=Get-Content -LiteralPath $private -Raw|ConvertFrom-Json
 if(!$secrets.adminPassword -or $secrets.adminPassword -eq 'REPLACE_ME'){throw 'Fill your local admin credentials first.'}
-$file=Join-Path $root 'data/local/accounts.private.json'
+$file=Join-Path $root "data/$Environment/accounts.private.json"
 if(Test-Path -LiteralPath $file){throw 'Fixture already exists. Keep it for repeatability; clean it explicitly before preparing a replacement.'}
 $admin=Invoke-LocalApi $config user POST '/api/auth/login' @{email=$secrets.adminEmail;password=$secrets.adminPassword}
 if($admin.role -ne 'Admin' -or !$admin.token){throw 'Admin authentication failed.'}
@@ -40,6 +40,6 @@ try {
  $ids=@($data.accounts|ForEach-Object{[int]$_.bookId})
  $null=Invoke-LocalApi $config inventory PUT "/api/Lists/$prefix/items" @{itemIds=$ids} $admin.token
  $data.complete=$true;Save-Fixture
- Write-Host "Prepared $Users local customer fixtures; credentials saved only to ignored accounts.private.json."
+ Write-Host "Prepared $Users $Environment customer fixtures; credentials saved only to ignored accounts.private.json."
  if($SeedNotifications){Write-Host 'Notification events were queued. Verify consumer delivery before notification read-action scenarios.'}
 } catch { Save-Fixture;throw 'Fixture preparation stopped; the private manifest records created resources. Check service logs and Kafka, then use cleanup-data.ps1 or reconcile partial records. Do not rerun blindly.' }

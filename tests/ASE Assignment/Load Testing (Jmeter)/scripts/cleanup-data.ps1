@@ -1,10 +1,10 @@
-param([switch]$ConfirmFixtureCleanup)
+﻿param([ValidateSet('local','azure')][string]$Environment='local',[switch]$ConfirmFixtureCleanup)
 . "$PSScriptRoot/common.ps1"
 if(!$ConfirmFixtureCleanup){throw 'Use -ConfirmFixtureCleanup to remove ONLY resources named in the fixture manifest.'}
-$root=Split-Path $PSScriptRoot -Parent;$config=Read-Properties (Join-Path $root 'config/local.properties');Assert-Local $config
-$file=Join-Path $root 'data/local/accounts.private.json';$data=Get-Content -LiteralPath $file -Raw|ConvertFrom-Json
+$root=Split-Path $PSScriptRoot -Parent;$config=Read-Properties (Join-Path $root "config/$Environment.properties");Assert-Environment $config $Environment
+$file=Join-Path $root "data/$Environment/accounts.private.json";$data=Get-Content -LiteralPath $file -Raw|ConvertFrom-Json
 if($data.prefix -notmatch '^ase-[a-f0-9]{12}$'){throw 'Unrecognized fixture ownership prefix.'}
-$secrets=Get-Content (Join-Path $root 'config/local.private.json') -Raw|ConvertFrom-Json
+$secrets=Get-Content (Join-Path $root "config/$Environment.private.json") -Raw|ConvertFrom-Json
 $admin=Invoke-LocalApi $config user POST '/api/auth/login' @{email=$secrets.adminEmail;password=$secrets.adminPassword}
 $failed=$false
 # Reverse dependencies: books/list before genre/author; users removed only when their own email matches.
@@ -43,5 +43,6 @@ foreach($kind in @('book','list','author','genre','user')){
 }
 if($failed){throw 'Partial cleanup; private manifest retained for retry.'}
 # Rename rather than delete the recovery manifest. Path is fixed inside the suite's data directory.
-Move-Item -LiteralPath $file -Destination (Join-Path $root ('data/local/cleaned-'+(Get-Date -Format 'yyyyMMddHHmmss')+'.private.json'))
+#Move-Item -LiteralPath $file -Destination (Join-Path $root ('data/local/cleaned-'+(Get-Date -Format 'yyyyMMddHHmmss')+'.private.json'))
+Move-Item -LiteralPath $file -Destination (Join-Path $root ('data/' + $Environment + '/cleaned-' + (Get-Date -Format 'yyyyMMddHHmmss') + '.private.json'))
 Write-Host 'Fixture resources cleaned. Historical Lending/Notification records remain by design; use fresh dedicated databases for a complete reset.'

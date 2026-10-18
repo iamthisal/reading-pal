@@ -1,0 +1,2 @@
+﻿param([switch]$AllowWrites,[switch]$Preview,[ValidateRange(20,100)][int]$Customers=20,[ValidateRange(30,3600)][int]$DurationSeconds=60,[string]$JMeterPath,[string]$ApplicationCommit='UNVERIFIED')
+& "$PSScriptRoot/run-parallel-local.ps1" -Environment azure -AllowWrites:$AllowWrites -Preview:$Preview -Customers $Customers -DurationSeconds $DurationSeconds -JMeterPath $JMeterPath -ApplicationCommit $ApplicationCommit
