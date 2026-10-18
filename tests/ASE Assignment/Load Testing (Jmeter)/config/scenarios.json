@@ -1,0 +1,1500 @@
+{
+  "requiredAccounts": 33,
+  "groups": [
+    {
+      "plan": "user-service",
+      "scenario": "reads",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | health",
+          "service": "user",
+          "method": "GET",
+          "route": "/health",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | own profile",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/User/profile",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "user-service",
+      "scenario": "login",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "LOAD | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "user-service",
+      "scenario": "admin",
+      "profile": "load",
+      "group": "admin-pool",
+      "users": 2,
+      "offset": 20,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | admin message",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/Admin/message",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | pending accounts",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/Admin/users/pending",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | active accounts",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/Admin/users/active",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "user-service",
+      "scenario": "lifecycle",
+      "profile": "workflow",
+      "group": "user-service :: lifecycle",
+      "users": 1,
+      "offset": 22,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | register",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/register",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | duplicate registration rejected",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/register",
+          "status": 400,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | find registered account",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/Admin/users/pending",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | pending profile",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/User/profile",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | approve account",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/Admin/users/{id}/accept",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | update own profile",
+          "service": "user",
+          "method": "PUT",
+          "route": "/api/User/profile",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | verify profile update",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/User/profile",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | revoke owned account",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/Admin/users/{id}/revoke",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | verify revoked account",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/User/profile",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | delete owned pending account",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/Admin/users/{id}/reject",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "user-service",
+      "scenario": "negative",
+      "profile": "workflow",
+      "group": "user-service :: negative",
+      "users": 1,
+      "offset": 23,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | user | anonymous profile denied",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/User/profile",
+          "status": 401,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | customer admin access denied",
+          "service": "user",
+          "method": "GET",
+          "route": "/api/Admin/users/active",
+          "status": 403,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | invalid login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 401,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | user | invalid registration",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/register",
+          "status": 400,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "inventory-service",
+      "scenario": "reads",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "LOAD | inventory | health",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/health",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | all books",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | browse",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | keyword search",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | genre availability",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | pagination",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | detail",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | Genres listing",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Genres",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | Authors listing",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Authors",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | Lists listing",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Lists",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | Genres books",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Genres/{id}/books",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | Authors books",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Authors/{id}/books",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | author detail",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Authors/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | author profile",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Authors/profile",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | curated list",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Lists/{key}",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "inventory-service",
+      "scenario": "favourites",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | favourite books",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Favourites",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | favourite IDs",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Favourites/ids",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "inventory-service",
+      "scenario": "crud",
+      "profile": "workflow",
+      "group": "inventory-service :: crud",
+      "users": 1,
+      "offset": 24,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | create Genres",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Genres",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | duplicate Genres",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Genres",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | update Genres",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Genres/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | create Authors",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Authors",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | duplicate Authors",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Authors",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | update Authors",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Authors/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | create owned book",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | duplicate ISBN rejected",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | update book",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mark unavailable",
+          "service": "inventory",
+          "method": "PATCH",
+          "route": "/api/Books/{id}/mark-unavailable",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mark available",
+          "service": "inventory",
+          "method": "PATCH",
+          "route": "/api/Books/{id}/mark-available",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | add favourite",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Favourites/{bookId}",
+          "status": 204,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify favourite",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Favourites/ids",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | remove favourite",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Favourites/{bookId}",
+          "status": 204,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify favourite removed",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Favourites/ids",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | create list",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Lists",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | rename list",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Lists/{key}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | set list contents",
+          "service": "inventory",
+          "method": "PUT",
+          "route": "/api/Lists/{key}/items",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | genre in use blocked",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Genres/{id}",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned list",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Lists/{key}",
+          "status": 204,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned book",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Books/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned Authors",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Authors/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned Genres",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Genres/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "inventory-service",
+      "scenario": "negative",
+      "profile": "workflow",
+      "group": "inventory-service :: negative",
+      "users": 1,
+      "offset": 25,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | customer create denied",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 403,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | missing book",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 404,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | missing author query",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Authors/profile",
+          "status": 400,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "reads",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | lending | health",
+          "service": "lending",
+          "method": "GET",
+          "route": "/health",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | own borrowing history",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "admin",
+      "profile": "load",
+      "group": "admin-pool",
+      "users": 2,
+      "offset": 20,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | lending | pending reservations",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/reservations/pending",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | borrowed reservations",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/reservations/borrowed",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | history reservations",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/reservations/history",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "cancel",
+      "profile": "workflow",
+      "group": "lending-service :: cancel",
+      "users": 1,
+      "offset": 26,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | create owned book",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | reserve owned book",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | duplicate pending blocked",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | cancel",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/my-borrowings/reservations/{id}/cancel",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | verify cancelled history",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify final available copies",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned book",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Books/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "reject",
+      "profile": "workflow",
+      "group": "lending-service :: reject",
+      "users": 1,
+      "offset": 27,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | create owned book",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | reserve owned book",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | duplicate pending blocked",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | reject",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations/{id}/reject",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | verify cancelled history",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify final available copies",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned book",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Books/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "return",
+      "profile": "workflow",
+      "group": "lending-service :: return",
+      "users": 1,
+      "offset": 28,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | create owned book",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | reserve owned book",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 201,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | duplicate pending blocked",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | accept",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/reservations/{id}/accept",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify deducted copy",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | retry existing checkout",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books/{id}/checkouts/{reservationId}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify no second deduction",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | borrowed deletion blocked",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Books/{id}",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | accepted cancellation blocked",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/my-borrowings/reservations/{id}/cancel",
+          "status": 409,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | return",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/returns/{borrowRecordId}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | repeat return",
+          "service": "lending",
+          "method": "POST",
+          "route": "/api/returns/{borrowRecordId}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | retry inventory return",
+          "service": "inventory",
+          "method": "POST",
+          "route": "/api/Books/{id}/checkouts/{reservationId}/return",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | verify returned history",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | verify final available copies",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | delete owned book",
+          "service": "inventory",
+          "method": "DELETE",
+          "route": "/api/Books/{id}",
+          "status": 204,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "lending-service",
+      "scenario": "negative",
+      "profile": "workflow",
+      "group": "lending-service :: negative",
+      "users": 1,
+      "offset": 29,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | lending | anonymous denied",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 401,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | customer admin queue denied",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/reservations/pending",
+          "status": 403,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "notification-service",
+      "scenario": "reads",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | notification | health",
+          "service": "notification",
+          "method": "GET",
+          "route": "/health",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | inbox",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | next page",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | unread inbox",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | unread count",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications/unread-count",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "notification-service",
+      "scenario": "admin",
+      "profile": "load",
+      "group": "admin-pool",
+      "users": 2,
+      "offset": 20,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | notification | inbox",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | next page",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | unread inbox",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | unread count",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications/unread-count",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "notification-service",
+      "scenario": "read-actions",
+      "profile": "workflow",
+      "group": "notification-service :: read-actions",
+      "users": 1,
+      "offset": 30,
+      "setup": true,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | notification | select existing notification",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | mark read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/notifications/{id}/read",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | repeat read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/notifications/{id}/read",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | mark all read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/notifications/read-all",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | repeat all read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/notifications/read-all",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | verify unread cleared",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications/unread-count",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "notification-service",
+      "scenario": "admin-read-actions",
+      "profile": "workflow",
+      "group": "notification-service :: admin-read-actions",
+      "users": 1,
+      "offset": 31,
+      "setup": true,
+      "requests": [
+        {
+          "label": "SETUP | user | Admin login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | notification | select existing notification",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | mark read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/admin/notifications/{id}/read",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | repeat read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/admin/notifications/{id}/read",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | mark all read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/admin/notifications/read-all",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | repeat all read",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/admin/notifications/read-all",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | verify unread cleared",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications/unread-count",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "notification-service",
+      "scenario": "negative",
+      "profile": "workflow",
+      "group": "notification-service :: negative",
+      "users": 1,
+      "offset": 32,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | notification | anonymous denied",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 401,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | customer admin inbox denied",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/admin/notifications",
+          "status": 403,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | missing notification",
+          "service": "notification",
+          "method": "POST",
+          "route": "/api/notifications/{id}/read",
+          "status": 404,
+          "phase": "LOAD"
+        }
+      ]
+    },
+    {
+      "plan": "mixed-user-workload",
+      "scenario": "reads",
+      "profile": "load",
+      "group": "customer-pool",
+      "users": 20,
+      "offset": 0,
+      "setup": false,
+      "requests": [
+        {
+          "label": "SETUP | user | User login",
+          "service": "user",
+          "method": "POST",
+          "route": "/api/auth/login",
+          "status": 200,
+          "phase": "SETUP"
+        },
+        {
+          "label": "LOAD | inventory | mixed search 1",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed search 2",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed search 3",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed search 4",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed search 5",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/books/search",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed book 1",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | inventory | mixed book 2",
+          "service": "inventory",
+          "method": "GET",
+          "route": "/api/Books/{id}",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | mixed history 1",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | lending | mixed history 2",
+          "service": "lending",
+          "method": "GET",
+          "route": "/api/my-borrowings",
+          "status": 200,
+          "phase": "LOAD"
+        },
+        {
+          "label": "LOAD | notification | mixed inbox",
+          "service": "notification",
+          "method": "GET",
+          "route": "/api/notifications",
+          "status": 200,
+          "phase": "LOAD"
+        }
+      ]
+    }
+  ]
+}

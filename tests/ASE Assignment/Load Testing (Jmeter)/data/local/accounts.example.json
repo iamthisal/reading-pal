@@ -1,0 +1,16 @@
+{
+  "complete": true,
+  "accounts": [
+    {
+      "userEmail": "YOUR_APPROVED_LOCAL_TEST_USER",
+      "userPassword": "REPLACE_ME",
+      "bookId": 1,
+      "genreId": 1,
+      "genre": "Fiction",
+      "authorId": 1,
+      "authorName": "Example",
+      "listKey": "example",
+      "searchTerm": "Example"
+    }
+  ]
+}
