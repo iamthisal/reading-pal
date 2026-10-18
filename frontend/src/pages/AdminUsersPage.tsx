@@ -166,7 +166,7 @@ const AdminUsersPage = () => {
         
         setActionLoading(true);
         try {
-            await axios.post(`http://localhost:5000/api/admin/users/${selectedUser.id}/revoke`, {}, {
+            await axios.post(`${API_BASE_URL}/api/admin/users/${selectedUser.id}/revoke`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUsers(prev => prev.filter(u => u.id !== selectedUser.id));
