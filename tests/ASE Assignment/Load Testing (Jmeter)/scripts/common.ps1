@@ -17,14 +17,16 @@ function Find-JMeter([string]$Requested) {
     foreach ($candidate in $candidates) {
         if (!$candidate) { continue }
         if (Test-Path -LiteralPath $candidate -PathType Leaf) { return (Resolve-Path -LiteralPath $candidate).Path }
-        $bat = Join-Path $candidate 'bin/jmeter.bat'
-        if (Test-Path -LiteralPath $bat) { return $bat }
+        $executable = if ($env:OS -eq 'Windows_NT') { 'bin/jmeter.bat' } else { 'bin/jmeter' }
+        $binary = Join-Path $candidate $executable
+        if (Test-Path -LiteralPath $binary) { return $binary }
     }
-    $cmd = Get-Command jmeter.bat -ErrorAction SilentlyContinue
+    $commandName = if ($env:OS -eq 'Windows_NT') { 'jmeter.bat' } else { 'jmeter' }
+    $cmd = Get-Command $commandName -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
     $known = 'D:\Apps\apache-jmeter-5.6.3\apache-jmeter-5.6.3\bin\jmeter.bat'
-    if (Test-Path -LiteralPath $known) { return $known }
-    throw 'JMeter not found. Supply -JMeterPath with the full path to bin\jmeter.bat.'
+    if ($env:OS -eq 'Windows_NT' -and (Test-Path -LiteralPath $known)) { return $known }
+    throw 'JMeter not found. Supply -JMeterPath with the full path to bin/jmeter (Linux) or bin/jmeter.bat (Windows).'
 }
 
 function Assert-Local([hashtable]$Config) {

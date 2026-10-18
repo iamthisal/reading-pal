@@ -2,6 +2,23 @@
 
 Owner: Wickramasinghe G. K. D. K - IT24101516
 
+## GitHub Actions
+
+The shared **ASE Assignment Tests** workflow detects this folder's run-ci.ps1. Its load job uses a
+separate Ubuntu 24.04 runner with Java 17, downloads JMeter 5.6.3 and verifies its official SHA-512
+checksum, starts a disposable MySQL/Kafka/four-service stack, prepares 33 fixture accounts and waits
+for notification delivery. It then runs the existing suite with 20 customers and 60 seconds of traffic.
+The original assertions, minimum sample counts, p95 limits and error-rate gates are unchanged.
+
+Generated HTML/JMeter/JSON reports and infrastructure logs are uploaded as **ase-load-results**,
+including when a gate fails. Private admin credentials and account manifests are not uploaded.
+CI cleans up its own containers/volumes; this adapter refuses to provision or reseed a developer's
+existing local stack. Use the local commands below for local runs.
+
+The generator and APIs share the CI runner. Results measure that environment; they do not establish
+production or Azure capacity. A non-skipped job is not a passing performance result: consult its gates
+and downloadable reports.
+
 ## Run
 
 Start the four local services, MySQL and Kafka. The runner does not start infrastructure.
@@ -92,4 +109,4 @@ boundaries, Kafka delivery latency and browser rendering are outside this plan's
 Cleanup targets only recorded owned resources; history and failed-workflow leftovers may
 need manual reconciliation. Keep private files out of Git. Commit the plan, scripts,
 non-secret configuration, examples and documentation. The group can call the runner from
-its unified automation; nonzero exit means failure. No CI workflow is changed by this suite.
+its unified automation; nonzero exit means failure. The shared workflow now calls the CI adapter.

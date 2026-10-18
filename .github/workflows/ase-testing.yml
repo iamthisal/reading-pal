@@ -130,8 +130,9 @@ jobs:
     name: Load and performance testing
     needs: discover
     if: needs.discover.outputs.load == 'true'
-    runs-on: windows-latest
-    timeout-minutes: 30
+    # A separate Linux Docker stack keeps load traffic independent of the browser suite.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4

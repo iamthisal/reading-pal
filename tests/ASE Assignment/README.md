@@ -32,7 +32,7 @@ Use your own unused branch name in place of ase-my-contribution. Add your suite'
 | Unit testing and mocking | Unit Testing (xUnit-Moq) | Connected: all four projects run and produce TRX results. |
 | Mutation testing | Mutation Testing (Stryker) | Pending: teammate adds the suite and run-ci.ps1. |
 | UI/E2E testing | E2E Testing (Selenium) | Connected: Linux CI runner provisions the local stack and executes four Selenium projects. |
-| Load/performance testing | Load Testing (Jmeter) | Local JMeter suite exists; CI environment/fixture adapter run-ci.ps1 is pending. |
+| Load/performance testing | Load Testing (Jmeter) | Connected: Linux CI adapter provisions an isolated stack, prepares fixtures and runs the existing JMeter gates. |
 
 The Mutation-Testing-ASE branch currently contains the same load-testing commit as Load-Testing-ASE; its name alone does not establish a mutation implementation. PR #106 supplies the assignment Selenium suite; existing Selenium projects elsewhere in tests remain separate.
 
@@ -89,16 +89,16 @@ param(
 
 This is a parameter contract, not a complete runner. The script must actually run the tests, enforce the suite's pass/fail criteria, and write reports to ResultsDirectory. It must throw or exit nonzero on setup/test/threshold failures. A zero exit with no report files is rejected by the shared runner.
 
-Each job uses PowerShell 7. Unit, mutation and load jobs use fresh Windows runners. The connected UI job uses **ubuntu-24.04** with Linux Docker, Chrome and .NET 10; Node 22 is installed by its setup step. Its entry point builds the frontend, starts the repository's MySQL/Kafka/API stack, waits for readiness, runs the four projects sequentially, saves TRX/log artifacts, and cleans up its disposable environment. A completed runner is not proof that every E2E assertion passes; consult its results.
+Each job uses PowerShell 7. Unit and mutation jobs use fresh Windows runners. The connected UI and load jobs use separate **ubuntu-24.04** runners with Linux Docker and .NET 10. The UI job installs Node 22 and uses Chrome; its entry point builds the frontend, starts MySQL/Kafka/APIs, waits for readiness, runs four projects sequentially, saves TRX/log artifacts and cleans up. The load job installs Java 17 and verifies/downloads JMeter 5.6.3; it prepares 33 fixture accounts on its own stack and runs 20 customers for 60 seconds. Consult actual reports rather than assuming configured suites pass.
 
 - **Mutation owner:** pin Stryker through a committed tool manifest, restore it, target the relevant unit projects, configure a meaningful mutation threshold, propagate its exit code and save the mutation report.
 - **UI owner:** the connected run-ci.ps1 handles CI infrastructure and test execution. Maintain the Selenium cases and inspect reports for genuine failures. Local runs can explicitly use -UseExistingStack with a prepared local environment; they do not reset local containers or volumes.
-- **Load owner:** install/pin JMeter, provision local MySQL/Kafka/services, create fresh private CI credentials and fixtures, wait for notification delivery, then invoke the existing prepare/run/report scripts. Pass ApplicationCommit to the load runner. The current runner deliberately permits local hosts only. Copy public reports to ResultsDirectory; never upload private account manifests, credentials, tokens or HTTP headers.
+- **Load owner:** the connected run-ci.ps1 handles JMeter installation, infrastructure, fixtures and notification readiness, then invokes the existing prepare/run/report scripts with ApplicationCommit. Maintain the scenarios and interpret actual performance results. Existing thresholds remain unchanged. Private account manifests and credentials remain outside uploaded reports.
 
-The load adapter is still pending. Its Windows job must either provision compatible infrastructure or switch to a suitable Linux runner and adapt its Windows-specific JMeter lookup. Merely adding test files or a run-ci.ps1 placeholder does not complete infrastructure integration.
+Mutation integration is still pending. The UI and load adapters enforce their own results and run on separate machines, so load traffic cannot interfere with Selenium's outage cases. A failed performance gate is a failed job, not a skip or a fabricated pass.
 
 Use disposable CI data rather than production or a developer's persistent database. The workflow has read-only repository permissions and does not deploy or push code. No shared secrets are wired in yet; arrange any required CI secrets explicitly when the owning suite is connected.
 
 ## Before the presentation
 
-Complete the pending mutation/load adapters and team ownership details. Run the workflow with require_all=true, confirm all four jobs execute and pass, download the artifacts, and rehearse the two-minute group introduction and four individual demonstrations. Until then this is not a finished four-suite pipeline.
+Complete the pending mutation adapter and team ownership details. Run the workflow with require_all=true, confirm all four jobs execute and pass, download the artifacts, and rehearse the two-minute group introduction and four individual demonstrations. Until then this is not a finished four-suite pipeline.
