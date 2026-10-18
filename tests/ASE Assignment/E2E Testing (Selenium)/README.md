@@ -2,22 +2,33 @@
 
 ## Verified coverage and results
 
-The four projects were run one after another on 18 October 2026 against the local Docker stack (.NET SDK
-10.0.401, Chrome 155, headless): **187 test cases (112 happy, 75 unhappy), 198 executed runs, 197 passed,
-1 failed, 0 skipped.** Theory rows explain why executed runs exceed cases. The one failure is a real defect
-(below), not a broken test. Every outage case stopped and restarted its container successfully, and the
-test data cleanup left no E2E books, authors or lists behind.
+**187 test cases: 112 happy paths, 75 unhappy paths.** Both runs below used the local Docker stack on 18 October
+2026 (.NET SDK 10.0.401, Chrome 155, headless). Theory rows explain why executed runs (198) exceed cases.
 
-| Project | Cases | Executed | Passed | Failed | Run time |
+| Run | Frontend under test | Executed | Passed | Failed |
+| --- | --- | ---: | ---: | ---: |
+| Run 1 | `develop` @ b35cfba | 198 | 197 | 1 (ACC-04) |
+| Run 2 | `fix/revoke-member-url` @ f6e9b26 | 198 | 198 | 0 |
+
+| Project | Cases | Executed | Run 1 passed | Run 2 passed | Run time |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| UserService.E2ETests | 46 | 55 | 54 | 1 | 5 min |
-| InventoryService.E2ETests | 80 | 82 | 82 | 0 | 10 min |
-| LendingService.E2ETests | 42 | 42 | 42 | 0 | 4 min |
-| NotificationService.E2ETests | 19 | 19 | 19 | 0 | 5 min |
-| Total | 187 | 198 | 197 | 1 | about 25 min |
+| UserService.E2ETests | 46 | 55 | 54 | 55 | 5 min |
+| InventoryService.E2ETests | 80 | 82 | 82 | 82 | 10 min |
+| LendingService.E2ETests | 42 | 42 | 42 | 42 | 4 min |
+| NotificationService.E2ETests | 19 | 19 | 19 | 19 | 5 min |
+| Total | 187 | 198 | 197 | 198 | about 25 min |
 
-The failing case is **ACC-04** (an admin revokes an active member): it asserts the required behaviour and
-fails because of finding 1 below.
+**What failed and why.** In run 1 only **ACC-04** (an admin revokes an active member) failed, and the cause was
+in the application, not the test: `frontend/src/pages/AdminUsersPage.tsx` sent the revoke request to a
+hard-coded `http://localhost:5000` instead of the configured User Service address, so the admin always saw
+"Failed to revoke user access. Please try again." The fix is on branch `fix/revoke-member-url` (commit
+f6e9b26); with it every case passes (run 2). **Until that branch is merged, ACC-04 still fails on `develop`.**
+
+Problems found in the test code while the suites were being built (stale page elements, a too-strict row
+match, a layout check that needed a 2 px tolerance, and so on) were fixed before the final runs. Every one,
+with its cause and fix, is in the "Failures and fixes" section of [TEST-CATALOG.md](TEST-CATALOG.md). Every
+outage case stopped and restarted its container successfully, and cleanup left no E2E books, authors or
+lists behind.
 
 Each case is described in [TEST-PLAN.md](TEST-PLAN.md) and listed with its result in
 [TEST-CATALOG.md](TEST-CATALOG.md). TRX files are in each project's ignored `TestResults` folder.
@@ -116,9 +127,11 @@ dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/UserService.E2ETests/Us
 dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/InventoryService.E2ETests/InventoryService.E2ETests.csproj" --filter "Type=Unhappy"
 ~~~
 
-Rebuild the catalogue from the latest TRX files:
+Record a run in the catalogue (reads each project's TRX file; recorded runs are kept in `results/`, and the
+notes on failures and fixes in `scripts/catalog-notes.json`), then rebuild it:
 
 ~~~bash
+python3 "tests/ASE Assignment/E2E Testing (Selenium)/scripts/build-catalog.py" --record run-3 --label "Run 3" --date 2026-10-20 --frontend "develop @ abc1234"
 python3 "tests/ASE Assignment/E2E Testing (Selenium)/scripts/build-catalog.py"
 ~~~
 
@@ -155,10 +168,11 @@ the browser, then checks what the browser shows and, where it matters, what the 
 
 ## Findings
 
-Writing and running the suite found real problems; the related tests assert the *correct* behaviour and
-fail, or document today's behaviour where the plan says so. Details are in TEST-PLAN.md §10.
+Writing and running the suite found real problems in the application. ACC-04 asserts the correct
+behaviour and failed until the fix; the other findings are documented by tests that check today's
+behaviour, so they pass. Details are in TEST-PLAN.md §10.
 
-1. **Revoking a member always fails** (ACC-04 fails). `frontend/src/pages/AdminUsersPage.tsx` sends the revoke request to a hard-coded `http://localhost:5000` instead of the configured User Service address, so the admin sees "Failed to revoke user access. Please try again." locally and on Azure.
+1. **Revoking a member always failed** (ACC-04). **Fixed on `fix/revoke-member-url` (f6e9b26)**, not yet merged. `frontend/src/pages/AdminUsersPage.tsx` sends the revoke request to a hard-coded `http://localhost:5000` instead of the configured User Service address, so the admin sees "Failed to revoke user access. Please try again." locally and on Azure.
 2. **Admins see a Borrow button the service always refuses** (RES-09 documents it).
 3. **A revoked member keeps the Borrow button until they sign in again**; the service correctly refuses (ACC-06).
 4. **Deleting a book leaves its pending reservations open**, and a reservation stuck on "Retry Accept" cannot be rejected (ADMRES-04).

@@ -484,6 +484,8 @@ test cases assert today's behaviour and should be updated if the behaviour chang
    revoke request to a hard-coded `http://localhost:5000` instead of the configured User Service address,
    so the admin sees "Failed to revoke user access. Please try again." locally (port 5050) and on Azure.
    Accept and Reject use the configured address and work.
+   **Fixed** on branch `fix/revoke-member-url` (commit f6e9b26), which uses the configured address; with it ACC-04
+   passes (TEST-CATALOG.md, run 2).
 8. **The Add book form has no length limits** (ADMBOOK-06). The Edit form stops typing at the server's limits
    (title 200, author 150, ISBN 30); the Add form lets anything through and then shows the generic
    "Failed to add book…" message when the server rejects it.

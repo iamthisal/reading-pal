@@ -1,0 +1,580 @@
+{
+  "name": "run-2",
+  "label": "Run 2 (with fix)",
+  "date": "2026-10-18",
+  "frontend": "fix/revoke-member-url @ f6e9b26",
+  "results": {
+    "ACC01_Admin_ApprovesAPendingMember_WhoMovesToActiveUsers": [
+      "Passed"
+    ],
+    "ACC02_ApprovedMember_CanBorrowAfterSigningInAgain": [
+      "Passed"
+    ],
+    "ACC03_Admin_RejectsAPendingMember_WhoCanNoLongerSignIn": [
+      "Passed"
+    ],
+    "ACC04_Admin_RevokesAnActiveMember_WhoMovesBackToPending": [
+      "Passed"
+    ],
+    "ACC05_CancellingTheRevokeDialog_ChangesNothing": [
+      "Passed"
+    ],
+    "ACC06_RevokedMemberWithAnOldSession_IsRefusedWhenBorrowing": [
+      "Passed"
+    ],
+    "ACC07_RevokedMember_SigningInAgain_SeesTheWarningAndNoBorrowButton": [
+      "Passed"
+    ],
+    "ACC08_SecondAdminRejectingAnAlreadyApprovedMember_IsRefused": [
+      "Passed"
+    ],
+    "ACC09_AdminAccounts_AreNeverListedAsMembers": [
+      "Passed"
+    ],
+    "ADMAUTH01_Admin_AddsAnAuthor_WhoGetsAPublicPage": [
+      "Passed"
+    ],
+    "ADMAUTH02_Admin_EditsAnAuthorsBiography": [
+      "Passed"
+    ],
+    "ADMAUTH03_RenamingAnAuthor_RenamesThemOnTheirBooks": [
+      "Passed"
+    ],
+    "ADMAUTH04_DuplicateAuthorName_IsRefused": [
+      "Passed"
+    ],
+    "ADMAUTH05_ClearingThePortrait_IsAllowed": [
+      "Passed"
+    ],
+    "ADMAUTH06_NonWebPortraitLink_IsRefused": [
+      "Passed"
+    ],
+    "ADMAUTH07_RemovingAnAuthor_KeepsTheirBooks": [
+      "Passed"
+    ],
+    "ADMAUTH08_CancellingTheRemoveDialog_KeepsTheAuthor": [
+      "Passed"
+    ],
+    "ADMBOOK01_Admin_AddsABook_ThatIsSearchableAtOnce": [
+      "Passed"
+    ],
+    "ADMBOOK02_BlankRequiredField_IsRefused": [
+      "Passed"
+    ],
+    "ADMBOOK03_NegativeCopies_AreBlocked": [
+      "Passed"
+    ],
+    "ADMBOOK04_DuplicateIsbn_IsRefusedEvenInADifferentCase": [
+      "Passed"
+    ],
+    "ADMBOOK05_InvalidCoverUrl_IsBlocked": [
+      "Passed"
+    ],
+    "ADMBOOK06_OverlongTitle_IsRefusedByTheServer_AndCappedInTheEditForm": [
+      "Passed"
+    ],
+    "ADMBOOK07_Admin_EditsABook_AndTheChangeShowsToReaders": [
+      "Passed"
+    ],
+    "ADMBOOK08_TotalCopiesBelowCurrentLoans_IsRefused": [
+      "Passed"
+    ],
+    "ADMBOOK09_MarkUnavailable_GreysOutBorrowForReaders": [
+      "Passed"
+    ],
+    "ADMBOOK10_MakeAvailable_PutsOneCopyBack": [
+      "Passed"
+    ],
+    "ADMBOOK11_DeletingABookWithNoLoans_RemovesIt": [
+      "Passed"
+    ],
+    "ADMBOOK12_DeletingABookOnLoan_IsRefused": [
+      "Passed"
+    ],
+    "ADMBOOK13_CancellingTheDeleteDialog_KeepsTheBook": [
+      "Passed"
+    ],
+    "ADMBOOK14_Admin_AddsRenamesAndDeletesAGenre": [
+      "Passed"
+    ],
+    "ADMBOOK15_DuplicateGenre_IsRefused": [
+      "Passed"
+    ],
+    "ADMBOOK16_GenreInUse_CannotBeDeleted": [
+      "Passed"
+    ],
+    "ADMBOOK17_InventoryDown_ShowsTheConnectionError": [
+      "Passed"
+    ],
+    "ADMBOOK18_KafkaDown_SavesTheBookButReportsTheMissingEvent": [
+      "Passed"
+    ],
+    "ADMBOOK19_Dialog_FocusesTheFirstField_AndEscapeClosesIt": [
+      "Passed"
+    ],
+    "ADMLIST01_CreatingAList_FillsItsKeyFromTheName": [
+      "Passed"
+    ],
+    "ADMLIST02_AddingAndOrderingBooks_IsSavedInThatOrder": [
+      "Passed"
+    ],
+    "ADMLIST03_AuthorList_TakesAuthors": [
+      "Passed"
+    ],
+    "ADMLIST04_DuplicateKey_IsRefused": [
+      "Passed"
+    ],
+    "ADMLIST05_KeyWithDoubleOrOuterHyphens_IsRefused": [
+      "Passed",
+      "Passed"
+    ],
+    "ADMLIST06_ClosingWithUnsavedChanges_AsksFirst": [
+      "Passed"
+    ],
+    "ADMLIST07_EveryAuthorAlreadyListed_LeavesNothingToAdd": [
+      "Passed"
+    ],
+    "ADMLIST08_RenamingAList_KeepsItsKey": [
+      "Passed"
+    ],
+    "ADMLIST09_DeletingAList_KeepsItsBooks": [
+      "Passed"
+    ],
+    "ADMLIST10_ItemSearchWithNoMatch_SaysSo": [
+      "Passed"
+    ],
+    "ADMRES01_NewRequest_AppearsInTheQueueWithTheMembersName": [
+      "Passed"
+    ],
+    "ADMRES02_Accepting_LendsTheBookAndTakesACopy": [
+      "Passed"
+    ],
+    "ADMRES03_Rejecting_CancelsTheRequestWithoutTouchingCopies": [
+      "Passed"
+    ],
+    "ADMRES04_AcceptingWithNoCopyLeft_KeepsTheRowForRetry": [
+      "Passed"
+    ],
+    "ADMRES05_RetryAccept_SucceedsOnceACopyComesBack": [
+      "Passed"
+    ],
+    "ADMRES06_SecondAdminActingOnAHandledRequest_IsToldItChanged": [
+      "Passed"
+    ],
+    "ADMRES07_AcceptingARequestTheMemberCancelled_IsRefused": [
+      "Passed"
+    ],
+    "ADMRES08_InventoryDownDuringAccept_CanBeRetriedSafely": [
+      "Passed"
+    ],
+    "ADMRES09_LendingDown_ShowsTheQueueError": [
+      "Passed"
+    ],
+    "ADMRES10_RefreshButton_BringsInRequestsMadeAfterThePageLoaded": [
+      "Passed"
+    ],
+    "AUTH01_ApprovedMember_SignsInThroughForm_LandsOnDiscover": [
+      "Passed"
+    ],
+    "AUTH02_Admin_SignsInThroughForm_LandsOnAdminDashboard": [
+      "Passed"
+    ],
+    "AUTH03_WrongPassword_ShowsInvalidCredentials_AndStaysOnLogin": [
+      "Passed"
+    ],
+    "AUTH04_UnknownEmail_ShowsTheSameMessageAsAWrongPassword": [
+      "Passed"
+    ],
+    "AUTH05_EmptyFields_AreBlockedByTheBrowser": [
+      "Passed"
+    ],
+    "AUTH06_MalformedEmail_IsBlockedByTheBrowser": [
+      "Passed"
+    ],
+    "AUTH07_PendingMember_SignsIn_AndSeesTheApprovalWarning": [
+      "Passed"
+    ],
+    "AUTH08_RejectedMember_CannotSignIn": [
+      "Passed"
+    ],
+    "AUTH09_LogOut_ClearsTheSession_AndProtectedPagesRedirect": [
+      "Passed"
+    ],
+    "AUTH10_ExpiredToken_IsTreatedAsSignedOut": [
+      "Passed"
+    ],
+    "AUTH11_MalformedToken_RedirectsToLoginWithoutCrashing": [
+      "Passed"
+    ],
+    "AUTH12_TokenExpiringDuringASession_SignsTheReaderOut": [
+      "Passed"
+    ],
+    "AUTH13_RootAddress_SendsEachRoleToItsHome": [
+      "Passed"
+    ],
+    "AUTH14_UnknownRoute_RedirectsByRole": [
+      "Passed"
+    ],
+    "AUTH15_SessionSurvivesAReload": [
+      "Passed"
+    ],
+    "BOOK01_BookPage_ShowsItsDetailsAndActions": [
+      "Passed"
+    ],
+    "BOOK02_BackButton_ReturnsToTheSameSearchResults": [
+      "Passed"
+    ],
+    "BOOK03_UnknownBook_ShowsBookNotFound": [
+      "Passed",
+      "Passed"
+    ],
+    "BOOK04_AuthorLink_OpensTheAuthorsPageWithTheirBooks": [
+      "Passed"
+    ],
+    "BOOK05_UnknownAuthor_ShowsAuthorNotFound": [
+      "Passed"
+    ],
+    "BOOK06_AuthorWithNoBooks_SaysSo": [
+      "Passed"
+    ],
+    "BOOK07_PendingMember_IsToldTheyCanBorrowAfterApproval": [
+      "Passed"
+    ],
+    "BOOK08_MissingOrBrokenCover_ShowsThePlaceholderCover": [
+      "Passed"
+    ],
+    "CAT01_DiscoverPage_ShowsBannerStatsSliderAndShelves": [
+      "Passed"
+    ],
+    "CAT02_BannerSearch_OpensSearchWithTheQuery": [
+      "Passed"
+    ],
+    "CAT03_RecommendedList_DrivesTheFirstShelfInOrder": [
+      "Passed"
+    ],
+    "CAT04_PosterSlider_MovesBetweenPostersAndItsLinksWork": [
+      "Passed"
+    ],
+    "CAT05_SlowCatalogue_ShowsAnimatedPlaceholders_ThenTheShelves": [
+      "Passed"
+    ],
+    "CAT06_InventoryDown_ShowsTheCatalogueError_AndTheShellStillWorks": [
+      "Passed"
+    ],
+    "CAT07_RecommendedShelf_FollowsTheScreenWidth": [
+      "Passed"
+    ],
+    "CAT08_Cards_ShowAvailabilityAndTheMatchingBorrowState": [
+      "Passed"
+    ],
+    "FAV01_Heart_AddsTheBookToFavourites": [
+      "Passed"
+    ],
+    "FAV02_Heart_RemovesTheBook_FromACardAndFromTheFavouritesPage": [
+      "Passed"
+    ],
+    "FAV03_Favourites_AreKeptAcrossSessions": [
+      "Passed"
+    ],
+    "FAV04_Favourites_BelongToOneMember": [
+      "Passed"
+    ],
+    "FAV05_NoFavourites_ShowsTheEmptyStateWithALinkToBrowse": [
+      "Passed"
+    ],
+    "FAV06_Admin_CanKeepFavouritesToo": [
+      "Passed"
+    ],
+    "FAV07_DeletedFavouriteBook_DisappearsWithoutABrokenCard": [
+      "Passed"
+    ],
+    "FAV08_InventoryDown_ShowsTheFavouritesError": [
+      "Passed"
+    ],
+    "LOAN01_OnTimeReturn_HasNoFineAndPutsTheCopyBack": [
+      "Passed"
+    ],
+    "LOAN02_LateReturn_RecordsTenRupeesPerDay": [
+      "Passed"
+    ],
+    "LOAN03_DueJustBeforeSriLankanMidnight_CountsAsOneDayLate": [
+      "Passed"
+    ],
+    "LOAN04_CancellingTheReturnDialog_KeepsTheLoan": [
+      "Passed"
+    ],
+    "LOAN05_TwoAdminsReturningTheSameLoan_RecordItOnce": [
+      "Passed"
+    ],
+    "LOAN06_InventoryDownDuringReturn_KeepsTheOriginalReturnTime": [
+      "Passed"
+    ],
+    "LOAN07_HistoryFilter_ShowsOnlyTheChosenStatus": [
+      "Passed"
+    ],
+    "LOAN08_HistoryColumns_ShowTheFineOrADash": [
+      "Passed"
+    ],
+    "MYB01_PendingReservation_IsListedWithACancelButton": [
+      "Passed"
+    ],
+    "MYB02_AcceptedReservation_IsACurrentLoanDueInFourteenDays": [
+      "Passed"
+    ],
+    "MYB03_OverdueLoan_ShowsDaysOverdueAndAnEstimatedFine": [
+      "Passed"
+    ],
+    "MYB04_ReturnedBook_MovesToBorrowingHistory": [
+      "Passed"
+    ],
+    "MYB05_MemberCancelsAPendingReservation": [
+      "Passed"
+    ],
+    "MYB06_DismissingTheCancelDialog_KeepsTheReservation": [
+      "Passed"
+    ],
+    "MYB07_CancellingAfterTheAdminAccepted_IsRefused": [
+      "Passed"
+    ],
+    "MYB08_LendingDown_ShowsTheLoadError": [
+      "Passed"
+    ],
+    "MYB09_TokenTheServiceRejects_AsksTheMemberToSignInAgain": [
+      "Passed"
+    ],
+    "MYB10_RecordedFine_IsAddedToTheUnpaidTotal": [
+      "Passed"
+    ],
+    "NOTIF01_NewReservation_IsAnnouncedToAdminsWithTheMembersName": [
+      "Passed"
+    ],
+    "NOTIF02_Acceptance_TellsTheMemberTheDueDate": [
+      "Passed"
+    ],
+    "NOTIF03_Rejection_TellsOnlyTheMember": [
+      "Passed"
+    ],
+    "NOTIF04_MemberCancelling_TellsTheMemberAndTheAdmins": [
+      "Passed"
+    ],
+    "NOTIF05_Return_ThanksTheMember": [
+      "Passed"
+    ],
+    "NOTIF06_LateReturn_TellsTheMemberAboutTheFine": [
+      "Passed"
+    ],
+    "NOTIF07_LoanDueInTwoDays_GetsExactlyOneReminder": [
+      "Passed"
+    ],
+    "NOTIF08_NewBook_IsAnnouncedToMembersAndOtherAdminsButNotItsCreator": [
+      "Passed"
+    ],
+    "NOTIF09_BookEditsAndAvailability_AreToldToOtherAdminsOnly": [
+      "Passed"
+    ],
+    "NOTIF10_DeletedBook_TellsOnlyTheMemberWaitingForIt": [
+      "Passed"
+    ],
+    "NOTIF11_MemberApprovedAfterABookWasAdded_DoesNotGetItsAnnouncement": [
+      "Passed"
+    ],
+    "NOTIF12_MarkingOneAsRead_RemovesItFromUnreadAndLowersTheBellCount": [
+      "Passed"
+    ],
+    "NOTIF13_MarkAllAsRead_EmptiesTheUnreadList": [
+      "Passed"
+    ],
+    "NOTIF14_ShowAndHideViewed_PagesTheHistoryInTwenties": [
+      "Passed"
+    ],
+    "NOTIF15_ReadStatus_IsKeptPerAdmin": [
+      "Passed"
+    ],
+    "NOTIF16_ReadingFromTheBell_UpdatesTheOpenPage": [
+      "Passed"
+    ],
+    "NOTIF17_NotificationServiceDown_ShowsErrorsInTheBellAndThePage": [
+      "Passed"
+    ],
+    "NOTIF18_KafkaOutage_DelaysButDoesNotLoseNotifications": [
+      "Passed"
+    ],
+    "NOTIF19_NotificationServiceRestart_DoesNotDuplicateNotifications": [
+      "Passed"
+    ],
+    "PROF01_Profile_ShowsTheMembersCurrentDetails": [
+      "Passed"
+    ],
+    "PROF02_UpdatingNames_IsSavedAndKeptAfterAReload": [
+      "Passed"
+    ],
+    "PROF03_ChangingThePassword_ReplacesTheOldOne": [
+      "Passed"
+    ],
+    "PROF04_SavingWithoutAPassword_KeepsTheOldPassword": [
+      "Passed"
+    ],
+    "PROF05_EmailOfAnotherMember_IsRefused": [
+      "Passed"
+    ],
+    "PROF06_InvalidField_IsBlockedByTheBrowser": [
+      "Passed",
+      "Passed",
+      "Passed"
+    ],
+    "PROF07_ChangingTheEmail_MovesTheSignInToTheNewAddress": [
+      "Passed"
+    ],
+    "RBAC01_SignedOutVisitor_IsSentToLogin": [
+      "Passed",
+      "Passed",
+      "Passed",
+      "Passed",
+      "Passed"
+    ],
+    "RBAC02_Member_CannotOpenAnyAdminPage": [
+      "Passed"
+    ],
+    "RBAC03_Admin_IsSentAwayFromMemberOnlyPages": [
+      "Passed"
+    ],
+    "RBAC04_Admin_CanOpenThePagesSharedWithMembers": [
+      "Passed"
+    ],
+    "RBAC05_EachRole_SeesItsOwnNavigation": [
+      "Passed"
+    ],
+    "RBAC06_MemberToken_IsRefusedByAnAdminApi": [
+      "Passed"
+    ],
+    "REG01_NewMember_Registers_SeesSuccess_AndIsSentToSignIn": [
+      "Passed"
+    ],
+    "REG02_NewRegistration_AppearsInTheAdminApprovalQueue": [
+      "Passed"
+    ],
+    "REG03_DuplicateEmail_IsRefused": [
+      "Passed"
+    ],
+    "REG04_PasswordShorterThanSix_IsRefusedByTheBrowserAndTheServer": [
+      "Passed"
+    ],
+    "REG05_MissingRequiredField_BlocksTheSubmit": [
+      "Passed",
+      "Passed",
+      "Passed",
+      "Passed"
+    ],
+    "REG06_InvalidEmailFormat_IsBlocked": [
+      "Passed"
+    ],
+    "REG07_BuiltInAdminAddress_CanBeRegistered_ButStillSignsInAsAdmin": [
+      "Passed"
+    ],
+    "REG08_LinksBetweenSignInAndRegister_Work": [
+      "Passed"
+    ],
+    "REG09_RegisterPage_MatchesTheLoginLayout_AndStacksNamesOnAPhone": [
+      "Passed"
+    ],
+    "RES01_ApprovedMember_ReservesABook_AndTheButtonShowsPending": [
+      "Passed"
+    ],
+    "RES02_PendingState_ShowsOnTheSearchListBookPageAndShelves": [
+      "Passed"
+    ],
+    "RES03_AcceptedRequest_TurnsTheButtonToBorrowed": [
+      "Passed"
+    ],
+    "RES04_ReturnedBook_CanBeBorrowedAgain": [
+      "Passed"
+    ],
+    "RES05_RejectedOrCancelledRequest_ShowsBorrowAgain": [
+      "Passed"
+    ],
+    "RES06_NoCopiesOnTheShelf_ShowsAGreyedDisabledBorrow": [
+      "Passed"
+    ],
+    "RES07_CopiesRunningOutAfterThePageLoaded_IsRefused": [
+      "Passed"
+    ],
+    "RES08_SecondRequestForTheSameBook_IsRefused": [
+      "Passed"
+    ],
+    "RES09_Admin_SeesBorrow_ButIsRefused": [
+      "Passed"
+    ],
+    "RES10_BookDeletedAfterThePageLoaded_IsReportedAsNotFound": [
+      "Passed"
+    ],
+    "RES11_LendingDown_ShowsAnErrorAndTheButtonRecovers": [
+      "Passed"
+    ],
+    "RES12_UserServiceDown_RefusesBecauseApprovalCannotBeChecked": [
+      "Passed"
+    ],
+    "RES13_DoubleClick_CreatesOnlyOneRequest": [
+      "Passed"
+    ],
+    "RES14_MemberWithOtherRequestsAndLoans_CanBorrowAnotherBook": [
+      "Passed"
+    ],
+    "SRCH01_SearchByTitle_FindsOnlyThatBook": [
+      "Passed"
+    ],
+    "SRCH02_SearchByAuthorIsbnAndGenre_EachFindTheBook": [
+      "Passed"
+    ],
+    "SRCH03_SeveralWords_MustAllMatch": [
+      "Passed"
+    ],
+    "SRCH04_GenreFilters_NarrowAndRestoreTheResults": [
+      "Passed"
+    ],
+    "SRCH05_AvailableOnly_HidesBooksWithNoCopies": [
+      "Passed"
+    ],
+    "SRCH06_SortOrder_ChangesTheListAndIsKeptInTheAddress": [
+      "Passed"
+    ],
+    "SRCH07_ManyResults_ArePagedTwelveAtATime": [
+      "Passed"
+    ],
+    "SRCH08_DeepLink_RestoresTheQueryAndFilters": [
+      "Passed"
+    ],
+    "SRCH09_NoMatches_ShowsAFriendlyEmptyState": [
+      "Passed"
+    ],
+    "SRCH10_OddInput_IsTreatedAsPlainText": [
+      "Passed"
+    ],
+    "SRCH11_PageBeyondTheEnd_DoesNotError": [
+      "Passed"
+    ],
+    "SRCH12_InventoryDown_ShowsTheSearchError": [
+      "Passed"
+    ],
+    "SRCH13_BannerSearchBox_HighlightsTheWholeBoxWithoutAnInnerRing": [
+      "Passed"
+    ],
+    "X01_PhoneWidth_HasNoSidewaysScrollingOnTheMainPages": [
+      "Passed"
+    ],
+    "X02_KeyboardOnly_SignInReserveAndCloseADialog": [
+      "Passed"
+    ],
+    "X03_ReducedMotion_StopsTheSliderAndTheShimmer": [
+      "Passed"
+    ],
+    "X04_CoreJourney_LeavesNoUncaughtErrorsInTheConsole": [
+      "Passed"
+    ],
+    "X05_ScriptInABookTitle_IsShownAsTextEverywhere": [
+      "Passed"
+    ],
+    "X06_NotificationTimes_AreShownInSriLankaTime": [
+      "Passed"
+    ]
+  }
+}

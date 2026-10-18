@@ -1,0 +1,113 @@
+{
+  "history": [
+    {
+      "name": "run-1",
+      "notes": "First complete run of all four projects on develop. ACC-04 failed because of an application defect (see Failures and fixes). REG-09 failed once on a 1 px layout difference; the test was corrected and the User project run again, so this column shows that second User run."
+    },
+    {
+      "name": "run-2",
+      "notes": "Same tests, with the frontend served from fix/revoke-member-url (commit f6e9b26), which fixes the revoke defect. Every case passed."
+    }
+  ],
+  "fixes": [
+    {
+      "case": "ACC-04",
+      "where": "Application",
+      "failed": "Run 1: the admin saw \"Failed to revoke user access. Please try again.\" and the member stayed active.",
+      "why": "frontend/src/pages/AdminUsersPage.tsx sent the revoke request to a hard-coded http://localhost:5000. The User Service runs on 5050 locally (macOS AirPlay holds 5000) and there is no localhost on Azure, so the request never reached it. Accept and Reject on the same page use the configured address.",
+      "fixed": "Branch fix/revoke-member-url, commit f6e9b26 (\"YRP-150 send the revoke request to the configured User Service\"): the request now uses API_BASE_URL. Passed in run 2 and in three separate reruns. Until that branch is merged, ACC-04 still fails on develop."
+    },
+    {
+      "case": "ACC-04",
+      "where": "Test",
+      "failed": "While developing: an UnhandledAlertException instead of a readable failure.",
+      "why": "The failure alert opened while the test was still checking the page, and any page query throws while an alert is open.",
+      "fixed": "The wait checks for an alert first and the test fails with the alert's text."
+    },
+    {
+      "case": "REG-09",
+      "where": "Test",
+      "failed": "While developing: the names never stacked at phone width. Run 1: the two name fields were 312 px and 313 px from the top.",
+      "why": "Headless Chrome will not make a window narrower than about 500 px, so the 420 px phone layout never applied. Later, sub-pixel rounding put side-by-side fields 1 px apart.",
+      "fixed": "Phone widths are emulated through the Chrome DevTools protocol (Browser.Resize), and \"side by side\" allows 2 px. Passed three reruns, run 1's User rerun and run 2."
+    },
+    {
+      "case": "SRCH-07",
+      "where": "Test",
+      "failed": "While developing: StaleElementReferenceException.",
+      "why": "The result list re-renders as results arrive, so rows Selenium had found were replaced before it read them.",
+      "fixed": "Result titles are read in one JavaScript call."
+    },
+    {
+      "case": "ADMBOOK-06",
+      "where": "Test (planned expectation was wrong)",
+      "failed": "While developing: expected the title to stop at 200 characters; all 250 were accepted.",
+      "why": "The Add book form has no maxLength (the Edit form has). Recorded as finding 8 in TEST-PLAN.md.",
+      "fixed": "The case now checks what really happens: the server refuses the overlong title (\"Failed to add book. Please verify your inputs and try again.\") and the Edit form stops at 200."
+    },
+    {
+      "case": "ADMAUTH-02, -03, -07, -08",
+      "where": "Test",
+      "failed": "While developing: the author's row was never found.",
+      "why": "An author without a portrait shows their initial in front of the name, so the cell text was \"EE2E Author…\", not an exact match.",
+      "fixed": "Rows are matched on the name contained in the first cell. ADMAUTH-03 also read the dialog text before it rendered; it now waits for the text."
+    },
+    {
+      "case": "ADMLIST-01",
+      "where": "Test",
+      "failed": "While developing: the \"Created …\" message never appeared.",
+      "why": "Creating a list opens its contents editor at once, and the page hides its message while a dialog is open.",
+      "fixed": "The test expects the editor, closes it, then checks the message."
+    },
+    {
+      "case": "RES-02",
+      "where": "Test",
+      "failed": "While developing: StaleElementReferenceException on the author page.",
+      "why": "The shelf re-rendered between finding it and reading the button inside it.",
+      "fixed": "The test waits for the Pending button itself."
+    },
+    {
+      "case": "ADMRES-05",
+      "where": "Test",
+      "failed": "While developing: set-up failed with \"Book is currently unavailable for reservation.\"",
+      "why": "The second member reserved after the only copy was lent, which the service correctly refuses.",
+      "fixed": "Both members reserve while the copy is on the shelf, then the first request is accepted."
+    },
+    {
+      "case": "NOTIF-12, -13, -14",
+      "where": "Test",
+      "failed": "While developing: unread counts were one higher than expected, and an item stayed in the unread list after being read.",
+      "why": "The member could also receive a \"New in the catalogue\" notice for the test's own book: the book and the member's approval happened within the same second.",
+      "fixed": "The tests match the rejection notification's own text and take expected counts from the API."
+    },
+    {
+      "case": "ADMLIST-10",
+      "where": "Test (label only)",
+      "failed": "Not a failure: the code labelled the case Unhappy while TEST-PLAN.md says Happy.",
+      "why": "Mismatch between plan and code.",
+      "fixed": "The code now matches the plan, giving the planned 112 happy and 75 unhappy cases."
+    }
+  ],
+  "cases": {
+    "ACC-04": "Failed in run 1 (application defect: revoke used a hard-coded http://localhost:5000). Fixed in fix/revoke-member-url (f6e9b26); passes in run 2.",
+    "REG-09": "Test corrected twice (phone-width emulation, 2 px tolerance) before the final runs.",
+    "SRCH-07": "Test corrected while developing (stale result rows).",
+    "ADMBOOK-06": "Rewritten while developing: the Add form has no length limit (finding 8).",
+    "ADMAUTH-02": "Test corrected while developing (author row match).",
+    "ADMAUTH-03": "Test corrected while developing (author row match, dialog text wait).",
+    "ADMAUTH-07": "Test corrected while developing (author row match).",
+    "ADMAUTH-08": "Test corrected while developing (author row match).",
+    "ADMLIST-01": "Test corrected while developing (editor opens after create).",
+    "ADMLIST-10": "Type label aligned with the plan (Happy).",
+    "RES-02": "Test corrected while developing (stale shelf).",
+    "RES-09": "Passes by documenting today's behaviour: admins see Borrow and are refused (finding 1).",
+    "ACC-06": "Passes; the UI still offers Borrow to a revoked member until they sign in again (finding 2).",
+    "ADMRES-04": "Passes; a request stuck on Retry Accept cannot be rejected (finding 4).",
+    "ADMRES-05": "Test set-up corrected while developing.",
+    "ADMBOOK-18": "Passes; book events are lost while Kafka is down (finding 5).",
+    "REG-07": "Passes; the built-in admin's email can be registered (finding 6).",
+    "NOTIF-12": "Test corrected while developing (extra catalogue notice).",
+    "NOTIF-13": "Test corrected while developing (extra catalogue notice).",
+    "NOTIF-14": "Test corrected while developing (extra catalogue notice)."
+  }
+}
