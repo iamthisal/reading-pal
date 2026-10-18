@@ -1,0 +1,187 @@
+name: ASE Assignment Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - unit-testing-ASE
+      - Mutation-Testing-ASE
+      - Load-Testing-ASE
+      - E2E-Testing-ASE
+    paths:
+      - .github/workflows/ase-testing.yml
+      - tests/ASE Assignment/**
+      - services/**
+      - frontend/**
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - .github/workflows/ase-testing.yml
+      - tests/ASE Assignment/**
+      - services/**
+      - frontend/**
+  workflow_dispatch:
+    inputs:
+      require_all:
+        description: Fail unless all four suites are connected and pass
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ase-testing-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  CI: 'true'
+  ASE_RESULTS_DIRECTORY: ${{ github.workspace }}/.ase-results
+
+jobs:
+  discover:
+    name: Check suite readiness
+    runs-on: windows-latest
+    outputs:
+      mutation: ${{ steps.suites.outputs.mutation }}
+      ui: ${{ steps.suites.outputs.ui }}
+      load: ${{ steps.suites.outputs.load }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Discover connected suites
+        id: suites
+        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover'
+
+  unit:
+    name: Unit testing and mocking
+    needs: discover
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Run all four xUnit and Moq projects
+        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit'
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ase-unit-results
+          path: .ase-results/unit/
+          if-no-files-found: warn
+
+  mutation:
+    name: Mutation testing
+    needs: [discover, unit]
+    if: needs.discover.outputs.mutation == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Run teammate mutation entry point
+        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation'
+      - name: Upload mutation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ase-mutation-results
+          path: .ase-results/mutation/
+          if-no-files-found: warn
+
+  ui:
+    name: UI and E2E testing
+    needs: discover
+    if: needs.discover.outputs.ui == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run teammate Selenium entry point
+        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui'
+      - name: Upload UI reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ase-ui-results
+          path: .ase-results/ui/
+          if-no-files-found: warn
+
+  load:
+    name: Load and performance testing
+    needs: discover
+    if: needs.discover.outputs.load == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Run teammate JMeter entry point
+        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Load'
+      - name: Upload performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ase-load-results
+          path: .ase-results/load/
+          if-no-files-found: warn
+
+  summary:
+    name: Assignment readiness and results
+    needs: [discover, unit, mutation, ui, load]
+    if: always()
+    runs-on: windows-latest
+    env:
+      DISCOVER_RESULT: ${{ needs.discover.result }}
+      UNIT_RESULT: ${{ needs.unit.result }}
+      MUTATION_RESULT: ${{ needs.mutation.result }}
+      UI_RESULT: ${{ needs.ui.result }}
+      LOAD_RESULT: ${{ needs.load.result }}
+      MUTATION_CONNECTED: ${{ needs.discover.outputs.mutation }}
+      UI_CONNECTED: ${{ needs.discover.outputs.ui }}
+      LOAD_CONNECTED: ${{ needs.discover.outputs.load }}
+      REQUIRE_ALL: ${{ inputs.require_all && 'true' || 'false' }}
+    steps:
+      - name: Report results, missing suites and failures
+        run: |
+          $rows = @(
+            @{ Name = 'Unit testing and mocking'; Connected = $true; Result = $env:UNIT_RESULT }
+            @{ Name = 'Mutation testing'; Connected = $env:MUTATION_CONNECTED -eq 'true'; Result = $env:MUTATION_RESULT }
+            @{ Name = 'UI and E2E testing'; Connected = $env:UI_CONNECTED -eq 'true'; Result = $env:UI_RESULT }
+            @{ Name = 'Load and performance testing'; Connected = $env:LOAD_CONNECTED -eq 'true'; Result = $env:LOAD_RESULT }
+          )
+          $lines = @('# ASE assignment results', '', '| Suite | Status |', '| --- | --- |')
+          foreach ($row in $rows) {
+            $status = if (!$row.Connected) { 'PENDING: CI entry point not added' } else { $row.Result }
+            $lines += "| $($row.Name) | $status |"
+          }
+          $incomplete = @($rows | Where-Object { !$_.Connected -or $_.Result -ne 'success' }).Count -gt 0
+          $lines += ''
+          $lines += if ($incomplete) { '**Group pipeline incomplete: not all four suites have passed.**' } else { '**All four suites passed.**' }
+          $lines | Tee-Object -FilePath $env:GITHUB_STEP_SUMMARY
+          if ($env:DISCOVER_RESULT -ne 'success') { throw 'Suite discovery did not succeed.' }
+          $failed = @($rows | Where-Object { $_.Connected -and $_.Result -ne 'success' })
+          if ($failed.Count -gt 0) { throw 'A connected suite failed, was cancelled or was blocked. See its job log.' }
+          if ($env:REQUIRE_ALL -eq 'true' -and $incomplete) { throw 'Final submission mode requires all four suites to be connected and pass.' }
