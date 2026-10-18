@@ -1,0 +1,213 @@
+# Complete test catalogue
+
+One row per test case in TEST-PLAN.md. A Theory runs once per data row; its result shows how many rows passed.
+Regenerate with `python3 scripts/build-catalog.py` after a run.
+**187 cases: 112 happy, 75 unhappy. 186 pass, 1 fail, 0 not run.**
+
+
+## User Service (UserService.E2ETests)
+
+| ID | Type | Priority | Test class | Test name | Scenario | Expected result | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ACC-01 | Happy | P1 | MemberAccountTests | `ACC01_Admin_ApprovesAPendingMember_WhoMovesToActiveUsers` | Approve a pending member | Member leaves the pending list and appears under `/admin/users/active` | Pass |
+| ACC-02 | Happy | P1 | MemberAccountTests | `ACC02_ApprovedMember_CanBorrowAfterSigningInAgain` | Approved member can now borrow | No approval banner; Borrow buttons are shown | Pass |
+| ACC-03 | Happy | P2 | MemberAccountTests | `ACC03_Admin_RejectsAPendingMember_WhoCanNoLongerSignIn` | Reject a pending member | Member disappears from both lists; signing in now gives "Invalid email or password" (AUTH-08) | Pass |
+| ACC-04 | Happy | P2 | MemberAccountTests | `ACC04_Admin_RevokesAnActiveMember_WhoMovesBackToPending` | Revoke an active member | Member moves back to the pending list | **Fail** |
+| ACC-05 | Unhappy | P2 | MemberAccountTests | `ACC05_CancellingTheRevokeDialog_ChangesNothing` | Revoke dialog cancelled | Nothing changes | Pass |
+| ACC-06 | Unhappy | P1 | MemberAccountTests | `ACC06_RevokedMemberWithAnOldSession_IsRefusedWhenBorrowing` | Revoked member with a still-valid session tries to borrow | The button is still shown (the old token says approved), but reserving fails with "Your account is not approved to reserve books. Please contact the library."; nothing reaches the admin queue | Pass |
+| ACC-07 | Happy | P2 | MemberAccountTests | `ACC07_RevokedMember_SigningInAgain_SeesTheWarningAndNoBorrowButton` | Revoked member signs in again | Approval banner shown, no Borrow buttons | Pass |
+| ACC-08 | Unhappy | P3 | MemberAccountTests | `ACC08_SecondAdminRejectingAnAlreadyApprovedMember_IsRefused` | Two admins act on the same pending member | Tab 2 shows "Failed to reject user. Please try again."; the member stays approved | Pass |
+| ACC-09 | Happy | P3 | MemberAccountTests | `ACC09_AdminAccounts_AreNeverListedAsMembers` | Built-in admin is never listed | No admin account in either list (**Existing**) | Pass |
+| AUTH-01 | Happy | P1 | AuthenticationTests | `AUTH01_ApprovedMember_SignsInThroughForm_LandsOnDiscover` | Approved member signs in | Lands on `/home` (Discover); topbar shows the member's menu; no approval warning | Pass |
+| AUTH-02 | Happy | P1 | AuthenticationTests | `AUTH02_Admin_SignsInThroughForm_LandsOnAdminDashboard` | Admin signs in | Lands on `/admin/dashboard`; admin sidebar is shown | Pass |
+| AUTH-03 | Unhappy | P1 | AuthenticationTests | `AUTH03_WrongPassword_ShowsInvalidCredentials_AndStaysOnLogin` | Wrong password | Stays on `/login`; error "Invalid email or password"; password field is not echoed anywhere (**Existing**) | Pass |
+| AUTH-04 | Unhappy | P2 | AuthenticationTests | `AUTH04_UnknownEmail_ShowsTheSameMessageAsAWrongPassword` | Unknown email | Same message as AUTH-03: the response does not reveal whether the email exists (**Existing**) | Pass |
+| AUTH-05 | Unhappy | P2 | AuthenticationTests | `AUTH05_EmptyFields_AreBlockedByTheBrowser` | Empty fields | Browser `required` validation blocks the submit; no request is sent (**Existing**) | Pass |
+| AUTH-06 | Unhappy | P3 | AuthenticationTests | `AUTH06_MalformedEmail_IsBlockedByTheBrowser` | Malformed email | `type="email"` validation blocks the submit | Pass |
+| AUTH-07 | Happy | P2 | AuthenticationTests | `AUTH07_PendingMember_SignsIn_AndSeesTheApprovalWarning` | Pending member signs in | Sign-in succeeds and lands on `/home`; banner "Account Pending Approval: Your registration must be validated before reserving physical books." | Pass |
+| AUTH-08 | Unhappy | P2 | AuthenticationTests | `AUTH08_RejectedMember_CannotSignIn` | Rejected member signs in | "Invalid email or password" | Pass |
+| AUTH-09 | Happy | P1 | AuthenticationTests | `AUTH09_LogOut_ClearsTheSession_AndProtectedPagesRedirect` | Log out | Back on `/login`; `localStorage.token` is cleared; browser Back does not show protected content | Pass |
+| AUTH-10 | Unhappy | P2 | AuthenticationTests | `AUTH10_ExpiredToken_IsTreatedAsSignedOut` | Expired token | Redirected to `/login` (the token is treated as missing) | Pass |
+| AUTH-11 | Unhappy | P2 | AuthenticationTests | `AUTH11_MalformedToken_RedirectsToLoginWithoutCrashing` | Malformed token | Redirected to `/login`, no crash | Pass |
+| AUTH-12 | Unhappy | P3 | AuthenticationTests | `AUTH12_TokenExpiringDuringASession_SignsTheReaderOut` | Token expires during a session | When it expires the app signs out and returns to `/login` without a reload | Pass |
+| AUTH-13 | Happy | P2 | AuthenticationTests | `AUTH13_RootAddress_SendsEachRoleToItsHome` | Root address by role | `/` redirects by role: member → `/home`, admin → `/admin/dashboard` | Pass |
+| AUTH-14 | Happy | P3 | AuthenticationTests | `AUTH14_UnknownRoute_RedirectsByRole` | Unknown route | Redirected to `/`, then on by role (or to `/login` if signed out) | Pass |
+| AUTH-15 | Happy | P3 | AuthenticationTests | `AUTH15_SessionSurvivesAReload` | Session survives a reload | Still signed in on the same page | Pass |
+| PROF-01 | Happy | P1 | ProfileTests | `PROF01_Profile_ShowsTheMembersCurrentDetails` | View profile | Current first name, last name and email are filled in (**Existing**) | Pass |
+| PROF-02 | Happy | P2 | ProfileTests | `PROF02_UpdatingNames_IsSavedAndKeptAfterAReload` | Update names | "Profile updated successfully!"; values persist after a reload (**Existing**) | Pass |
+| PROF-03 | Happy | P2 | ProfileTests | `PROF03_ChangingThePassword_ReplacesTheOldOne` | Change password | Success; old password then fails at sign-in, new one works | Pass |
+| PROF-04 | Happy | P2 | ProfileTests | `PROF04_SavingWithoutAPassword_KeepsTheOldPassword` | Save without a password | Other details save; the old password still works (**Existing**) | Pass |
+| PROF-05 | Unhappy | P2 | ProfileTests | `PROF05_EmailOfAnotherMember_IsRefused` | Email taken by another member | "Email already in use"; nothing changes | Pass |
+| PROF-06 | Unhappy | P2 | ProfileTests | `PROF06_InvalidField_IsBlockedByTheBrowser` | Invalid email, empty name, short password | Blocked by the browser (`type="email"`, `required`, `minLength=6`) (**Existing**) | Pass (3/3) |
+| PROF-07 | Happy | P3 | ProfileTests | `PROF07_ChangingTheEmail_MovesTheSignInToTheNewAddress` | Change email, then sign in with it | Sign-in works with the new email; the old email gives "Invalid email or password" | Pass |
+| RBAC-01 | Unhappy | P1 | AccessControlTests | `RBAC01_SignedOutVisitor_IsSentToLogin` | Signed out, any protected page | Each redirects to `/login` (**Existing** for the admin dashboard) | Pass (5/5) |
+| RBAC-02 | Unhappy | P1 | AccessControlTests | `RBAC02_Member_CannotOpenAnyAdminPage` | Member opens admin pages | Redirected to `/home`; no admin data is shown (**Existing** for some routes; extend to all 10) | Pass |
+| RBAC-03 | Unhappy | P2 | AccessControlTests | `RBAC03_Admin_IsSentAwayFromMemberOnlyPages` | Admin opens member-only pages | Redirected to `/admin/dashboard` (**Existing** for some) | Pass |
+| RBAC-04 | Happy | P2 | AccessControlTests | `RBAC04_Admin_CanOpenThePagesSharedWithMembers` | Pages shared by both roles | All load | Pass |
+| RBAC-05 | Happy | P2 | AccessControlTests | `RBAC05_EachRole_SeesItsOwnNavigation` | Navigation by role | Members see the library navigation (Discover, Search, Favourites, My Borrowings, Notifications, Profile); admins see the admin navigation (**Existing**) | Pass |
+| RBAC-06 | Unhappy | P2 | AccessControlTests | `RBAC06_MemberToken_IsRefusedByAnAdminApi` | Member calls an admin API with their own token | 403; nothing is created (checks the server, not only the hidden button) | Pass |
+| REG-01 | Happy | P1 | RegistrationTests | `REG01_NewMember_Registers_SeesSuccess_AndIsSentToSignIn` | Register a new member | Success panel "Registration Successful!" with a "Sign in now" link; redirected to `/login` after about 3 s (**Existing**, extend for the redirect) | Pass |
+| REG-02 | Happy | P2 | RegistrationTests | `REG02_NewRegistration_AppearsInTheAdminApprovalQueue` | New member appears for admins | The new member is listed as waiting for approval | Pass |
+| REG-03 | Unhappy | P1 | RegistrationTests | `REG03_DuplicateEmail_IsRefused` | Duplicate email | "Email already in use"; stays on the form (**Existing**) | Pass |
+| REG-04 | Unhappy | P2 | RegistrationTests | `REG04_PasswordShorterThanSix_IsRefusedByTheBrowserAndTheServer` | Password shorter than 6 | `minLength=6` blocks the submit; the server also rejects it (400) if the check is bypassed | Pass |
+| REG-05 | Unhappy | P2 | RegistrationTests | `REG05_MissingRequiredField_BlocksTheSubmit` | Missing first name / last name / email / password | `required` blocks the submit (**Existing** for three of the four; add the password case) | Pass (4/4) |
+| REG-06 | Unhappy | P3 | RegistrationTests | `REG06_InvalidEmailFormat_IsBlocked` | Invalid email format | Blocked by `type="email"` (**Existing**) | Pass |
+| REG-07 | Unhappy | P3 | RegistrationTests | `REG07_BuiltInAdminAddress_CanBeRegistered_ButStillSignsInAsAdmin` | Registering with the admin email | Registration succeeds (that address is not stored in the user table), but signing in with the admin password still logs in as the built-in admin. **Record as a finding:** the built-in admin's address can be registered as a member | Pass |
+| REG-08 | Happy | P3 | RegistrationTests | `REG08_LinksBetweenSignInAndRegister_Work` | "Sign in" link | Navigates to `/login` | Pass |
+| REG-09 | Happy | P3 | RegistrationTests | `REG09_RegisterPage_MatchesTheLoginLayout_AndStacksNamesOnAPhone` | Layout matches the login page | Same two-panel layout; first and last name side by side at desktop width, stacked at phone width | Pass |
+
+## Inventory Service (InventoryService.E2ETests)
+
+| ID | Type | Priority | Test class | Test name | Scenario | Expected result | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ADMAUTH-01 | Happy | P2 | AdminAuthorTests | `ADMAUTH01_Admin_AddsAnAuthor_WhoGetsAPublicPage` | Add an author | "Added <name>."; author page works | Pass |
+| ADMAUTH-02 | Happy | P2 | AdminAuthorTests | `ADMAUTH02_Admin_EditsAnAuthorsBiography` | Edit an author | "Saved <name>." | Pass |
+| ADMAUTH-03 | Happy | P2 | AdminAuthorTests | `ADMAUTH03_RenamingAnAuthor_RenamesThemOnTheirBooks` | Rename an author | The name on their books changes too ("Renaming an author also renames it on their books.") | Pass |
+| ADMAUTH-04 | Unhappy | P2 | AdminAuthorTests | `ADMAUTH04_DuplicateAuthorName_IsRefused` | Duplicate author | "An author named '<name>' already exists." | Pass |
+| ADMAUTH-05 | Happy | P2 | AdminAuthorTests | `ADMAUTH05_ClearingThePortrait_IsAllowed` | Clear the portrait URL | Saves (empty is allowed; regression for an earlier `[Url]` bug) | Pass |
+| ADMAUTH-06 | Unhappy | P3 | AdminAuthorTests | `ADMAUTH06_NonWebPortraitLink_IsRefused` | Non-web portrait link | "Unable to add the author." (only `http(s)://` or empty is accepted); nothing created | Pass |
+| ADMAUTH-07 | Happy | P2 | AdminAuthorTests | `ADMAUTH07_RemovingAnAuthor_KeepsTheirBooks` | Remove an author | "Removed <name>."; their books stay; they leave any author list | Pass |
+| ADMAUTH-08 | Unhappy | P3 | AdminAuthorTests | `ADMAUTH08_CancellingTheRemoveDialog_KeepsTheAuthor` | Remove dialog cancelled | Nothing changes | Pass |
+| ADMBOOK-01 | Happy | P1 | AdminBookTests | `ADMBOOK01_Admin_AddsABook_ThatIsSearchableAtOnce` | Add a book | Success message; the book is searchable straight away (**Existing**) | Pass |
+| ADMBOOK-02 | Unhappy | P2 | AdminBookTests | `ADMBOOK02_BlankRequiredField_IsRefused` | Missing required fields | "Please fill in all required fields." (**Existing**) | Pass |
+| ADMBOOK-03 | Unhappy | P2 | AdminBookTests | `ADMBOOK03_NegativeCopies_AreBlocked` | Negative copies | The browser blocks it (`min=0`); no book is created (**Existing**) | Pass |
+| ADMBOOK-04 | Unhappy | P2 | AdminBookTests | `ADMBOOK04_DuplicateIsbn_IsRefusedEvenInADifferentCase` | Duplicate ISBN | Conflict "A book with ISBN '<isbn>' already exists." (**Existing** for update; add for create) | Pass |
+| ADMBOOK-05 | Unhappy | P3 | AdminBookTests | `ADMBOOK05_InvalidCoverUrl_IsBlocked` | Invalid cover URL | Blocked by the browser (`type="url"`) | Pass |
+| ADMBOOK-06 | Unhappy | P3 | AdminBookTests | `ADMBOOK06_OverlongTitle_IsRefusedByTheServer_AndCappedInTheEditForm` | Title over 200 characters | Add: "Failed to add book. Please verify your inputs and try again." (the server enforces 200; the Add form has no limit). Edit: the field stops at 200 | Pass |
+| ADMBOOK-07 | Happy | P2 | AdminBookTests | `ADMBOOK07_Admin_EditsABook_AndTheChangeShowsToReaders` | Edit a book | "Successfully updated "<title>"."; changes show on the book page (**Existing**) | Pass |
+| ADMBOOK-08 | Unhappy | P2 | AdminBookTests | `ADMBOOK08_TotalCopiesBelowCurrentLoans_IsRefused` | Copies below current loans | "Total copies cannot be less than currently borrowed copies (2)." (**Existing**) | Pass |
+| ADMBOOK-09 | Happy | P2 | AdminBookTests | `ADMBOOK09_MarkUnavailable_GreysOutBorrowForReaders` | Mark unavailable | ""<title>" is now marked as unavailable."; members see a greyed Borrow | Pass |
+| ADMBOOK-10 | Happy | P2 | AdminBookTests | `ADMBOOK10_MakeAvailable_PutsOneCopyBack` | Make available again | ""<title>" is available again with 1 copy." | Pass |
+| ADMBOOK-11 | Happy | P1 | AdminBookTests | `ADMBOOK11_DeletingABookWithNoLoans_RemovesIt` | Delete a book with no loans | "Successfully removed "<title>"."; gone from search (**Existing**) | Pass |
+| ADMBOOK-12 | Unhappy | P1 | AdminBookTests | `ADMBOOK12_DeletingABookOnLoan_IsRefused` | Delete a book that is on loan | "A book cannot be removed while copies are currently borrowed." (**Existing**) | Pass |
+| ADMBOOK-13 | Unhappy | P3 | AdminBookTests | `ADMBOOK13_CancellingTheDeleteDialog_KeepsTheBook` | Delete dialog cancelled | Book remains | Pass |
+| ADMBOOK-14 | Happy | P2 | AdminBookTests | `ADMBOOK14_Admin_AddsRenamesAndDeletesAGenre` | Add, rename and delete a genre | The genre appears in the Add-book genre list; renaming and deleting work | Pass |
+| ADMBOOK-15 | Unhappy | P2 | AdminBookTests | `ADMBOOK15_DuplicateGenre_IsRefused` | Duplicate genre | "A genre named '<name>' already exists." | Pass |
+| ADMBOOK-16 | Unhappy | P2 | AdminBookTests | `ADMBOOK16_GenreInUse_CannotBeDeleted` | Delete a genre in use | "This genre cannot be deleted while it is assigned to a book." | Pass |
+| ADMBOOK-17 | Unhappy | P3 | AdminBookTests | `ADMBOOK17_InventoryDown_ShowsTheConnectionError` | Inventory down | "Unable to connect to the Inventory Service. Please ensure it is running on port 5001." | Pass |
+| ADMBOOK-18 | Unhappy | P3 | AdminBookTests | `ADMBOOK18_KafkaDown_SavesTheBookButReportsTheMissingEvent` | Kafka down while saving | The book is saved, but the page reports that the Kafka event could not be published (Inventory publishes without an outbox, so no "new book" notification is sent later) | Pass |
+| ADMBOOK-19 | Happy | P3 | AdminBookTests | `ADMBOOK19_Dialog_FocusesTheFirstField_AndEscapeClosesIt` | Dialog focus | Focus moves to the first field, not the close button; Esc closes the dialog | Pass |
+| ADMLIST-01 | Happy | P2 | AdminListTests | `ADMLIST01_CreatingAList_FillsItsKeyFromTheName` | Create a book list | "Created "E2E Picks". Add its books below." | Pass |
+| ADMLIST-02 | Happy | P2 | AdminListTests | `ADMLIST02_AddingAndOrderingBooks_IsSavedInThatOrder` | Add, order and save items | Order saved; reopening shows the same order | Pass |
+| ADMLIST-03 | Happy | P2 | AdminListTests | `ADMLIST03_AuthorList_TakesAuthors` | Author list | Saved; the authors show where the list is used | Pass |
+| ADMLIST-04 | Unhappy | P2 | AdminListTests | `ADMLIST04_DuplicateKey_IsRefused` | Duplicate key | "A list with the key 'top-100' already exists." | Pass |
+| ADMLIST-05 | Unhappy | P3 | AdminListTests | `ADMLIST05_KeyWithDoubleOrOuterHyphens_IsRefused` | Invalid key | "Unable to create the list."; nothing created | Pass (2/2) |
+| ADMLIST-06 | Unhappy | P3 | AdminListTests | `ADMLIST06_ClosingWithUnsavedChanges_AsksFirst` | Unsaved changes | "Discard the unsaved changes?" prompt; Cancel keeps the edits | Pass |
+| ADMLIST-07 | Unhappy | P3 | AdminListTests | `ADMLIST07_EveryAuthorAlreadyListed_LeavesNothingToAdd` | Every item already on the list | "Every one of the books is already on this list." | Pass |
+| ADMLIST-08 | Happy | P2 | AdminListTests | `ADMLIST08_RenamingAList_KeepsItsKey` | Rename a list | "Renamed to "<name>"." | Pass |
+| ADMLIST-09 | Happy | P2 | AdminListTests | `ADMLIST09_DeletingAList_KeepsItsBooks` | Delete a list | "Deleted "<name>"."; the list is gone and its books remain | Pass |
+| ADMLIST-10 | Happy | P3 | AdminListTests | `ADMLIST10_ItemSearchWithNoMatch_SaysSo` | Item search | "No books match that search." | Pass |
+| BOOK-01 | Happy | P1 | BookPageTests | `BOOK01_BookPage_ShowsItsDetailsAndActions` | Open a book | `/books/:id` shows cover, title, author link, genre, description, availability and Borrow | Pass |
+| BOOK-02 | Happy | P2 | BookPageTests | `BOOK02_BackButton_ReturnsToTheSameSearchResults` | Back button | Returns to the previous page with its state (for example the same search results) | Pass |
+| BOOK-03 | Unhappy | P2 | BookPageTests | `BOOK03_UnknownBook_ShowsBookNotFound` | Book that does not exist | "Book not found" page, no crash | Pass (2/2) |
+| BOOK-04 | Happy | P2 | BookPageTests | `BOOK04_AuthorLink_OpensTheAuthorsPageWithTheirBooks` | Author page | `/authors/<name>` with portrait, biography and the author's books | Pass |
+| BOOK-05 | Unhappy | P2 | BookPageTests | `BOOK05_UnknownAuthor_ShowsAuthorNotFound` | Unknown author | "Author not found" | Pass |
+| BOOK-06 | Happy | P3 | BookPageTests | `BOOK06_AuthorWithNoBooks_SaysSo` | Author with no books | Page shows "No books in the catalogue yet." | Pass |
+| BOOK-07 | Happy | P2 | BookPageTests | `BOOK07_PendingMember_IsToldTheyCanBorrowAfterApproval` | Pending member on a book page | No Borrow button; note "You can borrow once an admin has approved your account." | Pass |
+| BOOK-08 | Happy | P3 | BookPageTests | `BOOK08_MissingOrBrokenCover_ShowsThePlaceholderCover` | Missing or broken cover | The placeholder cover (with the title) is shown; no broken image | Pass |
+| CAT-01 | Happy | P1 | CatalogueTests | `CAT01_DiscoverPage_ShowsBannerStatsSliderAndShelves` | Discover page loads | Banner with search box, book count, poster slider, recommended shelf and curated sections | Pass |
+| CAT-02 | Happy | P2 | CatalogueTests | `CAT02_BannerSearch_OpensSearchWithTheQuery` | Banner search | Goes to `/search?q=<title>` with matching results | Pass |
+| CAT-03 | Happy | P2 | CatalogueTests | `CAT03_RecommendedList_DrivesTheFirstShelfInOrder` | Curated list drives a shelf | The shelf shows the same books in the new order | Pass |
+| CAT-04 | Happy | P3 | CatalogueTests | `CAT04_PosterSlider_MovesBetweenPostersAndItsLinksWork` | Poster slider | Slides change and the dots follow; the link opens `/search?sort=newest` | Pass |
+| CAT-05 | Happy | P2 | CatalogueTests | `CAT05_SlowCatalogue_ShowsAnimatedPlaceholders_ThenTheShelves` | Placeholders while loading | Animated skeleton placeholders are shown; the shelves replace them once the catalogue answers | Pass |
+| CAT-06 | Unhappy | P2 | CatalogueTests | `CAT06_InventoryDown_ShowsTheCatalogueError_AndTheShellStillWorks` | Inventory down | "Unable to load the book catalogue. Please ensure the Inventory Service is running."; the rest of the shell still works | Pass |
+| CAT-07 | Happy | P3 | CatalogueTests | `CAT07_RecommendedShelf_FollowsTheScreenWidth` | Shelf size follows the screen | The recommended shelf shows all 6 books at 2560 px; fewer, scrollable at smaller widths; no horizontal page scroll at 390 px | Pass |
+| CAT-08 | Happy | P2 | CatalogueTests | `CAT08_Cards_ShowAvailabilityAndTheMatchingBorrowState` | Availability on cards | Card status and Borrow state differ correctly (**Existing**) | Pass |
+| FAV-01 | Happy | P1 | FavouritesTests | `FAV01_Heart_AddsTheBookToFavourites` | Add a favourite | Heart fills; the book appears on `/favourites` | Pass |
+| FAV-02 | Happy | P2 | FavouritesTests | `FAV02_Heart_RemovesTheBook_FromACardAndFromTheFavouritesPage` | Remove a favourite | Book leaves the list | Pass |
+| FAV-03 | Happy | P2 | FavouritesTests | `FAV03_Favourites_AreKeptAcrossSessions` | Favourites persist | Still in favourites (stored on the server) | Pass |
+| FAV-04 | Happy | P2 | FavouritesTests | `FAV04_Favourites_BelongToOneMember` | Per-user favourites | B's favourites do not include it | Pass |
+| FAV-05 | Happy | P3 | FavouritesTests | `FAV05_NoFavourites_ShowsTheEmptyStateWithALinkToBrowse` | Empty state | Friendly empty state | Pass |
+| FAV-06 | Happy | P3 | FavouritesTests | `FAV06_Admin_CanKeepFavouritesToo` | Admin favourites | Works (the route and API allow both roles) | Pass |
+| FAV-07 | Unhappy | P3 | FavouritesTests | `FAV07_DeletedFavouriteBook_DisappearsWithoutABrokenCard` | Favourite book deleted | It disappears from `/favourites`, no broken card | Pass |
+| FAV-08 | Unhappy | P3 | FavouritesTests | `FAV08_InventoryDown_ShowsTheFavouritesError` | Favourites fail to load | "Unable to load your favourites. Please try again." | Pass |
+| SRCH-01 | Happy | P1 | SearchTests | `SRCH01_SearchByTitle_FindsOnlyThatBook` | Search by title | Only matching books; the result count is shown | Pass |
+| SRCH-02 | Happy | P2 | SearchTests | `SRCH02_SearchByAuthorIsbnAndGenre_EachFindTheBook` | Search by author, ISBN and genre text | Each finds the book (the server matches title, author, genre and ISBN) | Pass |
+| SRCH-03 | Happy | P2 | SearchTests | `SRCH03_SeveralWords_MustAllMatch` | Several words | Only books matching **every** word | Pass |
+| SRCH-04 | Happy | P2 | SearchTests | `SRCH04_GenreFilters_NarrowAndRestoreTheResults` | Category filter | Results limited to those genres; the URL gains `genre=` parameters; unticking restores the list | Pass |
+| SRCH-05 | Happy | P2 | SearchTests | `SRCH05_AvailableOnly_HidesBooksWithNoCopies` | Available only | Books with 0 copies disappear; `available=1` in the URL | Pass |
+| SRCH-06 | Happy | P3 | SearchTests | `SRCH06_SortOrder_ChangesTheListAndIsKeptInTheAddress` | Sort | Order changes accordingly; the choice is kept in the URL | Pass |
+| SRCH-07 | Happy | P2 | SearchTests | `SRCH07_ManyResults_ArePagedTwelveAtATime` | Pages | 12 per page; page 2 shows the next books; `page=2` in the URL | Pass |
+| SRCH-08 | Happy | P2 | SearchTests | `SRCH08_DeepLink_RestoresTheQueryAndFilters` | Deep link | Filters and the query are restored from the URL | Pass |
+| SRCH-09 | Unhappy | P2 | SearchTests | `SRCH09_NoMatches_ShowsAFriendlyEmptyState` | No matches | Friendly empty state, no error | Pass |
+| SRCH-10 | Unhappy | P3 | SearchTests | `SRCH10_OddInput_IsTreatedAsPlainText` | Odd input | No crash; nothing is executed; treated as plain text | Pass |
+| SRCH-11 | Unhappy | P3 | SearchTests | `SRCH11_PageBeyondTheEnd_DoesNotError` | Out-of-range page | No error message; the page and navigation still work | Pass |
+| SRCH-12 | Unhappy | P2 | SearchTests | `SRCH12_InventoryDown_ShowsTheSearchError` | Search fails | "Unable to search the catalogue. Please try again." | Pass |
+| SRCH-13 | Happy | P3 | SearchTests | `SRCH13_BannerSearchBox_HighlightsTheWholeBoxWithoutAnInnerRing` | Banner input focus | The whole box highlights; no inner green ring (regression for the fix in PR #98) | Pass |
+| X-01 | Happy | P2 | CrossCuttingTests | `X01_PhoneWidth_HasNoSidewaysScrollingOnTheMainPages` | Phone width (390 px): login, register, home, search, book, My Borrowings, admin Borrowed books | No horizontal page scroll; the admin table scrolls inside its container | Pass |
+| X-02 | Happy | P3 | CrossCuttingTests | `X02_KeyboardOnly_SignInReserveAndCloseADialog` | Keyboard only: sign in, Tab to Borrow and press Enter, close a dialog with Esc | All reachable; the focused button shows a focus ring | Pass |
+| X-03 | Happy | P3 | CrossCuttingTests | `X03_ReducedMotion_StopsTheSliderAndTheShimmer` | Reduced motion (emulate `prefers-reduced-motion`) | No shimmer or slider animation | Pass |
+| X-04 | Unhappy | P3 | CrossCuttingTests | `X04_CoreJourney_LeavesNoUncaughtErrorsInTheConsole` | Browser console | No uncaught errors on the main pages during the P1 journey | Pass |
+| X-05 | Unhappy | P3 | CrossCuttingTests | `X05_ScriptInABookTitle_IsShownAsTextEverywhere` | Script injection through data | A book titled `<img src=x onerror=alert(1)>` is shown as text on cards, the book page, the admin queue and in notifications; no alert fires | Pass |
+| X-06 | Happy | P3 | CrossCuttingTests | `X06_NotificationTimes_AreShownInSriLankaTime` | Dates and times | Dates show in Sri Lanka time (`Asia/Colombo`), e.g. "14 Oct 2026, 10:39" | Pass |
+
+## Lending Service (LendingService.E2ETests)
+
+| ID | Type | Priority | Test class | Test name | Scenario | Expected result | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ADMRES-01 | Happy | P1 | ReservationQueueTests | `ADMRES01_NewRequest_AppearsInTheQueueWithTheMembersName` | Queue shows the request | Row with the member's name, book title and date (**Existing**) | Pass |
+| ADMRES-02 | Happy | P1 | ReservationQueueTests | `ADMRES02_Accepting_LendsTheBookAndTakesACopy` | Accept | Row leaves the queue; loan appears on `/admin/borrowed`; available copies drop by 1 (**Existing**) | Pass |
+| ADMRES-03 | Happy | P1 | ReservationQueueTests | `ADMRES03_Rejecting_CancelsTheRequestWithoutTouchingCopies` | Reject | Message "Reservation for <title> by <name> was cancelled. Notification event queued."; row goes to history as Cancelled; copies unchanged (**Existing**) | Pass |
+| ADMRES-04 | Unhappy | P2 | ReservationQueueTests | `ADMRES04_AcceptingWithNoCopyLeft_KeepsTheRowForRetry` | Accept with no copy left | First succeeds. Second shows "Inventory could not allocate a copy. Acceptance is pending; retry when a copy is available."; the row stays with "Retry Accept" and Reject is disabled | Pass |
+| ADMRES-05 | Happy | P2 | ReservationQueueTests | `ADMRES05_RetryAccept_SucceedsOnceACopyComesBack` | Retry Accept after a copy returns | Succeeds; the second member now has the loan | Pass |
+| ADMRES-06 | Unhappy | P2 | ReservationQueueTests | `ADMRES06_SecondAdminActingOnAHandledRequest_IsToldItChanged` | Two admins, same reservation | Admin B sees "Only pending reservations can be rejected. Refresh the queue."; the queue refreshes and the row is gone | Pass |
+| ADMRES-07 | Unhappy | P2 | ReservationQueueTests | `ADMRES07_AcceptingARequestTheMemberCancelled_IsRefused` | Member cancelled meanwhile | "Only pending reservations can be accepted. Refresh the queue."; nothing is borrowed | Pass |
+| ADMRES-08 | Unhappy | P3 | ReservationQueueTests | `ADMRES08_InventoryDownDuringAccept_CanBeRetriedSafely` | Inventory down during accept | "Inventory checkout could not be confirmed. Retry Accept to safely complete this reservation."; after a restart, Retry Accept completes it and exactly one copy is taken | Pass |
+| ADMRES-09 | Unhappy | P3 | ReservationQueueTests | `ADMRES09_LendingDown_ShowsTheQueueError` | Queue fails to load | "Unable to load pending reservations. Please try refreshing." | Pass |
+| ADMRES-10 | Happy | P3 | ReservationQueueTests | `ADMRES10_RefreshButton_BringsInRequestsMadeAfterThePageLoaded` | Refresh button | The new request appears without reloading the page | Pass |
+| LOAN-01 | Happy | P1 | ReturnsTests | `LOAN01_OnTimeReturn_HasNoFineAndPutsTheCopyBack` | On-time return | "Book returned. No fine is due."; loan goes to history; copies go up by 1 (**Existing**) | Pass |
+| LOAN-02 | Happy | P1 | ReturnsTests | `LOAN02_LateReturn_RecordsTenRupeesPerDay` | Late return | "Book returned. 3 day(s) overdue. Fine: Rs. 30.00 — Unpaid." (**Existing**) | Pass |
+| LOAN-03 | Happy | P2 | ReturnsTests | `LOAN03_DueJustBeforeSriLankanMidnight_CountsAsOneDayLate` | Due just before Sri Lankan midnight | Fine Rs. 10.00 for 1 day: days are Sri Lanka calendar days, not 24-hour blocks | Pass |
+| LOAN-04 | Unhappy | P2 | ReturnsTests | `LOAN04_CancellingTheReturnDialog_KeepsTheLoan` | Return dialog cancelled | Loan stays | Pass |
+| LOAN-05 | Unhappy | P2 | ReturnsTests | `LOAN05_TwoAdminsReturningTheSameLoan_RecordItOnce` | Return twice | The second request repeats the finished return (same message); only one return and one fine are recorded | Pass |
+| LOAN-06 | Unhappy | P3 | ReturnsTests | `LOAN06_InventoryDownDuringReturn_KeepsTheOriginalReturnTime` | Inventory down during return | "Inventory return could not be confirmed. Retry Return; the original return date is preserved."; after a restart, Retry Return keeps the **original** return time | Pass |
+| LOAN-07 | Happy | P2 | ReturnsTests | `LOAN07_HistoryFilter_ShowsOnlyTheChosenStatus` | History filters | Each filter shows only matching rows (**Existing** for two filters) | Pass |
+| LOAN-08 | Happy | P3 | ReturnsTests | `LOAN08_HistoryColumns_ShowTheFineOrADash` | History columns | Days overdue, fine amount and fine status filled in; "—" for records without a fine | Pass |
+| MYB-01 | Happy | P1 | MyBorrowingsTests | `MYB01_PendingReservation_IsListedWithACancelButton` | Pending list | Book listed under pending reservations with its date | Pass |
+| MYB-02 | Happy | P1 | MyBorrowingsTests | `MYB02_AcceptedReservation_IsACurrentLoanDueInFourteenDays` | Current loans | Book under current loans with checkout and due date (14 days later) (**Existing**) | Pass |
+| MYB-03 | Happy | P2 | MyBorrowingsTests | `MYB03_OverdueLoan_ShowsDaysOverdueAndAnEstimatedFine` | Estimated fine on an overdue loan | Loan shows 3 days overdue and an estimated fine of Rs. 30.00 | Pass |
+| MYB-04 | Happy | P2 | MyBorrowingsTests | `MYB04_ReturnedBook_MovesToBorrowingHistory` | History | Book in history with return date and fine (**Existing**) | Pass |
+| MYB-05 | Happy | P1 | MyBorrowingsTests | `MYB05_MemberCancelsAPendingReservation` | Cancel a pending reservation | "Your reservation for "<title>" has been cancelled."; moves to the cancelled section (**Existing**) | Pass |
+| MYB-06 | Unhappy | P2 | MyBorrowingsTests | `MYB06_DismissingTheCancelDialog_KeepsTheReservation` | Cancel dialog dismissed | Nothing changes | Pass |
+| MYB-07 | Unhappy | P2 | MyBorrowingsTests | `MYB07_CancellingAfterTheAdminAccepted_IsRefused` | Cancel after the admin accepted | "This reservation is already being processed or has been accepted and cannot be cancelled. Refresh your list." | Pass |
+| MYB-08 | Unhappy | P3 | MyBorrowingsTests | `MYB08_LendingDown_ShowsTheLoadError` | Lending down | "Unable to load your borrowing records. Please try again." | Pass |
+| MYB-09 | Unhappy | P3 | MyBorrowingsTests | `MYB09_TokenTheServiceRejects_AsksTheMemberToSignInAgain` | Token the service rejects | "Your session has expired. Please log in again." | Pass |
+| MYB-10 | Happy | P3 | MyBorrowingsTests | `MYB10_RecordedFine_IsAddedToTheUnpaidTotal` | Unpaid fines total | The unpaid fines total includes the recorded fine | Pass |
+| RES-01 | Happy | P1 | ReserveTests | `RES01_ApprovedMember_ReservesABook_AndTheButtonShowsPending` | Reserve an available book | Toast "Book reserved successfully! It is now pending admin approval."; the button becomes a disabled "Pending" (**Existing** for the toast; add the button state) | Pass |
+| RES-02 | Happy | P1 | ReserveTests | `RES02_PendingState_ShowsOnTheSearchListBookPageAndShelves` | Pending everywhere | All three show "Pending" | Pass |
+| RES-03 | Happy | P1 | ReserveTests | `RES03_AcceptedRequest_TurnsTheButtonToBorrowed` | Borrowed after acceptance | Button shows a disabled "Borrowed" | Pass |
+| RES-04 | Happy | P2 | ReserveTests | `RES04_ReturnedBook_CanBeBorrowedAgain` | Back to Borrow after return | Button returns to an active "Borrow" | Pass |
+| RES-05 | Happy | P2 | ReserveTests | `RES05_RejectedOrCancelledRequest_ShowsBorrowAgain` | Back to Borrow after rejection or cancellation | Button returns to "Borrow" | Pass |
+| RES-06 | Unhappy | P1 | ReserveTests | `RES06_NoCopiesOnTheShelf_ShowsAGreyedDisabledBorrow` | No copies on the shelf | Greyed, disabled "Borrow"; tooltip "No copies on the shelf right now"; not-allowed cursor (**Existing** for disabled) | Pass |
+| RES-07 | Unhappy | P2 | ReserveTests | `RES07_CopiesRunningOutAfterThePageLoaded_IsRefused` | Copies run out after the page loaded | Error "Book is currently unavailable for reservation."; nothing is queued | Pass |
+| RES-08 | Unhappy | P2 | ReserveTests | `RES08_SecondRequestForTheSameBook_IsRefused` | Same book twice | "You already have a pending reservation for this book." (**Existing**) | Pass |
+| RES-09 | Unhappy | P2 | ReserveTests | `RES09_Admin_SeesBorrow_ButIsRefused` | Admin clicks Borrow | The admin token counts as approved, so Borrow is shown; clicking it gives "Admins cannot reserve books. Please log in with a regular user account." **Record as a UX finding:** the button should be hidden for admins | Pass |
+| RES-10 | Unhappy | P2 | ReserveTests | `RES10_BookDeletedAfterThePageLoaded_IsReportedAsNotFound` | Book deleted after the page loaded | "Book with ID <n> not found in inventory." | Pass |
+| RES-11 | Unhappy | P3 | ReserveTests | `RES11_LendingDown_ShowsAnErrorAndTheButtonRecovers` | Lending down | "Failed to reserve book. Please try again."; the button returns to an active "Borrow" (not stuck on "Borrowing…") | Pass |
+| RES-12 | Unhappy | P3 | ReserveTests | `RES12_UserServiceDown_RefusesBecauseApprovalCannotBeChecked` | User Service down while reserving | "Your account could not be verified right now. Please try again."; nothing queued | Pass |
+| RES-13 | Happy | P3 | ReserveTests | `RES13_DoubleClick_CreatesOnlyOneRequest` | Double click | Exactly one reservation appears in the admin queue | Pass |
+| RES-14 | Happy | P2 | ReserveTests | `RES14_MemberWithOtherRequestsAndLoans_CanBorrowAnotherBook` | Borrow a second, different book | Allowed: the only limit is one open request per book | Pass |
+
+## Notification Service (NotificationService.E2ETests)
+
+| ID | Type | Priority | Test class | Test name | Scenario | Expected result | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| NOTIF-01 | Happy | P1 | NotificationEventTests | `NOTIF01_NewReservation_IsAnnouncedToAdminsWithTheMembersName` | Admins hear about a new reservation | Admin bell count +1; message "<member name> reserved '<title>' on <date>." | Pass |
+| NOTIF-02 | Happy | P1 | NotificationEventTests | `NOTIF02_Acceptance_TellsTheMemberTheDueDate` | Member hears about acceptance | Member: "Your reservation for '<title>' was accepted. Please return it by <date>." | Pass |
+| NOTIF-03 | Happy | P2 | NotificationEventTests | `NOTIF03_Rejection_TellsOnlyTheMember` | Member hears about rejection | Member: "Your reservation for '<title>' was rejected by the library."; admins get nothing | Pass |
+| NOTIF-04 | Happy | P2 | NotificationEventTests | `NOTIF04_MemberCancelling_TellsTheMemberAndTheAdmins` | Member cancels | Member: "You cancelled your reservation for '<title>'."; admins: "<name> cancelled their pending reservation for '<title>'." | Pass |
+| NOTIF-05 | Happy | P2 | NotificationEventTests | `NOTIF05_Return_ThanksTheMember` | Return | Member: "'<title>' was returned on <date>. Thank you!" | Pass |
+| NOTIF-06 | Happy | P2 | NotificationEventTests | `NOTIF06_LateReturn_TellsTheMemberAboutTheFine` | Fine | Member also gets "A fine of Rs. 30.00 was recorded for '<title>': returned 3 days late." | Pass |
+| NOTIF-07 | Happy | P3 | NotificationEventTests | `NOTIF07_LoanDueInTwoDays_GetsExactlyOneReminder` | Due-soon reminder | Member: "Reminder: '<title>' is due on <date>. Please return it on time to avoid a fine."; still one reminder after another restart | Pass |
+| NOTIF-08 | Happy | P2 | NotificationEventTests | `NOTIF08_NewBook_IsAnnouncedToMembersAndOtherAdminsButNotItsCreator` | New book announcement | Approved members: "New in the catalogue: '<title>' by <author>."; Admin B: "<admin email> added '<title>' to the catalogue."; Admin A gets nothing | Pass |
+| NOTIF-09 | Happy | P3 | NotificationEventTests | `NOTIF09_BookEditsAndAvailability_AreToldToOtherAdminsOnly` | Book edited / availability | Admin B gets "…updated…", "…marked … as unavailable.", "…marked … as available."; members get nothing | Pass |
+| NOTIF-10 | Happy | P2 | NotificationEventTests | `NOTIF10_DeletedBook_TellsOnlyTheMemberWaitingForIt` | Deleted book, member waiting | That member: "'<title>', a book on your reservations or borrowings, has been removed from the library catalogue."; other members get nothing | Pass |
+| NOTIF-11 | Unhappy | P3 | NotificationEventTests | `NOTIF11_MemberApprovedAfterABookWasAdded_DoesNotGetItsAnnouncement` | Members registered after a new book | The new member does **not** see the earlier "New in the catalogue" announcement | Pass |
+| NOTIF-12 | Happy | P1 | NotificationInboxTests | `NOTIF12_MarkingOneAsRead_RemovesItFromUnreadAndLowersTheBellCount` | Mark one as read | It leaves the unread list; the bell count drops at once | Pass |
+| NOTIF-13 | Happy | P2 | NotificationInboxTests | `NOTIF13_MarkAllAsRead_EmptiesTheUnreadList` | Mark all as read | Unread list empty ("No unread notifications…"); bell shows 0 | Pass |
+| NOTIF-14 | Happy | P2 | NotificationInboxTests | `NOTIF14_ShowAndHideViewed_PagesTheHistoryInTwenties` | Show / hide viewed | Toggle label switches; "Load more history" pages in groups of 20 and disappears at the end | Pass |
+| NOTIF-15 | Happy | P3 | NotificationInboxTests | `NOTIF15_ReadStatus_IsKeptPerAdmin` | Read status is per admin | It stays unread for Admin B | Pass |
+| NOTIF-16 | Happy | P3 | NotificationInboxTests | `NOTIF16_ReadingFromTheBell_UpdatesTheOpenPage` | Bell and page stay in sync | The page empties without a reload | Pass |
+| NOTIF-17 | Unhappy | P2 | NotificationInboxTests | `NOTIF17_NotificationServiceDown_ShowsErrorsInTheBellAndThePage` | Notification Service down | Bell: "Notifications are unavailable right now."; page: "Your notifications could not be loaded." with Retry | Pass |
+| NOTIF-18 | Unhappy | P2 | NotificationEventTests | `NOTIF18_KafkaOutage_DelaysButDoesNotLoseNotifications` | Kafka down, then back | No notification while Kafka is down; once it is back, the admin notification arrives (Lending's outbox resends; nothing is lost) | Pass |
+| NOTIF-19 | Unhappy | P3 | NotificationEventTests | `NOTIF19_NotificationServiceRestart_DoesNotDuplicateNotifications` | Notification Service restarted mid-stream | No duplicate notifications (redelivered events are skipped by event ID) | Pass |
