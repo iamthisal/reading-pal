@@ -1,104 +1,225 @@
-# ASE group test automation
+﻿# ReadingPal — ASE Testing Assignment
 
-The group has selected four areas: unit testing/mocking, mutation testing, UI/E2E testing and load/performance testing. The shared workflow is **.github/workflows/ase-testing.yml**, named **ASE Assignment Tests**.
+This README outlines the tools, setup, execution commands, shared pipeline and individual contributions for testing ReadingPal's User, Inventory, Lending and Notification services.
 
-## Contribution branches and pull requests
+## Team contributions
 
-Each contributor opens their PR **directly into develop**. The unit-testing-ASE PR includes the unit tests, shared workflow and group runner, plus the already-merged load-testing contribution. No separate integration branch is required.
-
-The unit tests and workflow foundation can be reviewed and merged first. The other suites remain visibly pending. Teammates then add their tests and CI entry points through their own PRs into develop. Before final submission, all four suites must execute and pass with require_all=true.
-
-After the foundation PR is merged into develop, bring the shared setup into an existing contribution branch. First commit or stash your unfinished work, then run:
-
-~~~bash
-git fetch origin
-git switch your-contribution-branch
-git merge origin/develop
-~~~
-
-Replace your-contribution-branch with your actual branch name. Resolve any conflicts before committing and pushing. To start a new contribution branch instead:
-
-~~~bash
-git fetch origin
-git switch --no-track -c ase-my-contribution origin/develop
-~~~
-
-Use your own unused branch name in place of ase-my-contribution. Add your suite's folder and run-ci.ps1, push your contribution branch, and choose **develop** as the PR base.
-
-## Current readiness
-
-| Contribution | Folder | Workflow connection |
+| Student | Student ID | Feature and responsibility |
 | --- | --- | --- |
-| Unit testing and mocking | Unit Testing (xUnit-Moq) | Connected: all four projects run and produce TRX results. |
-| Mutation testing | Mutation Testing (Stryker) | Pending: teammate adds the suite and run-ci.ps1. |
-| UI/E2E testing | UI Testing (Selenium) | Pending: teammate adds the suite and run-ci.ps1. |
-| Load/performance testing | Load Testing (Jmeter) | Local JMeter suite exists; CI environment/fixture adapter run-ci.ps1 is pending. |
+| Wickramathanthri T. D | IT24101868 | Unit testing and mocking with xUnit, Moq and EF Core InMemory; business rules, boundaries, errors and dependency verification across all four services. |
+| Samaraweera S K U S S | IT24101841 | Mutation testing with Stryker.NET; service configurations, mutation execution, scores and HTML/JSON reports. |
+| Peiris M D D P | IT24100532 | Selenium E2E testing; customer/admin browser journeys, access control, outage scenarios, test catalogue and results. |
+| Wickramasinghe G. K. D. K | IT24101516 | JMeter load and performance testing; concurrent API journeys, fixture preparation, performance thresholds and reports. |
 
-The Mutation-Testing-ASE branch currently contains the same load-testing commit as Load-Testing-ASE; its name alone does not establish a mutation implementation. Existing Selenium projects elsewhere in tests are not automatically treated as the assignment contribution.
+## Contribution locations and readiness
 
-Add each student's name and student ID to their suite README before submission. The [unit README](Unit%20Testing%20%28xUnit-Moq%29/README.md) documents the 120 locally passing cases and demo examples. This group workflow is new and still needs a successful GitHub Actions run; local execution is not evidence of a remote workflow pass.
+Status checked against fetched branches on **23 October 2026**. The working branch is `unit-testing-ASE`. Fetching a contribution does not add its files to the current checkout; commands for another contribution require a checkout containing its files.
 
-## How one workflow coordinates the group
+| Suite | Branch | Folder under `tests/ASE Assignment/` | Integration status |
+| --- | --- | --- | --- |
+| Unit | `unit-testing-ASE` | `Unit Testing (xUnit-Moq)/` | Present here and connected to the shared workflow. |
+| Mutation | `Mutation-Testing-ASE` | `Mutation_Testing/` | Configurations, runner and reports available on the contribution branch; shared CI adapter missing. |
+| Selenium | `E2E-Testing-ASE` | `E2E Testing (Selenium)/` | Four projects, support library, documentation, recorded results and CI entry point available on the contribution branch. |
+| JMeter | `Load-Testing-ASE` | `Load Testing (Jmeter)/` | Local suite present here; the E2E branch also contains the load CI adapter and manual Azure runner. |
 
-1. Discovery reports which suite entry points exist.
-2. Unit tests run on every matching trigger. Each project is run even if an earlier one fails; any failing project fails the job.
-3. Mutation runs after unit tests pass. UI and load use separate runners, so their traffic does not interfere.
-4. Each connected suite uploads reports even when its execution fails.
-5. The final summary distinguishes success, failure and missing contributions. Missing suites are **PENDING**, not passing tests.
+These suites are not yet all integrated into this checkout or `origin/develop`. The current shared runner expects `Mutation Testing (Stryker)/run-ci.ps1` and `UI Testing (Selenium)/run-ci.ps1`. The E2E branch corrects the Selenium discovery path to `E2E Testing (Selenium)/run-ci.ps1` and adapts Docker jobs to Linux. Mutation still needs an adapter and discovery path aligned with its actual `Mutation_Testing` folder.
 
-The workflow runs on relevant pushes to main, develop and the four current ASE contribution branches; on pull requests targeting develop with relevant changes; and manually through Actions. Other contributor branches can use a pull request or be added to the push branch list.
+## Tool setup
 
-The manual Run workflow screen supports **require_all**:
+| Tool | Required for | Setup |
+| --- | --- | --- |
+| Git | Source and contribution branches | Clone the repository and fetch contribution branches. |
+| .NET SDK 10 | Unit, mutation and E2E | Install SDK 10; project packages restore through `dotnet restore` or `dotnet test`. |
+| PowerShell 7 (`pwsh`) | Test runners | Install PowerShell 7; run commands from the repository root unless stated otherwise. |
+| xUnit 2.9.3, Moq 4.20.72, EF Core InMemory | Unit tests | Restored from test project NuGet references. |
+| Stryker.NET | Mutation testing | Install `dotnet-stryker`; see the mutation setup below. |
+| Chrome, Selenium WebDriver 4.48 | E2E tests | Install Chrome; restore projects. Selenium Manager resolves ChromeDriver. |
+| Docker with Linux containers and Compose | Local E2E and Docker-based CI | Start Docker and prepare the disposable application stack. |
+| Node.js 22 and npm | React frontend | Run `npm ci` in `frontend`. |
+| Java 17 and Apache JMeter 5.6.3 | Load testing | Install Java, extract JMeter and set `JMETER_HOME` or supply `-JMeterPath`. |
 
-- false: development mode; missing contributions are clearly pending, while any connected suite failure fails the workflow.
-- true: final submission mode; all four suites must be connected and pass.
+Verify tools:
 
-GitHub normally exposes a newly added workflow's manual Run workflow control after the workflow file is present on the default branch. Until then, a qualifying push or pull request can trigger it.
+```powershell
+dotnet --version
+pwsh --version
+git --version
+node --version
+npm --version
+docker compose version
+java -version
+```
 
-The existing application CI/CD files are unchanged. This file coordinates the ASE assignment only. The existing ci.yml project loops split paths at spaces and need a separate fix before those loops can reliably include the new assignment folders.
+Unit tests call C# classes directly using mocked dependencies and fresh EF Core InMemory databases. Running APIs, MySQL, Kafka and Docker are unnecessary for the unit suite. Selenium and JMeter exercise the running application.
 
-## Local commands
+For application-backed tests, configure environment files using `.env.example` and `frontend/.env.example` without overwriting existing settings. Follow each suite's README for stack configuration. Selenium defaults to User Service port 5050; the local JMeter configuration uses 5000. Keep passwords, tokens and private fixture files out of Git and uploaded artifacts.
 
-Run these from the repository root using PowerShell 7:
+## Unit testing commands
 
-~~~powershell
+From the repository root:
+
+```powershell
 pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover
 pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit
-~~~
+```
 
-Once the matching teammate entry point is ready:
+The runner restores/builds in Release, executes all four projects even when an earlier project fails, saves TRX files to `.ase-results/unit/<Service>/`, and fails if any project fails.
 
-~~~powershell
+Run one project or a focused demonstration:
+
+```powershell
+dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
+dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj" --filter "FullyQualifiedName~Register_NewEmail_SavesUnapprovedUser"
+```
+
+See the [unit README](Unit%20Testing%20%28xUnit-Moq%29/README.md) for coverage, test explanations and demo examples.
+
+## Mutation testing commands
+
+Use a checkout containing the `Mutation-Testing-ASE` contribution. Install Stryker once:
+
+```powershell
+dotnet tool install --global dotnet-stryker
+dotnet stryker --version
+```
+
+The inspected branch has no committed Stryker tool manifest/version pin. Agree and pin a version in a tool manifest for repeatable execution; the command above installs the currently available version.
+
+**Configuration prerequisite:** check production and test project paths in every `stryker-config.json` before running. The inspected User configuration names `UserService.csproj` without its backend directory and references `../../../unit-tests/UserService.Tests/UserService.Tests.csproj`, which does not exist on that branch. Correct paths against the actual checkout first. Retained reports do not prove that the current configuration can reproduce the run.
+
+After correcting configuration paths, run all services:
+
+```powershell
+pwsh -NoProfile -File "tests/ASE Assignment/Mutation_Testing/run-mutation.ps1"
+```
+
+Or select services from a PowerShell session:
+
+```powershell
+& "tests/ASE Assignment/Mutation_Testing/run-mutation.ps1" -Services UserService,LendingService
+```
+
+Output: `Mutation_Testing/reports/<Service>.html`, `<Service>.summary.json` and `summary.md`. Raw runs are under each service's ignored `StrykerOutput/` directory. The inspected User configuration uses a break threshold of 0, so execution success does not establish a minimum mutation score.
+
+## Selenium E2E commands
+
+Use a checkout containing `E2E-Testing-ASE`. Follow its E2E README and `TEST-PLAN.md` to prepare Chrome, MySQL, Kafka and the four APIs in Docker. Use a disposable local test stack: the suite changes test data and stops/pauses containers for outage scenarios.
+
+Prepare the frontend in a separate terminal after configuring its API addresses:
+
+```powershell
+Set-Location frontend
+npm ci
+npm run dev
+```
+
+From the repository root, run against the prepared stack:
+
+```powershell
+pwsh -NoProfile -File "tests/ASE Assignment/E2E Testing (Selenium)/run-ci.ps1" -ResultsDirectory ".ase-results/ui" -ApplicationCommit "$(git rev-parse HEAD)" -UseExistingStack
+```
+
+Run one project or case directly:
+
+```powershell
+dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --logger "trx;LogFileName=UserService.E2ETests.trx"
+dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --filter "Id=ACC-04"
+```
+
+On its contribution branch, CI provisions a disposable stack and frontend, runs four projects sequentially, retains TRX files and infrastructure logs, then cleans up its infrastructure. Local `-UseExistingStack` mode requires infrastructure prepared by the developer.
+
+## JMeter commands
+
+Start the four APIs, MySQL and Kafka. Install Java and JMeter 5.6.3. From the repository root:
+
+```powershell
+Set-Location "tests/ASE Assignment/Load Testing (Jmeter)"
+```
+
+Create `config/local.private.json` from `config/local.private.example.json` only if it does not already exist, then supply local admin credentials. Set `JMETER_HOME` to your extracted JMeter directory, or supply the full `bin/jmeter.bat` path with `-JMeterPath`.
+
+Prepare fixtures only if they do not already exist, then wait for seeded notifications:
+
+```powershell
+.\scripts\prepare-data.ps1 -Users 40 -SeedNotifications
+```
+
+Preview and execute:
+
+```powershell
+.\scripts\run-parallel-local.ps1 -Preview
+.\scripts\run-parallel-local.ps1 -AllowWrites -ApplicationCommit "$(git rev-parse HEAD)"
+```
+
+The default plan uses 20 customer threads, 2 admin threads, additional bounded workflow checks and 60 seconds of repeated traffic. HTML reports and metrics appear under `results/local/parallel-<timestamp>/`. Response assertions and configured error-rate, latency and sample-count checks determine success. Thresholds are assessment targets, not production SLAs.
+
+The E2E branch also includes a load `run-ci.ps1` and `scripts/run-azure.ps1`; use that branch's README for parameters. The local runner in this checkout only permits local hosts.
+
+See the [JMeter README](Load%20Testing%20%28Jmeter%29/README.md) for fixture ownership, cleanup and result interpretation.
+
+## Shared GitHub Actions pipeline
+
+Workflow: [ASE Assignment Tests](../../.github/workflows/ase-testing.yml).
+
+```text
+Discover suites ──> Unit tests ──> Mutation (when connected)
+                ├─> Selenium (when connected)
+                └─> JMeter   (when connected)
+                         ↓
+                Artifacts + final summary
+```
+
+Relevant pushes to `main`, `develop` and the ASE contribution branches, pull requests targeting `develop`, and manual dispatch can trigger execution. Unit runs after discovery; mutation additionally depends on unit success. Selenium and load use separate jobs. Report upload steps use `if: always()` to retain available results after failures.
+
+In **Actions → ASE Assignment Tests → Run workflow**, select the branch and set:
+
+- `require_all=false`: missing adapters remain visibly pending; connected suite failures fail the workflow.
+- `require_all=true`: every suite must be connected and pass for final submission.
+
+Once manual dispatch is available for this workflow, an authenticated GitHub CLI can run it:
+
+```powershell
+gh workflow run ase-testing.yml --ref unit-testing-ASE -f require_all=false
+gh run list --workflow ase-testing.yml --limit 5
+gh run view <run-id> --log-failed
+gh run download <run-id> --dir .ase-results/downloaded
+```
+
+Replace `<run-id>` with an actual run ID. For final submission, use the integrated branch and `require_all=true`. The present checkout cannot pass final mode while suite adapters remain missing.
+
+Shared commands for integrated suite adapters, run from the repository root:
+
+```powershell
 pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation
 pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui
 pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Load
-~~~
+```
 
-Missing entry points fail when requested directly. They are not replaced by empty passing scripts. Results default to **.ase-results/** at the repository root; each suite has a separate directory. CI uses the same commands, paths and entry points.
+These commands fail if their expected entry point is missing. They require the contribution files, correct discovery paths and suitable runner environments. The current workflow uses Windows runners; Docker-based E2E/load jobs need the Linux adaptations present on the E2E branch.
 
-## Teammate handover: run-ci.ps1
+### CI entry-point contract
 
-Add the entry point at the exact path in the readiness table. Its parameters must be:
+Each adapter must accept:
 
-~~~powershell
+```powershell
 param(
     [Parameter(Mandatory)][string]$ResultsDirectory,
     [Parameter(Mandatory)][string]$ApplicationCommit
 )
-~~~
+```
 
-This is a parameter contract, not a complete runner. The script must actually run the tests, enforce the suite's pass/fail criteria, and write reports to ResultsDirectory. It must throw or exit nonzero on setup/test/threshold failures. A zero exit with no report files is rejected by the shared runner.
+Adapters must provision tools and a suitable environment, execute the real suite, write public reports to `ResultsDirectory`, return nonzero on setup/test/threshold failures, and clean up their infrastructure in a `finally` block. The shared runner rejects success without report files. Align the mutation adapter and discovery path with its actual contribution folder before enabling it.
 
-Each job uses a fresh **windows-latest** GitHub runner and PowerShell 7. The repository is checked out, .NET 10 is installed, the UI job also installs Node 22, and the load job installs Java 17. No backend, frontend, database, Kafka broker, Stryker tool, JMeter installation or fixture data is automatically started/provided. Each teammate entry point must provision its own disposable local test environment and tools, wait for readiness, execute the suite, and clean up its own processes in a finally block.
+Expected artifacts are `ase-unit-results`, `ase-mutation-results`, `ase-ui-results` and `ase-load-results`; files are available only when the respective job produces them. Local success and configured workflow files are not evidence of a successful remote CI run.
 
-- **Mutation owner:** pin Stryker through a committed tool manifest, restore it, target the relevant unit projects, configure a meaningful mutation threshold, propagate its exit code and save the mutation report.
-- **UI owner:** install/restore browser test dependencies, start the frontend/backends/test infrastructure, run headless Selenium tests and retain results/screenshots. Do not assume a developer's localhost is reachable from GitHub.
-- **Load owner:** install/pin JMeter, provision local MySQL/Kafka/services, create fresh private CI credentials and fixtures, wait for notification delivery, then invoke the existing prepare/run/report scripts. Pass ApplicationCommit to the load runner. The current runner deliberately permits local hosts only. Copy public reports to ResultsDirectory; never upload private account manifests, credentials, tokens or HTTP headers.
+## Recorded results
 
-GitHub-hosted Windows runners cannot run this repository's Linux Docker Compose stack directly. Teammates must either provision compatible local infrastructure or adapt their job to a supported runner/environment. Merely adding test files or a run-ci.ps1 placeholder does not complete infrastructure integration.
+These are retained results from **18 October 2026**, not new executions performed while writing this README.
 
-Use disposable CI data rather than production or a developer's persistent database. The workflow has read-only repository permissions and does not deploy or push code. No shared secrets are wired in yet; arrange any required CI secrets explicitly when the owning suite is connected.
+| Suite | Evidence |
+| --- | --- |
+| Unit | 71 methods, 120 executed cases; 120 passed, 0 failures, 0 skipped. User 20, Inventory 23, Lending 38, Notification 39. |
+| Mutation | User 49.06%, Inventory 62.34%, Lending 51.82%, Notification 57.25%. Mutation scores measure detected mutations, not code coverage. |
+| Selenium | 187 defined cases, 198 executions. Initial run: 197 passed, 1 failed (member revocation). Rerun with `fix/revoke-member-url` at `f6e9b26`: 198 passed. |
 
-## Before the presentation
-
-Complete all three pending adapters and the team ownership details. Run the workflow with require_all=true, confirm all four jobs execute and pass, download the artifacts, and rehearse the two-minute group introduction and four individual demonstrations. Until then this is a working unit-test workflow with integration entry points, not a finished four-suite pipeline.
+For load results, retain the generated report with its actual environment and application commit. Before submission, merge contributions through PRs into `develop`, resolve adapter/configuration gaps, execute with `require_all=true`, and retain the successful integrated run and artifacts.
