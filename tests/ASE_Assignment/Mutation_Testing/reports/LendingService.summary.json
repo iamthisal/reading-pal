@@ -1,0 +1,10 @@
+{
+  "service": "LendingService",
+  "run": "2026-11-25 00:25 UTC",
+  "commit": "7b2e506123340080467569bbbf4118eddec9a8e0",
+  "killed": 80,
+  "timeout": 0,
+  "survived": 59,
+  "noCoverage": 409,
+  "score": 14.6
+}

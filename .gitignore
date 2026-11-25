@@ -51,3 +51,6 @@ Thumbs.db
 # Logs
 logs/
 *.log
+
+# ASE assignment runner reports and local validation tools
+/.ase-results/

@@ -1,0 +1,10 @@
+{
+  "service": "NotificationService",
+  "run": "2026-11-25 00:28 UTC",
+  "commit": "7b2e506123340080467569bbbf4118eddec9a8e0",
+  "killed": 77,
+  "timeout": 0,
+  "survived": 100,
+  "noCoverage": 237,
+  "score": 18.6
+}

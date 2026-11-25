@@ -1,0 +1,594 @@
+{
+  "controllerEndpoints": 59,
+  "mapped": 59,
+  "unmapped": [],
+  "endpoints": [
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Authors",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Authors/{id:int}",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Authors/profile",
+      "plans": [
+        "inventory-service:negative",
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Authors/{id:int}/books",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Authors",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Authors/{id:int}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "DELETE",
+      "route": "/api/Authors/{id:int}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/AuthorsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Books",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Books/{id}",
+      "plans": [
+        "inventory-service:negative",
+        "inventory-service:reads",
+        "lending-service:cancel",
+        "lending-service:reject",
+        "lending-service:return",
+        "mixed-user-workload:reads"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Books/{id:int}/checkouts/{reservationId:int}",
+      "plans": [
+        "lending-service:return"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Books/{id:int}/checkouts/{reservationId:int}/return",
+      "plans": [
+        "lending-service:return"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "DELETE",
+      "route": "/api/Books/{id}",
+      "plans": [
+        "inventory-service:crud",
+        "lending-service:cancel",
+        "lending-service:reject",
+        "lending-service:return"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Books",
+      "plans": [
+        "inventory-service:crud",
+        "inventory-service:negative",
+        "lending-service:cancel",
+        "lending-service:reject",
+        "lending-service:return"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Books/{id}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PATCH",
+      "route": "/api/Books/{id}/mark-unavailable",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PATCH",
+      "route": "/api/Books/{id}/mark-available",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/BooksController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/books/search",
+      "plans": [
+        "inventory-service:reads",
+        "mixed-user-workload:reads"
+      ],
+      "source": "services/inventory-service/Controllers/BookSearchController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Favourites",
+      "plans": [
+        "inventory-service:favourites"
+      ],
+      "source": "services/inventory-service/Controllers/FavouritesController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Favourites/ids",
+      "plans": [
+        "inventory-service:crud",
+        "inventory-service:favourites"
+      ],
+      "source": "services/inventory-service/Controllers/FavouritesController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Favourites/{bookId:int}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/FavouritesController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "DELETE",
+      "route": "/api/Favourites/{bookId:int}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/FavouritesController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Genres",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/GenresController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Genres/{id:int}/books",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/GenresController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Genres",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/GenresController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Genres/{id}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/GenresController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "DELETE",
+      "route": "/api/Genres/{id}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/GenresController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Lists",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "GET",
+      "route": "/api/Lists/{key}",
+      "plans": [
+        "inventory-service:reads"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "POST",
+      "route": "/api/Lists",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Lists/{key}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "PUT",
+      "route": "/api/Lists/{key}/items",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "inventory",
+      "method": "DELETE",
+      "route": "/api/Lists/{key}",
+      "plans": [
+        "inventory-service:crud"
+      ],
+      "source": "services/inventory-service/Controllers/ListsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "GET",
+      "route": "/api/my-borrowings",
+      "plans": [
+        "lending-service:cancel",
+        "lending-service:negative",
+        "lending-service:reads",
+        "lending-service:reject",
+        "lending-service:return",
+        "mixed-user-workload:reads"
+      ],
+      "source": "services/lending-service/Controllers/MyBorrowingsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "POST",
+      "route": "/api/my-borrowings/reservations/{id:int}/cancel",
+      "plans": [
+        "lending-service:cancel",
+        "lending-service:return"
+      ],
+      "source": "services/lending-service/Controllers/MyBorrowingsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "GET",
+      "route": "/api/Reservations/pending",
+      "plans": [
+        "lending-service:admin",
+        "lending-service:negative"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "GET",
+      "route": "/api/Reservations/borrowed",
+      "plans": [
+        "lending-service:admin"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "GET",
+      "route": "/api/Reservations/history",
+      "plans": [
+        "lending-service:admin"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "POST",
+      "route": "/api/Reservations/{id:int}/accept",
+      "plans": [
+        "lending-service:return"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "POST",
+      "route": "/api/Reservations/{id:int}/reject",
+      "plans": [
+        "lending-service:reject"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "POST",
+      "route": "/api/Reservations",
+      "plans": [
+        "lending-service:cancel",
+        "lending-service:reject",
+        "lending-service:return"
+      ],
+      "source": "services/lending-service/Controllers/ReservationsController.cs"
+    },
+    {
+      "service": "lending",
+      "method": "POST",
+      "route": "/api/returns/{borrowRecordId:int}",
+      "plans": [
+        "lending-service:return"
+      ],
+      "source": "services/lending-service/Controllers/ReturnsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "GET",
+      "route": "/api/admin/notifications",
+      "plans": [
+        "notification-service:admin",
+        "notification-service:admin-read-actions",
+        "notification-service:negative"
+      ],
+      "source": "services/notification-service/Controllers/AdminNotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "GET",
+      "route": "/api/admin/notifications/unread-count",
+      "plans": [
+        "notification-service:admin",
+        "notification-service:admin-read-actions"
+      ],
+      "source": "services/notification-service/Controllers/AdminNotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "POST",
+      "route": "/api/admin/notifications/{id:int}/read",
+      "plans": [
+        "notification-service:admin-read-actions"
+      ],
+      "source": "services/notification-service/Controllers/AdminNotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "POST",
+      "route": "/api/admin/notifications/read-all",
+      "plans": [
+        "notification-service:admin-read-actions"
+      ],
+      "source": "services/notification-service/Controllers/AdminNotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "GET",
+      "route": "/api/notifications",
+      "plans": [
+        "mixed-user-workload:reads",
+        "notification-service:negative",
+        "notification-service:read-actions",
+        "notification-service:reads"
+      ],
+      "source": "services/notification-service/Controllers/NotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "GET",
+      "route": "/api/notifications/unread-count",
+      "plans": [
+        "notification-service:read-actions",
+        "notification-service:reads"
+      ],
+      "source": "services/notification-service/Controllers/NotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "POST",
+      "route": "/api/notifications/{id:int}/read",
+      "plans": [
+        "notification-service:negative",
+        "notification-service:read-actions"
+      ],
+      "source": "services/notification-service/Controllers/NotificationsController.cs"
+    },
+    {
+      "service": "notification",
+      "method": "POST",
+      "route": "/api/notifications/read-all",
+      "plans": [
+        "notification-service:read-actions"
+      ],
+      "source": "services/notification-service/Controllers/NotificationsController.cs"
+    },
+    {
+      "service": "user",
+      "method": "GET",
+      "route": "/api/Admin/message",
+      "plans": [
+        "user-service:admin"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "GET",
+      "route": "/api/Admin/users/pending",
+      "plans": [
+        "user-service:admin",
+        "user-service:lifecycle"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "GET",
+      "route": "/api/Admin/users/active",
+      "plans": [
+        "user-service:admin",
+        "user-service:negative"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "POST",
+      "route": "/api/Admin/users/{id}/accept",
+      "plans": [
+        "user-service:lifecycle"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "POST",
+      "route": "/api/Admin/users/{id}/reject",
+      "plans": [
+        "user-service:lifecycle"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "POST",
+      "route": "/api/Admin/users/{id}/revoke",
+      "plans": [
+        "user-service:lifecycle"
+      ],
+      "source": "services/user-service/Controllers/AdminController.cs"
+    },
+    {
+      "service": "user",
+      "method": "POST",
+      "route": "/api/Auth/login",
+      "plans": [
+        "inventory-service:crud",
+        "inventory-service:favourites",
+        "inventory-service:negative",
+        "lending-service:admin",
+        "lending-service:cancel",
+        "lending-service:negative",
+        "lending-service:reads",
+        "lending-service:reject",
+        "lending-service:return",
+        "mixed-user-workload:reads",
+        "notification-service:admin",
+        "notification-service:admin-read-actions",
+        "notification-service:negative",
+        "notification-service:read-actions",
+        "notification-service:reads",
+        "user-service:admin",
+        "user-service:lifecycle",
+        "user-service:login",
+        "user-service:negative",
+        "user-service:reads"
+      ],
+      "source": "services/user-service/Controllers/AuthController.cs"
+    },
+    {
+      "service": "user",
+      "method": "POST",
+      "route": "/api/Auth/register",
+      "plans": [
+        "user-service:lifecycle",
+        "user-service:negative"
+      ],
+      "source": "services/user-service/Controllers/AuthController.cs"
+    },
+    {
+      "service": "user",
+      "method": "GET",
+      "route": "/api/User/profile",
+      "plans": [
+        "user-service:lifecycle",
+        "user-service:negative",
+        "user-service:reads"
+      ],
+      "source": "services/user-service/Controllers/UserController.cs"
+    },
+    {
+      "service": "user",
+      "method": "PUT",
+      "route": "/api/User/profile",
+      "plans": [
+        "user-service:lifecycle"
+      ],
+      "source": "services/user-service/Controllers/UserController.cs"
+    }
+  ]
+}

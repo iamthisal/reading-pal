@@ -1,0 +1,34 @@
+{
+  "stryker-config": {
+    "project": "NotificationService.csproj",
+    "test-projects": [
+      "../../Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj"
+    ],
+    "configuration": "Release",
+    "mutation-level": "Standard",
+    "mutate": [
+      "**/*.cs",
+      "!**/Migrations/**/*.cs",
+      "!**/Program.cs"
+    ],
+    "ignore-methods": [
+      "LogTrace",
+      "LogDebug",
+      "LogInformation",
+      "LogWarning",
+      "LogError",
+      "LogCritical"
+    ],
+    "reporters": [
+      "Progress",
+      "ClearText",
+      "Html",
+      "Json"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    }
+  }
+}

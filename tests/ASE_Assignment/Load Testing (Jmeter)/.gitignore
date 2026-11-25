@@ -1,0 +1,5 @@
+**/*.private.json
+**/*.private.properties
+data/**/users.csv
+results/**
+*.log
