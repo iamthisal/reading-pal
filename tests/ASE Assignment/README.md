@@ -223,3 +223,4 @@ These are retained results from **18 October 2026**, not new executions performe
 | Selenium | 187 defined cases, 198 executions. Initial run: 197 passed, 1 failed (member revocation). Rerun with `fix/revoke-member-url` at `f6e9b26`: 198 passed. |
 
 For load results, retain the generated report with its actual environment and application commit. Before submission, merge contributions through PRs into `develop`, resolve adapter/configuration gaps, execute with `require_all=true`, and retain the successful integrated run and artifacts.
+rgr
