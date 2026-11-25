@@ -1,0 +1,10 @@
+{
+  "service": "UserService",
+  "run": "2026-11-25 00:20 UTC",
+  "commit": "7b2e506123340080467569bbbf4118eddec9a8e0",
+  "killed": 54,
+  "timeout": 0,
+  "survived": 63,
+  "noCoverage": 42,
+  "score": 33.96
+}
