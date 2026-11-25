@@ -18,11 +18,11 @@ Status checked against fetched branches on **23 October 2026**. The working bran
 | Suite | Branch | Folder under `tests/ASE_Assignment/` | Integration status |
 | --- | --- | --- | --- |
 | Unit | `unit-testing-ASE` | `Unit Testing (xUnit-Moq)/` | Present here and connected to the shared workflow. |
-| Mutation | `Mutation-Testing-ASE` | `Mutation_Testing/` | Configurations, runner and reports available on the contribution branch; shared CI adapter missing. |
+| Mutation | `Mutation-Testing-ASE` | `Mutation_Testing/` | Configurations, runner, reports and CI entry point present here and connected to the shared workflow. |
 | Selenium | `E2E-Testing-ASE` | `E2E Testing (Selenium)/` | Four projects, support library, documentation, recorded results and CI entry point available on the contribution branch. |
 | JMeter | `Load-Testing-ASE` | `Load Testing (Jmeter)/` | Local suite present here; the E2E branch also contains the load CI adapter and manual Azure runner. |
 
-These suites are not yet all integrated into this checkout or `origin/develop`. The current shared runner expects `Mutation Testing (Stryker)/run-ci.ps1` and `UI Testing (Selenium)/run-ci.ps1`. The E2E branch corrects the Selenium discovery path to `E2E Testing (Selenium)/run-ci.ps1` and adapts Docker jobs to Linux. Mutation still needs an adapter and discovery path aligned with its actual `Mutation_Testing` folder.
+These suites are not yet all integrated into this checkout or `origin/develop`. The current shared runner expects `Mutation_Testing/run-ci.ps1` (present here) and `UI Testing (Selenium)/run-ci.ps1`. The E2E branch corrects the Selenium discovery path to `E2E Testing (Selenium)/run-ci.ps1` and adapts Docker jobs to Linux.
 
 ## Tool setup
 
@@ -32,7 +32,7 @@ These suites are not yet all integrated into this checkout or `origin/develop`. 
 | .NET SDK 10 | Unit, mutation and E2E | Install SDK 10; project packages restore through `dotnet restore` or `dotnet test`. |
 | PowerShell 7 (`pwsh`) | Test runners | Install PowerShell 7; run commands from the repository root unless stated otherwise. |
 | xUnit 2.9.3, Moq 4.20.72, EF Core InMemory | Unit tests | Restored from test project NuGet references. |
-| Stryker.NET | Mutation testing | Install `dotnet-stryker`; see the mutation setup below. |
+| Stryker.NET | Mutation testing | Version 5.0.0, pinned in `Mutation_Testing/.config/dotnet-tools.json`; the runner restores it. |
 | Chrome, Selenium WebDriver 4.48 | E2E tests | Install Chrome; restore projects. Selenium Manager resolves ChromeDriver. |
 | Docker with Linux containers and Compose | Local E2E and Docker-based CI | Start Docker and prepare the disposable application stack. |
 | Node.js 22 and npm | React frontend | Run `npm ci` in `frontend`. |
@@ -76,18 +76,9 @@ See the [unit README](Unit%20Testing%20%28xUnit-Moq%29/README.md) for coverage, 
 
 ## Mutation testing commands
 
-Use a checkout containing the `Mutation-Testing-ASE` contribution. Install Stryker once:
+Stryker mutates each service's production code and runs its project in `Unit Testing (xUnit-Moq)/` against every mutant. EF migrations, `Program.cs` and logging calls are excluded. The runner restores the pinned Stryker version; no global install is needed.
 
-```powershell
-dotnet tool install --global dotnet-stryker
-dotnet stryker --version
-```
-
-The inspected branch has no committed Stryker tool manifest/version pin. Agree and pin a version in a tool manifest for repeatable execution; the command above installs the currently available version.
-
-**Configuration prerequisite:** check production and test project paths in every `stryker-config.json` before running. The inspected User configuration names `UserService.csproj` without its backend directory and references `../../../unit-tests/UserService.Tests/UserService.Tests.csproj`, which does not exist on that branch. Correct paths against the actual checkout first. Retained reports do not prove that the current configuration can reproduce the run.
-
-After correcting configuration paths, run all services:
+Run all services:
 
 ```powershell
 pwsh -NoProfile -File "tests/ASE_Assignment/Mutation_Testing/run-mutation.ps1"
@@ -99,7 +90,7 @@ Or select services from a PowerShell session:
 & "tests/ASE_Assignment/Mutation_Testing/run-mutation.ps1" -Services UserService,LendingService
 ```
 
-Output: `Mutation_Testing/reports/<Service>.html`, `<Service>.summary.json` and `summary.md`. Raw runs are under each service's ignored `StrykerOutput/` directory. The inspected User configuration uses a break threshold of 0, so execution success does not establish a minimum mutation score.
+Output: `Mutation_Testing/reports/<Service>.html`, `<Service>.summary.json` and `summary.md`. Raw runs are under each service's ignored `StrykerOutput/` directory. Every configuration uses a break threshold of 0, so execution success does not establish a minimum mutation score.
 
 ## Selenium E2E commands
 
@@ -208,18 +199,18 @@ param(
 )
 ```
 
-Adapters must provision tools and a suitable environment, execute the real suite, write public reports to `ResultsDirectory`, return nonzero on setup/test/threshold failures, and clean up their infrastructure in a `finally` block. The shared runner rejects success without report files. Align the mutation adapter and discovery path with its actual contribution folder before enabling it.
+Adapters must provision tools and a suitable environment, execute the real suite, write public reports to `ResultsDirectory`, return nonzero on setup/test/threshold failures, and clean up their infrastructure in a `finally` block. The shared runner rejects success without report files.
 
 Expected artifacts are `ase-unit-results`, `ase-mutation-results`, `ase-ui-results` and `ase-load-results`; files are available only when the respective job produces them. Local success and configured workflow files are not evidence of a successful remote CI run.
 
 ## Recorded results
 
-These are retained results from **18 October 2026**, not new executions performed while writing this README.
+Unless a row gives another date, these are retained results from **18 October 2026**.
 
 | Suite | Evidence |
 | --- | --- |
 | Unit | 71 methods, 120 executed cases; 120 passed, 0 failures, 0 skipped. User 20, Inventory 23, Lending 38, Notification 39. |
-| Mutation | User 49.06%, Inventory 62.34%, Lending 51.82%, Notification 57.25%. Mutation scores measure detected mutations, not code coverage. |
+| Mutation | Run on 25 November 2026 at `7b2e506` against the ASE unit tests: User 33.96%, Inventory 13.53%, Lending 14.60%, Notification 18.60%. The earlier 18 October scores used the original `tests/*.Tests` projects and are not comparable. Mutation scores measure detected mutations, not code coverage. |
 | Selenium | 187 defined cases, 198 executions. Initial run: 197 passed, 1 failed (member revocation). Rerun with `fix/revoke-member-url` at `f6e9b26`: 198 passed. |
 
 For load results, retain the generated report with its actual environment and application commit. Before submission, merge contributions through PRs into `develop`, resolve adapter/configuration gaps, execute with `require_all=true`, and retain the successful integrated run and artifacts.
