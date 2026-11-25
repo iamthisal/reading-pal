@@ -11,7 +11,7 @@ on:
       - E2E-Testing-ASE
     paths:
       - .github/workflows/ase-testing.yml
-      - tests/ASE Assignment/**
+      - tests/ASE_Assignment/**
       - services/**
       - frontend/**
   pull_request:
@@ -19,7 +19,7 @@ on:
       - develop
     paths:
       - .github/workflows/ase-testing.yml
-      - tests/ASE Assignment/**
+      - tests/ASE_Assignment/**
       - services/**
       - frontend/**
   workflow_dispatch:
@@ -56,7 +56,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Discover connected suites
         id: suites
-        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover'
+        run: '& "./tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover'
 
   unit:
     name: Unit testing and mocking
@@ -69,7 +69,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Run all four xUnit and Moq projects
-        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit'
+        run: '& "./tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit'
       - name: Upload unit test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -90,7 +90,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Run teammate mutation entry point
-        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation'
+        run: '& "./tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation'
       - name: Upload mutation reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -114,7 +114,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run teammate Selenium entry point
-        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui'
+        run: '& "./tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui'
       - name: Upload UI reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -139,7 +139,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Run teammate JMeter entry point
-        run: '& "./tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Load'
+        run: '& "./tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Load'
       - name: Upload performance reports
         if: always()
         uses: actions/upload-artifact@v4

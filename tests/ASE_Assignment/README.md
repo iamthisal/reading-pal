@@ -15,7 +15,7 @@ This README outlines the tools, setup, execution commands, shared pipeline and i
 
 Status checked against fetched branches on **23 October 2026**. The working branch is `unit-testing-ASE`. Fetching a contribution does not add its files to the current checkout; commands for another contribution require a checkout containing its files.
 
-| Suite | Branch | Folder under `tests/ASE Assignment/` | Integration status |
+| Suite | Branch | Folder under `tests/ASE_Assignment/` | Integration status |
 | --- | --- | --- | --- |
 | Unit | `unit-testing-ASE` | `Unit Testing (xUnit-Moq)/` | Present here and connected to the shared workflow. |
 | Mutation | `Mutation-Testing-ASE` | `Mutation_Testing/` | Configurations, runner and reports available on the contribution branch; shared CI adapter missing. |
@@ -59,8 +59,8 @@ For application-backed tests, configure environment files using `.env.example` a
 From the repository root:
 
 ```powershell
-pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover
-pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit
+pwsh -NoProfile -File "tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Discover
+pwsh -NoProfile -File "tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Unit
 ```
 
 The runner restores/builds in Release, executes all four projects even when an earlier project fails, saves TRX files to `.ase-results/unit/<Service>/`, and fails if any project fails.
@@ -68,8 +68,8 @@ The runner restores/builds in Release, executes all four projects even when an e
 Run one project or a focused demonstration:
 
 ```powershell
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj" --filter "FullyQualifiedName~Register_NewEmail_SavesUnapprovedUser"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj" --filter "FullyQualifiedName~Register_NewEmail_SavesUnapprovedUser"
 ```
 
 See the [unit README](Unit%20Testing%20%28xUnit-Moq%29/README.md) for coverage, test explanations and demo examples.
@@ -90,13 +90,13 @@ The inspected branch has no committed Stryker tool manifest/version pin. Agree a
 After correcting configuration paths, run all services:
 
 ```powershell
-pwsh -NoProfile -File "tests/ASE Assignment/Mutation_Testing/run-mutation.ps1"
+pwsh -NoProfile -File "tests/ASE_Assignment/Mutation_Testing/run-mutation.ps1"
 ```
 
 Or select services from a PowerShell session:
 
 ```powershell
-& "tests/ASE Assignment/Mutation_Testing/run-mutation.ps1" -Services UserService,LendingService
+& "tests/ASE_Assignment/Mutation_Testing/run-mutation.ps1" -Services UserService,LendingService
 ```
 
 Output: `Mutation_Testing/reports/<Service>.html`, `<Service>.summary.json` and `summary.md`. Raw runs are under each service's ignored `StrykerOutput/` directory. The inspected User configuration uses a break threshold of 0, so execution success does not establish a minimum mutation score.
@@ -116,14 +116,14 @@ npm run dev
 From the repository root, run against the prepared stack:
 
 ```powershell
-pwsh -NoProfile -File "tests/ASE Assignment/E2E Testing (Selenium)/run-ci.ps1" -ResultsDirectory ".ase-results/ui" -ApplicationCommit "$(git rev-parse HEAD)" -UseExistingStack
+pwsh -NoProfile -File "tests/ASE_Assignment/E2E Testing (Selenium)/run-ci.ps1" -ResultsDirectory ".ase-results/ui" -ApplicationCommit "$(git rev-parse HEAD)" -UseExistingStack
 ```
 
 Run one project or case directly:
 
 ```powershell
-dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --logger "trx;LogFileName=UserService.E2ETests.trx"
-dotnet test "tests/ASE Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --filter "Id=ACC-04"
+dotnet test "tests/ASE_Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --logger "trx;LogFileName=UserService.E2ETests.trx"
+dotnet test "tests/ASE_Assignment/E2E Testing (Selenium)/UserService.E2ETests/UserService.E2ETests.csproj" --filter "Id=ACC-04"
 ```
 
 On its contribution branch, CI provisions a disposable stack and frontend, runs four projects sequentially, retains TRX files and infrastructure logs, then cleans up its infrastructure. Local `-UseExistingStack` mode requires infrastructure prepared by the developer.
@@ -133,7 +133,7 @@ On its contribution branch, CI provisions a disposable stack and frontend, runs 
 Start the four APIs, MySQL and Kafka. Install Java and JMeter 5.6.3. From the repository root:
 
 ```powershell
-Set-Location "tests/ASE Assignment/Load Testing (Jmeter)"
+Set-Location "tests/ASE_Assignment/Load Testing (Jmeter)"
 ```
 
 Create `config/local.private.json` from `config/local.private.example.json` only if it does not already exist, then supply local admin credentials. Set `JMETER_HOME` to your extracted JMeter directory, or supply the full `bin/jmeter.bat` path with `-JMeterPath`.
@@ -190,9 +190,9 @@ Replace `<run-id>` with an actual run ID. For final submission, use the integrat
 Shared commands for integrated suite adapters, run from the repository root:
 
 ```powershell
-pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation
-pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui
-pwsh -NoProfile -File "tests/ASE Assignment/scripts/Invoke-AseTests.ps1" -Suite Load
+pwsh -NoProfile -File "tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Mutation
+pwsh -NoProfile -File "tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Ui
+pwsh -NoProfile -File "tests/ASE_Assignment/scripts/Invoke-AseTests.ps1" -Suite Load
 ```
 
 These commands fail if their expected entry point is missing. They require the contribution files, correct discovery paths and suitable runner environments. The current workflow uses Windows runners; Docker-based E2E/load jobs need the Linux adaptations present on the E2E branch.

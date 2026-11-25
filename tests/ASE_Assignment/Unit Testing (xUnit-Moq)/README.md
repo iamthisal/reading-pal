@@ -57,10 +57,10 @@ Run all four projects, stopping with a failing exit code if any project fails:
 
 ~~~powershell
 $aseProjects = @(
-    "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
-    "tests/ASE Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj"
-    "tests/ASE Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj"
-    "tests/ASE Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj"
+    "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
+    "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj"
+    "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj"
+    "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj"
 )
 foreach ($aseProject in $aseProjects) {
     dotnet test "$aseProject"
@@ -71,16 +71,16 @@ foreach ($aseProject in $aseProjects) {
 Run one project:
 
 ~~~powershell
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj"
 ~~~
 
 To save a result file, add these arguments to a project command (use a different file name for each project):
 
 ~~~powershell
---logger "trx;LogFileName=UserService.UnitTests.trx" --results-directory "tests/ASE Assignment/Unit Testing (xUnit-Moq)/TestResults"
+--logger "trx;LogFileName=UserService.UnitTests.trx" --results-directory "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/TestResults"
 ~~~
 
 ## Simple explanations
@@ -115,8 +115,8 @@ Open the four methods below in advance. Restore/build the projects before presen
 Exact demo commands from the repository root:
 
 ~~~powershell
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~Register_NewEmail_SavesUnapprovedUser"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~Update_CopyBoundary_PreservesBorrowedCopies"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~DispatchAsync_PublisherUnavailable_KeepsMessagePending"
-dotnet test "tests/ASE Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~HandleAsync_AcceptedEvent_CreatesNotification"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/UserService.UnitTests/UserService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~Register_NewEmail_SavesUnapprovedUser"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/InventoryService.UnitTests/InventoryService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~Update_CopyBoundary_PreservesBorrowedCopies"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/LendingService.UnitTests/LendingService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~DispatchAsync_PublisherUnavailable_KeepsMessagePending"
+dotnet test "tests/ASE_Assignment/Unit Testing (xUnit-Moq)/NotificationService.UnitTests/NotificationService.UnitTests.csproj" --no-build --no-restore --filter "FullyQualifiedName~HandleAsync_AcceptedEvent_CreatesNotification"
 ~~~

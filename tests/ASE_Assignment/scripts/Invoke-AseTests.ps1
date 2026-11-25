@@ -66,7 +66,7 @@ try {
 
     $entryPoint = $entryPoints[$Suite]
     if (!(Test-Path -LiteralPath $entryPoint -PathType Leaf)) {
-        throw "$Suite is not connected. Add $entryPoint using the contract in tests/ASE Assignment/README.md."
+        throw "$Suite is not connected. Add $entryPoint using the contract in tests/ASE_Assignment/README.md."
     }
     $applicationCommit = if ($env:GITHUB_SHA) { $env:GITHUB_SHA } else {
         $revision = & git rev-parse HEAD
