@@ -37,7 +37,7 @@ jobs:
       - name: Run mutation tests
         shell: pwsh
         run: ./run-mutation.ps1
-        working-directory: "tests/ASE Assignment/Mutation_Testing"
+        working-directory: "tests/ASE_Assignment/Mutation_Testing"
 
       - name: Publish score summary
         if: always()
